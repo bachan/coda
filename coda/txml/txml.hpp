@@ -15,8 +15,8 @@
 
 */
 
-#ifndef __TXML_HPP__
-#define __TXML_HPP__
+#ifndef __CODA_TXML_TXML_HPP__8584928795827345723958234__
+#define __CODA_TXML_TXML_HPP__8584928795827345723958234__
 
 #include <sys/types.h>
 #include <expat.h>
@@ -33,7 +33,9 @@ struct determination_object
 	virtual void determine(parser* p) = 0;
 	void load_from_file(const char* fname);
 	void load_from_string(const char* s);
-	virtual ~determination_object(){}
+	virtual ~determination_object()
+	{
+	}
 };
 
 class parser
@@ -56,23 +58,23 @@ class parser
 	std::vector<level_desc>::iterator det_iter;
 
 	std::string current_value;
-	determination_object *data;
+	determination_object* data;
 
 	void determine();
-	void setValue(std::string &var);
-	void setValue(int32_t &var);
-	void setValue(uint32_t &var);
-	void setValue(int64_t &var);
-	void setValue(u_int64_t &var);
+	void setValue(std::string& var);
+	void setValue(int32_t& var);
+	void setValue(uint32_t& var);
+	void setValue(int64_t& var);
+	void setValue(u_int64_t& var);
 	
 	template <typename _T>
-	void setValue(_T &var)
+	void setValue(_T& var)
 	{
 		var.determine(this);
 	}
 
 	template <typename _T>
-	void setValue(std::list<_T> &var)
+	void setValue(std::list<_T>& var)
 	{
 		det_iter--;
 		if (!det_iter->pushed)
@@ -86,7 +88,7 @@ class parser
 	}
 
 	template <typename _T>
-	void setValue(std::vector<_T> &var)
+	void setValue(std::vector<_T>& var)
 	{
 		det_iter--;
 		if (!det_iter->pushed)
@@ -100,14 +102,14 @@ class parser
 	}
 
 	XML_Parser the_parser;
-	void parse(const char *szDataSource, unsigned int iDataLength, bool bIsFinal = true);
+	void parse(const char* szDataSource, unsigned int iDataLength, bool bIsFinal = true);
 public:
-	parser(determination_object *d);
+	parser(determination_object* d);
 	~parser();
-	void raiseError(const std::string &err);
+	void raiseError(const std::string& err);
 
 	template <typename _T>
-	bool determineMember(const std::string &key, _T &var)
+	bool determineMember(const std::string& key, _T& var)
 	{
 		if (det_iter == levels.end())
 		{
@@ -125,9 +127,9 @@ public:
 		return false;
 	}
 
-	void characters(const char *szChars, unsigned int iLength);
-	void start_element(const char *szName, const char **pszAttributes);
-	void end_element(const char *szName);
+	void characters(const char* szChars, unsigned int iLength);
+	void start_element(const char* szName, const char** pszAttributes);
+	void end_element(const char* szName);
 };
 
 }

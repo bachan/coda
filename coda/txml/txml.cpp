@@ -31,7 +31,6 @@ void txml::determination_object::load_from_file(const char* fname)
 	parser.filename = fname;
 
 	FILE *f = fopen(fname, "r");
-
 	if (!f)
 	{
 		char error_text[BUFFER_SIZE];
@@ -58,33 +57,34 @@ void txml::determination_object::load_from_file(const char* fname)
 	fclose(f);
 }
 
-void txml::determination_object::load_from_string(const char *s)
+void txml::determination_object::load_from_string(const char* s)
 {
 	txml::parser parser(this);
 	parser.parse(s, strlen(s), true);
 }
 
-void callback_characters(void * vThis, const char *szData, int iLength)
+void callback_characters(void* vThis, const char* szData, int iLength)
 {
-	(static_cast<txml::parser *>(vThis)) -> characters(szData, iLength);
+	(static_cast<txml::parser*>(vThis))->characters(szData, iLength);
 }
 
-void callback_start_element(void * vThis, const char * const szName, const char ** pszAttributes)
+void callback_start_element(void* vThis, const char* const szName, const char** pszAttributes)
 {
-	(static_cast<txml::parser *>(vThis)) -> start_element(szName, pszAttributes);
+	(static_cast<txml::parser*>(vThis))->start_element(szName, pszAttributes);
 }
 
-void callback_end_element(void * vThis, const char * const szName)
+void callback_end_element(void* vThis, const char* const szName)
 {
-	(static_cast<txml::parser *>(vThis)) -> end_element(szName);
+	(static_cast<txml::parser*>(vThis))->end_element(szName);
 }
 
-int callback_unknown_encoding_handler(void * vThis, const XML_Char *name, XML_Encoding *info)
+int callback_unknown_encoding_handler(void* vThis, const XML_Char* name, XML_Encoding* info)
 {
 	return 0;
 }
 
-txml::parser::parser(determination_object *d) : data(d)
+txml::parser::parser(determination_object* d)
+	: data(d)
 {
 	the_parser = XML_ParserCreate("UTF-8");
 	XML_SetUserData(the_parser, this);
@@ -98,7 +98,7 @@ txml::parser::~parser()
 	XML_ParserFree(the_parser);
 }
 
-void txml::parser::parse(const char *szDataSource, unsigned int iDataLength, bool bIsFinal)
+void txml::parser::parse(const char* szDataSource, unsigned int iDataLength, bool bIsFinal)
 {
 	int iFinal = bIsFinal;
 	if (XML_Parse(the_parser, szDataSource, iDataLength, iFinal) == XML_STATUS_ERROR)
@@ -107,14 +107,14 @@ void txml::parser::parse(const char *szDataSource, unsigned int iDataLength, boo
 	}	
 }
 
-void txml::parser::raiseError(const std::string &err)
+void txml::parser::raiseError(const std::string& err)
 {
 	char error_text[BUFFER_SIZE];
-	snprintf(error_text, BUFFER_SIZE, "XML error (%s): %s, line %d, column %d",
-		filename.c_str(),
-		err.c_str(),
-		(int)XML_GetCurrentLineNumber(the_parser),
-		(int)XML_GetCurrentColumnNumber(the_parser));
+	snprintf(error_text, BUFFER_SIZE, "XML error (%s): %s, line %d, column %d"
+		, filename.c_str()
+		, err.c_str()
+		, (int)XML_GetCurrentLineNumber(the_parser)
+		, (int)XML_GetCurrentColumnNumber(the_parser));
 	throw std::logic_error(error_text);
 }
 
@@ -124,37 +124,37 @@ void txml::parser::determine()
 	data->determine(this);
 }
 	
-void txml::parser::setValue(std::string &var)
+void txml::parser::setValue(std::string& var)
 {
 	var += current_value;
 }
 
-void txml::parser::setValue(int32_t &var)
+void txml::parser::setValue(int32_t& var)
 {
 	var = atoi(current_value.c_str());
 }
 
-void txml::parser::setValue(u_int32_t &var)
+void txml::parser::setValue(u_int32_t& var)
 {
 	var = atoi(current_value.c_str());
 }
 
-void txml::parser::setValue(u_int64_t &var)
+void txml::parser::setValue(u_int64_t& var)
 {
 	var = atoll(current_value.c_str());
 }
 
-void txml::parser::setValue(int64_t &var)
+void txml::parser::setValue(int64_t& var)
 {
 	var = atoll(current_value.c_str());
 }
 
-void txml::parser::characters(const char *szChars, unsigned int iLength)
+void txml::parser::characters(const char* szChars, unsigned int iLength)
 {
 	current_value += std::string(szChars, iLength);
 }
 
-void txml::parser::start_element(const char *szName, const char **pszAttributes)
+void txml::parser::start_element(const char* szName, const char** pszAttributes)
 {
 	levels.push_back(szName);
 	for (int i = 0; pszAttributes[i] && pszAttributes[i + 1]; i +=2)
@@ -175,7 +175,7 @@ void txml::parser::start_element(const char *szName, const char **pszAttributes)
 	current_value.clear();
 }
 
-void txml::parser::end_element(const char *szName)
+void txml::parser::end_element(const char* szName)
 {
 	determine();
 	current_value.clear();
