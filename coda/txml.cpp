@@ -15,7 +15,7 @@
 
 */
 
-#include <txml/txml.hpp>
+#include "txml.hpp"
 
 #include <stdexcept>
 #include <stdlib.h>
