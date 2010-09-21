@@ -1,6 +1,10 @@
 #ifndef __CODA_LOGGER_H__
 #define __CODA_LOGGER_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define LOG_ACCESS  0  /* ACC: special level for access log      */
 #define LOG_EMERG   1  /* EME: system is unusable                */
 #define LOG_ALERT   2  /* ALE: action must be taken immediately  */
@@ -19,16 +23,6 @@
 #define log_notice(e,fmt,...) log_format(STDERR_FILENO,LOG_NOTICE,"[notice]",e,fmt,##__VA_ARGS__)
 #define log_info(  e,fmt,...) log_format(STDERR_FILENO,LOG_INFO,  "  [info]",e,fmt,##__VA_ARGS__)
 
-/* #define log_format(fd,lv,str,err,fmt,...) do {      \ */
-                                                    /* \ */
-    /* if (lv <= log_lvmask)                           \ */
-    /* {                                               \ */
-        /* dprintf(fd, str " *: " fmt " (%d: %s)",     \ */
-            /* ##__VA_ARGS__, err, rdv_errstr(err));   \ */
-    /* }                                               \ */
-                                                    /* \ */
-/* } while (0) */
-
 #define log_format(fd,lv,ls,fmt,...) do {                               \
                                                                         \
     if (lv <= log_lvmask)                                               \
@@ -37,14 +31,14 @@
                                                                         \
         rdv_gmtime(time(NULL), &tp);                                    \
                                                                         \
-        dprintf(fd, "%04u/%02u/%02u/%02u:%02u:%02u "ls" %s: "fmt"\n",   \
+        dprintf(fd, "%04u-%02u-%02u-%02u:%02u:%02u\t"ls"\t%s:\t"fmt"\n",\
             tp.tm_year,                                                 \
             tp.tm_mon,                                                  \
             tp.tm_mday,                                                 \
             tp.tm_hour,                                                 \
             tp.tm_min,                                                  \
             tp.tm_sec,                                                  \
-            log_thread(),                                               \
+            log_get_thread_name(),                                      \
             ##__VA_ARGS__                                               \
         );                                                              \
     }                                                                   \
@@ -65,4 +59,9 @@ const char* log_get_thread_name();
 #define log_create_str(fn,lv) log_create_int(fn, log_lvread(lv))
 #define log_rotate(fn) log_create_int(fn, log_lvmask)
 
+#ifdef __cplusplus
+}
+#endif
+
 #endif /* __CODA_LOGGER_H__ */
+
