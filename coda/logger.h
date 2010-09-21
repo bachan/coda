@@ -4,6 +4,10 @@
 #include "helper_file.h"
 #include "helper_time.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define LOG_ACCESS  0  /* ACC: special level for access log      */
 #define LOG_EMERG   1  /* EME: system is unusable                */
 #define LOG_ALERT   2  /* ALE: action must be taken immediately  */
@@ -58,4 +62,9 @@ const char* log_thread_name_get();
 #define log_create_from_str(path, level) log_create(path, log_levels(level))
 #define log_rotate(path)                 log_create(path, log_level)
 
+#ifdef __cplusplus
+}
+#endif
+
 #endif /* __CODA_LOGGER_H__ */
+
