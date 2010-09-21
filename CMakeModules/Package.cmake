@@ -79,7 +79,7 @@ ENDMACRO (USE_SUBPATH)
 
 # USE_PACKAGE (var lib inc [FIND_PATH_ARGS ...])
 # -----------------------------------------------------------------------------
-# Find package using by project with USE_LIBRARY and USE_INCLUDE macros.
+# Find package using USE_LIBRARY and USE_INCLUDE macros.
 
 MACRO (USE_PACKAGE var lib inc)
   IF (NOT ${lib} STREQUAL "NO_LIB")
@@ -89,6 +89,15 @@ MACRO (USE_PACKAGE var lib inc)
     USE_INCLUDE (INC_${var} ${inc} ${ARGN})
   ENDIF (NOT ${inc} STREQUAL "NO_INC")
 ENDMACRO (USE_PACKAGE)
+
+# USE_PKG (pkg)
+# -----------------------------------------------------------------------------
+# Find package using USE_PACKAGE and some heuristic on naming traditions.
+
+MACRO (USE_PKG pkg)
+  STRING (TOUPPER ${pkg} var)
+  USE_PACKAGE (${var} ${pkg} ${pkg}.h)
+ENDMACRO (USE_PKG)
 
 # GET_LOCALTIME (var [format [tmzone]])
 # -----------------------------------------------------------------------------

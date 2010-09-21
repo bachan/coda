@@ -5,14 +5,22 @@ SET (CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules ${CMAKE_MODULE_PATH})
 INCLUDE (Compile)
 INCLUDE (Package)
 
-USE_PACKAGE (EXPAT expat expat.h)
+USE_PKG (expat)
+USE_PKG (Judy)
 
 ADD_LIBRARY(coda STATIC coda/txml.cpp)
 TARGET_LINK_LIBRARIES(coda ${LIB_EXPAT})
 SET_TARGET_PROPERTIES(coda PROPERTIES VERSION 0.1 SOVERSION 1)
-
 INSTALL(FILES coda/txml.hpp DESTINATION include/coda)
 INSTALL(TARGETS coda DESTINATION ${LIBDIR})
+
+AUX_SOURCE_DIRECTORY (lizard SRC_LIZARD)
+ADD_EXECUTABLE (lizard ${SRC_LIZARD})
+TARGET_LINK_LIBRARIES (lizard ${LIB_RDEV} ${LIB_JUDY} ${LIB_EXPAT} pthread dl)
+INSTALL (TARGETS lizard DESTINATION bin)
+INSTALL (FILES lizard/plugin.hpp DESTINATION include/lizard)
+CONFIGURE_FILE (lizard/lizard.xml.in ${PROJECT_BINARY_DIR}/auto/lizard/lizard.xml)
+ADD_LIBRARY (lz_test SHARED lizard/plugin_test.cpp) # XXX
 
 ENABLE_TESTING()
 ADD_EXECUTABLE(test_txml tests/txml/test_txml.cpp)

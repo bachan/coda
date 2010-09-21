@@ -18,6 +18,7 @@
 #ifndef __CODA_TXML_TXML_HPP__8584928795827345723958234__
 #define __CODA_TXML_TXML_HPP__8584928795827345723958234__
 
+#include <stdint.h>
 #include <sys/types.h>
 #include <expat.h>
 #include <string>

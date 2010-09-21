@@ -1,5 +1,5 @@
-#ifndef __LOGGER_H__
-#define __LOGGER_H__
+#ifndef __CODA_LOGGER_H__
+#define __CODA_LOGGER_H__
 
 #define LOG_ACCESS  0  /* ACC: special level for access log      */
 #define LOG_EMERG   1  /* EME: system is unusable                */
@@ -19,22 +19,50 @@
 #define log_notice(e,fmt,...) log_format(STDERR_FILENO,LOG_NOTICE,"[notice]",e,fmt,##__VA_ARGS__)
 #define log_info(  e,fmt,...) log_format(STDERR_FILENO,LOG_INFO,  "  [info]",e,fmt,##__VA_ARGS__)
 
-#define log_format(fd,lv,str,err,fmt,...) do {      \
-                                                    \
-    if (lv <= log_lvcurr)                           \
-    {                                               \
-        dprintf(fd, str " *: " fmt " (%d: %s)",     \
-            ##__VA_ARGS__, err, rdv_errstr(err));   \
-    }                                               \
-                                                    \
+/* #define log_format(fd,lv,str,err,fmt,...) do {      \ */
+                                                    /* \ */
+    /* if (lv <= log_lvmask)                           \ */
+    /* {                                               \ */
+        /* dprintf(fd, str " *: " fmt " (%d: %s)",     \ */
+            /* ##__VA_ARGS__, err, rdv_errstr(err));   \ */
+    /* }                                               \ */
+                                                    /* \ */
+/* } while (0) */
+
+#define log_format(fd,lv,ls,fmt,...) do {                               \
+                                                                        \
+    if (lv <= log_lvmask)                                               \
+    {                                                                   \
+        struct tm tp;                                                   \
+                                                                        \
+        rdv_gmtime(time(NULL), &tp);                                    \
+                                                                        \
+        dprintf(fd, "%04u/%02u/%02u/%02u:%02u:%02u "ls" %s: "fmt"\n",   \
+            tp.tm_year,                                                 \
+            tp.tm_mon,                                                  \
+            tp.tm_mday,                                                 \
+            tp.tm_hour,                                                 \
+            tp.tm_min,                                                  \
+            tp.tm_sec,                                                  \
+            log_thread(),                                               \
+            ##__VA_ARGS__                                               \
+        );                                                              \
+    }                                                                   \
+                                                                        \
 } while (0)
 
-extern volatile
-int log_lvcurr;
+extern volatile int log_lvmask;
+
 int log_lvread(const char* lv);
-int log_create(const char* fn, int lv);
+int log_create_int(const char* fn, int lv);
 
-#define log_string(fn,lv) log_create(fn, log_lvread(lv))
-#define log_rotate(fn)    log_create(fn, log_lvcurr)
+int log_set_thread_name(const char* name);
+const char* log_get_thread_name();
 
-#endif /* __LOGGER_H__ */
+#define log_set_thread_name(name) pthread_setspecific(log_thread_name, (const void*) name)
+#define log_get_thread_name() (const char*) pthread_getspecific(log_thread_name)
+
+#define log_create_str(fn,lv) log_create_int(fn, log_lvread(lv))
+#define log_rotate(fn) log_create_int(fn, log_lvmask)
+
+#endif /* __CODA_LOGGER_H__ */
