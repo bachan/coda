@@ -2,7 +2,7 @@
 #define __LIZARD_UTILS_HPP___
 
 #include <stdint.h>
-#include "rdev_logger.h"
+#include <coda/logger.h>
 
 namespace lizard {
 extern int MSG_LIZARD_ID;

@@ -31,7 +31,7 @@ SET (LINK_SEARCH_END_STATIC TRUE)
 
 INCLUDE_DIRECTORIES (${PROJECT_BINARY_DIR})
 INCLUDE_DIRECTORIES (${PROJECT_SOURCE_DIR})
-INCLUDE_DIRECTORIES (${PROJECT_SOURCE_DIR}/include)
+#INCLUDE_DIRECTORIES (${PROJECT_SOURCE_DIR}/include)
 
 # USE_LIBRARY (var lib)
 # -----------------------------------------------------------------------------
@@ -100,21 +100,41 @@ MACRO (USE_PKG pkg)
   USE_PACKAGE (${var} ${pkg} ${pkg}.h)
 ENDMACRO (USE_PKG)
 
-# ADD_STATIC (lib)
+# ADD_EXE (pkg)
 # -----------------------------------------------------------------------------
 # TODO
 
-MACRO (ADD_STATIC lib)
-  AUX_SOURCE_DIRECTORY (${lib} SRC_${lib})
-  ADD_LIBRARY (${lib} STATIC ${SRC_${lib}})
+MACRO (ADD_EXE tgt)
+  AUX_SOURCE_DIRECTORY (${tgt} SRC_${tgt})
+  ADD_EXECUTABLE (${tgt} ${SRC_${tgt}})
   IF (${ARGC} GREATER 1)
-    TARGET_LINK_LIBRARIES (${lib} ${ARGN})
+    TARGET_LINK_LIBRARIES (${tgt} ${ARGN})
   ENDIF (${ARGC} GREATER 1)
+  INSTALL (TARGETS ${tgt} DESTINATION bin)
+ENDMACRO (ADD_EXE)
+
+MACRO (ADD_LIB lib typ)
+  GET_FILENAME_COMPONENT (${lib}_NAME "${lib}" NAME)
+  AUX_SOURCE_DIRECTORY (${lib} SRC_${${lib}_NAME})
+  ADD_LIBRARY (${${lib}_NAME} ${typ} ${SRC_${${lib}_NAME}})
+  IF (${ARGC} GREATER 2)
+    TARGET_LINK_LIBRARIES (${${lib}_NAME} ${ARGN})
+  ENDIF (${ARGC} GREATER 2)
   # TODO SET_TARGET_PROPERTIES (...)
-  INSTALL (TARGETS ${lib} DESTINATION ${LIBDIR})
-  # TODO ETOT EBUCHIJ PATTERN NADO POFIXIT, PIZDEC BLJAD CMAKE GOVNO SRANOE, DAJE PATTERNI U NIH SVOI BLJAD!!!!!
-  INSTALL (DIRECTORY ${lib}/ DESTINATION include FILES_MATCHING PATTERN "*.{h,hpp,tcc}")
+  INSTALL (TARGETS ${${lib}_NAME} DESTINATION ${LIBDIR})
+  INSTALL (DIRECTORY ${lib} DESTINATION include FILES_MATCHING PATTERN "*.h")
+  INSTALL (DIRECTORY ${lib} DESTINATION include FILES_MATCHING PATTERN "*.hpp")
+  INSTALL (DIRECTORY ${lib} DESTINATION include FILES_MATCHING PATTERN "*.tcc")
+ENDMACRO (ADD_LIB)
+
+MACRO (ADD_SHARED lib)
+  ADD_LIB (${lib} SHARED ${ARGN})
+ENDMACRO (ADD_SHARED)
+
+MACRO (ADD_STATIC lib)
+  ADD_LIB (${lib} STATIC ${ARGN})
 ENDMACRO (ADD_STATIC)
+
 
 # GET_LOCALTIME (var [format [tmzone]])
 # -----------------------------------------------------------------------------

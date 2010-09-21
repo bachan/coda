@@ -1,184 +1,181 @@
-/*
-
-   Copyright (c) 2004--2010, Usrsrc Team:
-   Alexander Pankov (pianist@usrsrc.ru)
-
-   txml library is free software; you can redistribute it and/or
-   modify it under the terms of the GNU Lesser General Public
-   License as published by the Free Software Foundation; either
-   version 2.1 of the License, or (at your option) any later version.
-
-   The GNU C Library is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-   Lesser General Public License for more details.
-
-*/
-
-#include "txml.hpp"
-
-#include <stdexcept>
+#include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <errno.h>
+#include <sys/types.h>
+#include "error.hpp"
+#include "txml.hpp"
 
-#define BUFFER_SIZE 128
+#define BUFSZ 4096
 
-void txml::determination_object::load_from_file(const char* fname)
+void coda::txml_determination_object::load_from_file(const char* filename)
 {
-	txml::parser parser(this);
-	parser.filename = fname;
+    coda::txml_parser p (this);
+    p.filename = filename;
 
-	FILE *f = fopen(fname, "r");
-	if (!f)
-	{
-		char error_text[BUFFER_SIZE];
-		snprintf(error_text, BUFFER_SIZE, "Cannot open file %s: %s", fname, strerror(errno));
-		throw std::logic_error(error_text);
-	}
+	FILE *fp = fopen(filename, "r");
 
-	char buf[BUFFER_SIZE];
-	while (!feof(f))
-	{
-		memset(buf, 0, BUFFER_SIZE);
-		size_t sz = fread(buf, sizeof(char), BUFFER_SIZE, f);
+	if (!fp)
+    {
+		throw coda_errno(errno, "Can't open file '%s'", filename);
+    }
 
-		if (0 != ferror(f))
-		{
-			char error_text[BUFFER_SIZE];
-			snprintf(error_text, BUFFER_SIZE, "Cannot read from file %s", fname);
-			throw std::logic_error(error_text);
-		}
+    char buf [BUFSZ];
 
-		parser.parse(buf, sz, feof(f) ? true : false);
-	}
+    try
+    {
+        while (!feof(fp))
+        {
+            size_t sz = fread(buf, sizeof(char), BUFSZ, fp);
 
-	fclose(f);
+            if (0 != ferror(fp))
+            {
+				throw coda_errno(errno, "Can't read from file '%s'", filename);
+            }
+
+            p.parse(buf, sz, feof(fp) ? true : false);
+        }
+    }
+    catch (...)
+    {
+        fclose(fp);
+        throw;
+    }
+
+    fclose(fp);
 }
 
-void txml::determination_object::load_from_string(const char* s)
+void coda::txml_determination_object::load_from_string(const char* str)
 {
-	txml::parser parser(this);
-	parser.parse(s, strlen(s), true);
+    coda::txml_parser p (this);
+    p.parse(str, strlen(str), true);
 }
 
-void callback_characters(void* vThis, const char* szData, int iLength)
+void coda::txml_determination_object::load_from_string(const char* str, size_t len)
 {
-	(static_cast<txml::parser*>(vThis))->characters(szData, iLength);
+    coda::txml_parser p (this);
+    p.parse(str, len, true);
 }
 
-void callback_start_element(void* vThis, const char* const szName, const char** pszAttributes)
+static void cb_characters(void* vThis, const char* szData, int iLength)
 {
-	(static_cast<txml::parser*>(vThis))->start_element(szName, pszAttributes);
+	((coda::txml_parser*) vThis)->characters(szData, iLength);
 }
 
-void callback_end_element(void* vThis, const char* const szName)
+static void cb_begelement(void* vThis, const char* const szName, const char** pszAttributes)
 {
-	(static_cast<txml::parser*>(vThis))->end_element(szName);
+    ((coda::txml_parser*) vThis)->begelement(szName, pszAttributes);
 }
 
-int callback_unknown_encoding_handler(void* vThis, const XML_Char* name, XML_Encoding* info)
+static void cb_endelement(void* vThis, const char* const szName)
 {
-	return 0;
+    ((coda::txml_parser*) vThis)->endelement(szName);
 }
 
-txml::parser::parser(determination_object* d)
+static int  cb_encunknown(void*, const XML_Char*, XML_Encoding*)
+{
+    return 0;
+}
+
+coda::txml_parser::txml_parser(coda::txml_determination_object* d)
 	: data(d)
 {
-	the_parser = XML_ParserCreate("UTF-8");
-	XML_SetUserData(the_parser, this);
-	XML_SetUnknownEncodingHandler(the_parser, callback_unknown_encoding_handler, NULL);
-	XML_SetElementHandler(the_parser, callback_start_element, callback_end_element);
-	XML_SetCharacterDataHandler(the_parser, callback_characters);
+    p = XML_ParserCreate("UTF-8");
+    XML_SetUserData(p, this);
+    XML_SetUnknownEncodingHandler(p, cb_encunknown, NULL);
+    XML_SetElementHandler(p, cb_begelement, cb_endelement);
+    XML_SetCharacterDataHandler(p, cb_characters);
 }
 
-txml::parser::~parser()
+coda::txml_parser::~txml_parser()
 {
-	XML_ParserFree(the_parser);
+    XML_ParserFree(p);
 }
 
-void txml::parser::parse(const char* szDataSource, unsigned int iDataLength, bool bIsFinal)
+void coda::txml_parser::parse(const char* szDataSource, unsigned int iDataLength, bool bIsFinal)
 {
-	int iFinal = bIsFinal;
-	if (XML_Parse(the_parser, szDataSource, iDataLength, iFinal) == XML_STATUS_ERROR)
-	{
-		raiseError(XML_ErrorString(XML_GetErrorCode(the_parser)));
-	}	
+    int iFinal = bIsFinal;
+
+    if (XML_STATUS_ERROR == XML_Parse(p, szDataSource, iDataLength, iFinal))
+    {
+        raise(XML_ErrorString(XML_GetErrorCode(p)));
+    }
 }
 
-void txml::parser::raiseError(const std::string& err)
+void coda::txml_parser::raise(const char* err)
 {
-	char error_text[BUFFER_SIZE];
-	snprintf(error_text, BUFFER_SIZE, "XML error (%s): %s, line %d, column %d"
-		, filename.c_str()
-		, err.c_str()
-		, (int)XML_GetCurrentLineNumber(the_parser)
-		, (int)XML_GetCurrentColumnNumber(the_parser));
-	throw std::logic_error(error_text);
+    throw coda_error("XML error (%s): %s, line %d, column %d",
+		filename.c_str(), err,
+        (int) XML_GetCurrentLineNumber(p),
+		(int) XML_GetCurrentColumnNumber(p));
 }
 
-void txml::parser::determine()
+void coda::txml_parser::determine()
 {
-	det_iter = levels.begin();
-	data->determine(this);
+    det_iter = levels.begin();
+    data->determine(this);
 }
-	
-void txml::parser::setValue(std::string& var)
+
+static bool strtobool(const char *s, size_t sz) /* usual on/off switcher -> bool */
 {
-	var += current_value;
+    if (0 !=      strtol(s, NULL,    10)) return true;
+    if (0 == strncasecmp(s, "0",     sz)) return false;
+
+    if (0 == strncasecmp(s, "true",  sz)) return true;
+    if (0 == strncasecmp(s, "false", sz)) return false;
+
+    if (0 == strncasecmp(s, "on",    sz)) return true;
+    if (0 == strncasecmp(s, "off",   sz)) return false;
+
+    if (0 == strncasecmp(s, "yes",   sz)) return true;
+    if (0 == strncasecmp(s, "no",    sz)) return false;
+
+    return false;
 }
 
-void txml::parser::setValue(int32_t& var)
+void coda::txml_parser::setValue(std::string& var) { var = current_value; }
+void coda::txml_parser::setValue(       bool& var) { var = strtobool (current_value.c_str(), current_value.size()); }
+void coda::txml_parser::setValue(    int32_t& var) { var = strtol    (current_value.c_str(), NULL, 10); }
+void coda::txml_parser::setValue(   uint32_t& var) { var = strtoul   (current_value.c_str(), NULL, 10); }
+void coda::txml_parser::setValue(    int64_t& var) { var = strtoll   (current_value.c_str(), NULL, 10); }
+void coda::txml_parser::setValue(   uint64_t& var) { var = strtoull  (current_value.c_str(), NULL, 10); }
+void coda::txml_parser::setValue(    uint8_t& var) { var = strtoul   (current_value.c_str(), NULL, 10); }
+void coda::txml_parser::setValue(      float& var) { var = strtof    (current_value.c_str(), NULL    ); }
+void coda::txml_parser::setValue(     double& var) { var = strtod    (current_value.c_str(), NULL    ); }
+void coda::txml_parser::setValue(long double& var) { var = strtold   (current_value.c_str(), NULL    ); }
+
+void coda::txml_parser::characters(const char* szChars, unsigned int iLength)
 {
-	var = atoi(current_value.c_str());
+    current_value.append(szChars, iLength);
 }
 
-void txml::parser::setValue(u_int32_t& var)
+void coda::txml_parser::begelement(const char* szName, const char** pszAttributes)
 {
-	var = atoi(current_value.c_str());
+    levels.push_back(szName);
+
+    for (int i = 0; pszAttributes[i] && pszAttributes[i + 1]; i += 2)
+    {
+        levels.push_back(pszAttributes[i]);
+        current_value = pszAttributes[i + 1];
+        determine();
+        levels.pop_back();
+    }
+
+    /* 2006-02-02 bugfix for list & vector */
+    levels.push_back("");
+    current_value.clear();
+    determine();
+    levels.pop_back();
+    /* end of bugfix */
+
+	/* current_value.clear(); */
 }
 
-void txml::parser::setValue(u_int64_t& var)
+void coda::txml_parser::endelement(const char*)
 {
-	var = atoll(current_value.c_str());
+    determine();
+    current_value.clear();
+    levels.pop_back();
 }
 
-void txml::parser::setValue(int64_t& var)
-{
-	var = atoll(current_value.c_str());
-}
-
-void txml::parser::characters(const char* szChars, unsigned int iLength)
-{
-	current_value += std::string(szChars, iLength);
-}
-
-void txml::parser::start_element(const char* szName, const char** pszAttributes)
-{
-	levels.push_back(szName);
-	for (int i = 0; pszAttributes[i] && pszAttributes[i + 1]; i +=2)
-	{
-		levels.push_back(pszAttributes[i]);
-		current_value = pszAttributes[i + 1];
-		determine();
-		levels.pop_back();
-	}
-
-	// 2006-02-02 bugfix for list&vector
-	levels.push_back("");
-	current_value = "";
-	determine();
-	levels.pop_back();
-	// end of bugfix
-
-	current_value.clear();
-}
-
-void txml::parser::end_element(const char* szName)
-{
-	determine();
-	current_value.clear();
-	levels.pop_back();
-}
 

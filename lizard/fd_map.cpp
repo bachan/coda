@@ -1,7 +1,6 @@
 #include "fd_map.hpp"
 #include "utils.hpp"
 
-
 enum {EPOLL_TIMEOUT = 100};
 
 //TODO: min_timeout(): we should calculate next timeout for epoll here but I decided to set it to 10ms manually for now
@@ -48,7 +47,7 @@ bool lizard::fd_map::create(int fd, const in_addr& ip)
 {
     bool ret = true;
 
-    //message(MSG_LIZARD_ID, "fds.create(%d)", fd);
+    //message("fds.create(%d)", fd);
 
     PPvoid_t h = JudyLIns(&map_handle, (Word_t)fd, 0);
 
@@ -71,24 +70,22 @@ bool lizard::fd_map::create(int fd, const in_addr& ip)
         }
     }
 
-    //rdev_ns::log_message_r(MSG_LIZARD_ID, LOG_DEBUG, "fds.create(%d)", fd);
+    /* log_debug("fds.create(%d)", fd); */
 
     return ret;
 }
-//--------------------------------------------------------------------------------------------------------
-lizard::http * lizard::fd_map::acquire(int fd)
+
+lizard::http* lizard::fd_map::acquire(int fd)
 {
-    //rdev_ns::log_message_r(MSG_LIZARD_ID, LOG_DEBUG, "fds.acquire(%d)", fd);
-    //message(MSG_LIZARD_ID, "fds.acquire(%d)", fd);
+	/* log_debug("fds.acquire(%d)", fd); */
 
-
-    http * ret = 0;
+    http* ret = 0;
 
     PPvoid_t h = JudyLGet(map_handle, (Word_t)fd, 0);
 
-    if(h && *h)
+    if (h && *h)
     {
-        container * c = (container*)(*h);
+        container* c = (container*)(*h);
         c->touch_time();
 
         timeouts.reg(fd, lz_utils::fine_clock());
@@ -98,16 +95,15 @@ lizard::http * lizard::fd_map::acquire(int fd)
 
     return ret;
 }
-//--------------------------------------------------------------------------------------------------------
+
 bool lizard::fd_map::release(http * el)
 {
     container * c = static_cast<container*>(el);
 
     if(false == c->is_locked())
     {
-        //rdev_ns::log_message_r(MSG_LIZARD_ID, LOG_DEBUG, "fds.release(%d)", el->get_fd());
-
-        //message(MSG_LIZARD_ID, "fds.release(%d).livetime=%llu", el->get_fd(), (long long unsigned)c->get_lifetime());
+		/* log_debug("fds.release(%d)", el->get_fd()); */
+		/* log_debug("fds.release(%d).livetime=%llu", el->get_fd(), (long long unsigned) c->get_lifetime()); */
         c->destroy();
         elements_pool.free(c);
 
@@ -115,7 +111,7 @@ bool lizard::fd_map::release(http * el)
     }
     else
     {
-        //message(MSG_LIZARD_ID, "fds.release(%d) deferred", el->get_fd());
+        /* log_debug("fds.release(%d) deferred", el->get_fd()); */
         c->destroy();
 
         return false;
@@ -144,8 +140,8 @@ bool lizard::fd_map::del(int fd)
         timeouts.del(fd);
     }
 
-    //rdev_ns::log_message_r(MSG_LIZARD_ID, LOG_DEBUG, "fds.del(%d)", fd);
-    //rdev_ns::log_message_r(MSG_LIZARD_ID, LOG_DEBUG, "===============================================================================");
+    /* log_debug("fds.del(%d)", fd); */
+    /* log_debug("==============================================================================="); */
 
     return ret;
 }
@@ -159,8 +155,7 @@ void lizard::fd_map::kill_oldest(int timeout)
 
     while(timeouts.enumerate(it, obj, time - timeout))
     {
-        //rdev_ns::log_message_r(MSG_LIZARD_ID, LOG_DEBUG, "timeout %d for %d", timeout, obj);
-        //    message(MSG_LIZARD_ID, "timeout %d for %d", timeout, obj);
+        /* log_debug("timeout %d for %d", timeout, obj); */
         del(obj);
     }
 

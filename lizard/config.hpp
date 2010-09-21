@@ -3,17 +3,17 @@
 
 #include <string>
 #include <inttypes.h>
-#include "rdev_logger.h"
-#include "rdev_error.hpp"
-#include "rdev_xmlpa.hpp"
+#include <coda/error.hpp>
+#include <coda/logger.h>
+#include <coda/txml.hpp>
 
 #define SRV_BUF 4096
 
 namespace lizard {
 
-struct lz_config : public rdev_xmlobject
+struct lz_config : public coda::txml_determination_object
 {
-    struct ROOT : public rdev_xmlobject
+    struct ROOT : public coda::txml_determination_object
     {
         std::string pid_file_name;
         std::string log_file_name;
@@ -21,14 +21,14 @@ struct lz_config : public rdev_xmlobject
 
         std::string access_log_file_name;
 
-        struct STATS : public rdev_xmlobject
+        struct STATS : public coda::txml_determination_object
         {
             std::string ip;
             std::string port;
 
             STATS(){}
 
-            void determine(rdev_xmlparser *p)
+            void determine(coda::txml_parser* p)
             {
                 p->determineMember("ip", ip);
                 p->determineMember("port", port);
@@ -45,12 +45,12 @@ struct lz_config : public rdev_xmlobject
                 char curns [SRV_BUF];
                 snprintf(curns, SRV_BUF, "%s:%s", par, ns);
 
-                if (ip  .empty()) throw rdev_error ("<%s:ip> is empty in config", curns);
-                if (port.empty()) throw rdev_error ("<%s:port> is empty in config", curns);
+                if (ip  .empty()) throw coda_error ("<%s:ip> is empty in config", curns);
+                if (port.empty()) throw coda_error ("<%s:port> is empty in config", curns);
             }
         };
 
-        struct PLUGIN : public rdev_xmlobject
+        struct PLUGIN : public coda::txml_determination_object
         {
             std::string ip;
             std::string port;
@@ -68,7 +68,7 @@ struct lz_config : public rdev_xmlobject
 
             PLUGIN() : connection_timeout(0), idle_timeout(0), easy_threads(1), hard_threads(0), easy_queue_limit(0), hard_queue_limit(0){}
 
-            void determine(rdev_xmlparser *p)
+            void determine(coda::txml_parser* p)
             {
                 p->determineMember("ip", ip);
                 p->determineMember("port", port);
@@ -107,19 +107,19 @@ struct lz_config : public rdev_xmlobject
                 char curns [SRV_BUF];
                 snprintf(curns, SRV_BUF, "%s:%s", par, ns);
 
-                if (ip     .empty()) throw rdev_error ("<%s:ip> is empty in config", curns);
-                if (port   .empty()) throw rdev_error ("<%s:port> is empty in config", curns);
-                if (library.empty()) throw rdev_error ("<%s:library> is empty in config", curns);
+                if (ip     .empty()) throw coda_error ("<%s:ip> is empty in config", curns);
+                if (port   .empty()) throw coda_error ("<%s:port> is empty in config", curns);
+                if (library.empty()) throw coda_error ("<%s:library> is empty in config", curns);
 
-                if (0 == connection_timeout) throw rdev_error ("<%s:connection_timeout> is not set or set to 0", curns);
-                if (0 == easy_threads) throw rdev_error ("<%s:easy_threads> is set to 0", curns);
+                if (0 == connection_timeout) throw coda_error ("<%s:connection_timeout> is not set or set to 0", curns);
+                if (0 == easy_threads) throw coda_error ("<%s:easy_threads> is set to 0", curns);
             }
         };
 
         STATS stats;
         PLUGIN plugin;
 
-        void determine(rdev_xmlparser *p)
+        void determine(coda::txml_parser* p)
         {
             p->determineMember("pid_file_name", pid_file_name);
             p->determineMember("log_file_name", log_file_name);
@@ -148,14 +148,14 @@ struct lz_config : public rdev_xmlobject
         {
             const char *curns = "lizard";
 
-            if (log_level.empty()) throw rdev_error ("<%s:log_level> is empty in config", curns);
+            if (log_level.empty()) throw coda_error ("<%s:log_level> is empty in config", curns);
 
             stats .check(curns, "stats");
             plugin.check(curns, "plugin");
         }
     } root;
 
-    void determine(rdev_xmlparser *p)
+    void determine(coda::txml_parser* p)
     {
         p->determineMember("lizard", root);
     }

@@ -13,22 +13,9 @@
 
 namespace lizard
 {
-//-----------------------------------------------------------------
+
 class server
 {
-    class lz_callback : public server_callback
-    {
-        server * lz;
-
-        public:
-            lz_callback();
-            ~lz_callback();
-
-            void init(server * srv);
-            void log_message(plugin_log_levels log_level, const char * param_str, ...);
-	    void vlog_message(plugin_log_levels log_lebel, const char * param_str, va_list ap);
-    };
-
     enum {LISTEN_QUEUE_SZ = 1024};
     enum {HINT_EPOLL_SIZE = 10000};
     enum {EPOLL_EVENTS = 2000};
@@ -50,7 +37,6 @@ class server
     mutable pthread_mutex_t    stats_proc_mutex;
     mutable pthread_cond_t    stats_proc_cond;
 
-
     mutable pthread_mutex_t    done_mutex;
 
     std::deque<http*>    easy_queue;
@@ -62,8 +48,6 @@ class server
     plugin_factory      factory;
 
     lz_config        config;
-
-    lz_callback        srv_callback;
 
     int             incoming_sock;
     int             stats_sock;

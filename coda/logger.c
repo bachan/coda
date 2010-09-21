@@ -5,7 +5,7 @@
 #include <pthread.h>
 #include "logger.h"
 
-volatile int log_level = LOG_INFO;
+volatile int log_level = LOG_info;
 
 int log_levels(const char* level)
 {
@@ -14,24 +14,24 @@ int log_levels(const char* level)
     case 'a': case 'A':
         switch (level[1])
         {
-        case 'c': case 'C': return LOG_ACCESS;
-        case 'l': case 'L': return LOG_ALERT;
+        case 'c': case 'C': return LOG_access;
+        case 'l': case 'L': return LOG_alert;
         }
         break;
-    case 'c': case 'C': return LOG_CRIT;
+    case 'c': case 'C': return LOG_crit;
     case 'e': case 'E':
         switch (level[1])
         {
-        case 'm': case 'M': return LOG_EMERG;
-        case 'r': case 'R': return LOG_ERROR;
+        case 'm': case 'M': return LOG_emerg;
+        case 'r': case 'R': return LOG_error;
         }
         break;
-    case 'i': case 'I': return LOG_INFO;
-    case 'n': case 'N': return LOG_NOTICE;
-    case 'w': case 'W': return LOG_WARN;
+    case 'i': case 'I': return LOG_info;
+    case 'n': case 'N': return LOG_notice;
+    case 'w': case 'W': return LOG_warn;
     }
 
-    return LOG_INFO; /* default */
+    return LOG_info; /* default */
 }
 
 int log_create(const char* path, int level)

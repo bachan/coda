@@ -156,13 +156,9 @@ inline void mem_chunk<data_size>::print()
     {
         char u[1024];
         memset(u, 0, 1024);
-
         memcpy(u, cur_page->page, cur_page->sz);
-
-        rdev_log_debug(lizard::MSG_LIZARD_ID, "mem_chunk[#%d](mr:%d,sz:%d)'%s'", ch_n, cur_page->current, cur_page->sz, u);
-
+        /* log_debug("mem_chunk[#%d](mr:%d,sz:%d)'%s'", ch_n, cur_page->current, cur_page->sz, u); */
         cur_page = cur_page->next;
-
         ch_n++;
     }
 }
@@ -187,59 +183,45 @@ inline bool mem_chunk<data_size>::write_to_fd(int fd, bool& can_write, bool& wan
             ssize_t    wr = write(fd, cur_page->page + cur_page->current, to_write);
             if(-1 == wr)
             {
-            //rdev_log_debug(lizard::MSG_LIZARD_ID, "process/read error: '%s'", print_errno().c_str());
+				/* log_debug("process/read error: '%s'", print_errno().c_str()); */
 
                 switch(errno)
                 {
                 case EPIPE:
-                    wreof = true;
-
+					wreof = true;
                 case EAGAIN:
-                                    can_write = false;
-
-                                        return false;
-
+					can_write = false;
+					return false;
                 case EINTR:
-                    rdev_log_debug(lizard::MSG_LIZARD_ID, "chunk/write: EINTR");
+                    /* log_debug("chunk/write: EINTR"); */
                     break;
-
                 default:
-                    {
-                        char buff[1024];
-                        rdev_log_error(lizard::MSG_LIZARD_ID, "chunk/write error: %s", strerror_r(errno, buff, 1024));
-
-                        can_write = false;
-                    }
-                    break;
+					log_err(errno, "chunk/write error");
+                    can_write = false;
+					break;
                 }
             }
             else if(wr)
             {
                 iswr = true;
-
                 cur_page->current += wr;
-
                 if(wr < to_write)
                 {
                     can_write = false;
-
                     return iswr;
                 }
             }
             else
             {
-                rdev_log_debug(lizard::MSG_LIZARD_ID, "chunk/write: got EOF");
-
+                /* log_debug("chunk/write: got EOF"); */
                 can_write = false;
                 wreof = true;
-
                 return false;
             }
         }
         else
         {
             want_write = false;
-
             return iswr;
         }
 
@@ -274,7 +256,7 @@ inline bool mem_chunk<data_size>::read_from_fd(int fd, bool& can_read, bool& wan
             ssize_t    rd = read(fd, cur_page->page + cur_page->get_data_size(), to_read);
             if(-1 == rd)
             {
-            //rdev_log_debug(lizard::MSG_LIZARD_ID, "process/read error: '%s'", print_errno().c_str());
+            /* log_debug("process/read error: '%s'", print_errno().c_str()); */
                 if(EAGAIN == errno)
                 {
                     can_read = false;
@@ -283,16 +265,13 @@ inline bool mem_chunk<data_size>::read_from_fd(int fd, bool& can_read, bool& wan
                 }
                 else if(EINTR != errno)
                 {
-                    char buff[1024];
-                    rdev_log_error(lizard::MSG_LIZARD_ID, "chunk/read error: %s", strerror_r(errno, buff, 1024));
-
+					log_err(errno, "chunk/read error");
                     can_read = false;
-
                     return true;
                 }
                 else
                 {
-                    rdev_log_debug(lizard::MSG_LIZARD_ID, "chunk/read: EINTR");
+                    log_debug("chunk/read: EINTR");
                 }
             }
             else if(rd)
@@ -310,8 +289,7 @@ inline bool mem_chunk<data_size>::read_from_fd(int fd, bool& can_read, bool& wan
             }
             else
             {
-                rdev_log_debug(lizard::MSG_LIZARD_ID, "chunk/read: got EOF");
-
+                log_debug("chunk/read: got EOF");
                 can_read = false;
                 rdeof = true;
 
@@ -409,11 +387,14 @@ inline void mem_block::print()
 {
     enum {SZZ = 65536};
     char u[SZZ];
-    memset(u, 0, SZZ);
 
+	memset(u, 0, SZZ);
     memcpy(u, page, page_sz);
 
-    rdev_log_debug(lizard::MSG_LIZARD_ID, "mem_block(mr:%d,sz:%d,cap:%d)'%s'", (int)current, (int)page_sz, (int)page_capacity, u);
+    log_debug("mem_block(mr:%d,sz:%d,cap:%d)'%s'",
+		(int) current,
+		(int) page_sz,
+		(int) page_capacity, u);
 }
 
 inline size_t mem_block::append_data(const void * data, size_t data_sz)
@@ -435,30 +416,22 @@ inline bool mem_block::write_to_fd(int fd, bool& can_write, bool& want_write, bo
             ssize_t    wr = write(fd, page + current, to_write);
             if(-1 == wr)
             {
-            //rdev_log_debug(lizard::MSG_LIZARD_ID, "process/read error: '%s'", print_errno().c_str());
+				/* log_debug("process/read error: '%s'", print_errno().c_str()); */
+
                 switch(errno)
                 {
                 case EPIPE:
                     wreof = true;
-
                 case EAGAIN:
                     can_write = false;
-
-                                        return false;
-
-                       case EINTR:
-                    rdev_log_debug(lizard::MSG_LIZARD_ID, "block/write: EINTR");
+                    return false;
+				case EINTR:
+                    log_debug("block/write: EINTR");
                     break;
-
                 default:
-                                    {
-                        char buff[1024];
-                        rdev_log_error(lizard::MSG_LIZARD_ID, "block/write error: %s", strerror_r(errno, buff, 1024));
-
-                                            can_write = false;
-
-                    }
-                                        break;
+					log_err(errno, "block/write error");
+                    can_write = false;
+                    break;
                 }
             }
             else if(wr)
@@ -479,18 +452,15 @@ inline bool mem_block::write_to_fd(int fd, bool& can_write, bool& want_write, bo
             }
             else
             {
-                rdev_log_debug(lizard::MSG_LIZARD_ID, "block/write: got EOF");
-
+                /* log_debug("block/write: got EOF"); */
                 can_write = false;
                 wreof = true;
-
                 return false;
             }
         }
         else
         {
             want_write = false;
-
             return false;
         }
     }
@@ -514,16 +484,13 @@ inline bool mem_block::read_from_fd(int fd, bool& can_read, bool& want_read, boo
                 }
                 else if(EINTR != errno)
                 {
-                    char buff[1024];
-                    rdev_log_error(lizard::MSG_LIZARD_ID, "block/read error: %s", strerror_r(errno, buff, 1024));
-
+					log_err(errno, "block/read error");
                     can_read = false;
-
                     return false;
                 }
                 else
                 {
-                    rdev_log_debug(lizard::MSG_LIZARD_ID, "block/read: EINTR");
+                    log_debug("block/read: EINTR");
                 }
             }
             else if(rd)
@@ -543,7 +510,7 @@ inline bool mem_block::read_from_fd(int fd, bool& can_read, bool& want_read, boo
             }
             else
             {
-                rdev_log_debug(lizard::MSG_LIZARD_ID, "block/read: got EOF");
+                /* log_debug("block/read: got EOF"); */
 
                 can_read = false;
                 rdeof = true;

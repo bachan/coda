@@ -7,25 +7,24 @@
 
 namespace lizard
 {
-//-------------------------------------------------------------------------
+
 class plugin_factory
 {
-    void * loaded_module;
-
-    lizard::plugin * plugin_handle;
+    void* loaded_module;
+    lizard::plugin* plugin_handle;
 
 public:
-
     plugin_factory();
     ~plugin_factory();
 
-    void load_module(const lizard::lz_config::ROOT::PLUGIN& pd, server_callback * srv);
+    void load_module(const lizard::lz_config::ROOT::PLUGIN& pd);
     void unload_module();
 
-    lizard::plugin * get_plugin()const;
+    lizard::plugin* get_plugin() const;
 
     void idle();
 };
-//-------------------------------------------------------------------------
+
 }
+
 #endif

@@ -8,36 +8,46 @@
 extern "C" {
 #endif
 
-#define LOG_ACCESS  0  /* ACC: special level for access log      */
-#define LOG_EMERG   1  /* EME: system is unusable                */
-#define LOG_ALERT   2  /* ALE: action must be taken immediately  */
-#define LOG_CRIT    3  /* CRI: critical conditions               */
-#define LOG_ERROR   4  /* ERR: error conditions                  */
-#define LOG_WARN    5  /* WRN: warning conditions                */
-#define LOG_NOTICE  6  /* NOT: normal, but significant condition */
-#define LOG_INFO    7  /* NFO: informational message             */
+#define LOG_access  0  /* ACC: special level for access log      */
+#define LOG_emerg   1  /* EME: system is unusable                */
+#define LOG_alert   2  /* ALE: action must be taken immediately  */
+#define LOG_crit    3  /* CRI: critical conditions               */
+#define LOG_error   4  /* ERR: error conditions                  */
+#define LOG_warn    5  /* WRN: warning conditions                */
+#define LOG_notice  6  /* NOT: normal, but significant condition */
+#define LOG_info    7  /* NFO: informational message             */
 
-#define log_access(fmt,...) log_format(STDERR_FILENO,LOG_ACCESS,"[access]",fmt,##__VA_ARGS__)
-#define log_emerg( fmt,...) log_format(STDERR_FILENO,LOG_EMERG, " [emerg]",fmt,##__VA_ARGS__)
-#define log_alert( fmt,...) log_format(STDERR_FILENO,LOG_ALERT, " [alert]",fmt,##__VA_ARGS__)
-#define log_crit(  fmt,...) log_format(STDERR_FILENO,LOG_CRIT,  "  [crit]",fmt,##__VA_ARGS__)
-#define log_error( fmt,...) log_format(STDERR_FILENO,LOG_ERROR, " [error]",fmt,##__VA_ARGS__)
-#define log_warn(  fmt,...) log_format(STDERR_FILENO,LOG_WARN,  "  [warn]",fmt,##__VA_ARGS__)
-#define log_notice(fmt,...) log_format(STDERR_FILENO,LOG_NOTICE,"[notice]",fmt,##__VA_ARGS__)
-#define log_info(  fmt,...) log_format(STDERR_FILENO,LOG_INFO,  "  [info]",fmt,##__VA_ARGS__)
+#define log_msg(lev,fmt,...) log_fmt(STDERR_FILENO,LOG_##lev,#lev,fmt,##__VA_ARGS__)
+#define log_err(err,fmt,...) log_msg(error,fmt " (%d: %s)\n", ##__VA_ARGS__, err, coda_strerror(err))
+#define log_ret(err,fmt,...) log_msg(error,fmt " (%d: %s)\n", ##__VA_ARGS__, err, coda_strerror(err)), err
+#define log_die(err,fmt,...) log_msg(emerg,fmt " (%d: %s)\n", ##__VA_ARGS__, err, coda_strerror(err)); exit(EXIT_FAILURE)
 
-#define LOG_FORMAT(lvstr,tname,fmt) "%04u/%02u/%02u/%02u:%02u:%02u "lvstr" "tname" "fmt"\n"
+#define log_access( fmt,...) log_msg(access,fmt,##__VA_ARGS__)
+#define log_emerg(  fmt,...) log_msg(emerg, fmt,##__VA_ARGS__)
+#define log_alert(  fmt,...) log_msg(alert, fmt,##__VA_ARGS__)
+#define log_crit(   fmt,...) log_msg(crit,  fmt,##__VA_ARGS__)
+#define log_error(  fmt,...) log_msg(error, fmt,##__VA_ARGS__)
+#define log_warn(   fmt,...) log_msg(warn,  fmt,##__VA_ARGS__)
+#define log_notice( fmt,...) log_msg(notice,fmt,##__VA_ARGS__)
+#define log_info(   fmt,...) log_msg(info,  fmt,##__VA_ARGS__)
+#ifndef NDEBUG
+#define log_debug(  fmt,...) log_msg(debug, fmt,##__VA_ARGS__)
+#else
+#define log_debug(  fmt,...) /* nothing here */
+#endif /* NDEBUG */
+
+#define LOG_FORMAT(lvstr,tname,fmt) "%04u-%02u-%02u.%02u:%02u:%02u\t"lvstr"\t"tname"\t"fmt"\n"
 #define LOG_VALUES(tmgmt,tname,...) tmgmt.tm_year, tmgmt.tm_mon, tmgmt.tm_mday, \
     tmgmt.tm_hour, tmgmt.tm_min, tmgmt.tm_sec, tname, ##__VA_ARGS__
 
-#define log_format(fd,level,lvstr,fmt,...) do {                             \
+#define log_fmt(fd,level,lvstr,fmt,...) do {								\
                                                                             \
     if (level <= log_level)                                                 \
     {                                                                       \
         struct tm tmgmt;                                                    \
         const char* tname;                                                  \
                                                                             \
-        rdv_gmtime(time(NULL), &tmgmt);                                     \
+        coda_gmtime(time(NULL), &tmgmt);                                    \
                                                                             \
         if (NULL != (tname = log_thread_name_get()))                        \
         {                                                                   \
@@ -46,7 +56,7 @@ extern "C" {
         }                                                                   \
         else                                                                \
         {                                                                   \
-            dprintf(fd, LOG_FORMAT(lvstr,"%u:",fmt),                        \
+            dprintf(fd, LOG_FORMAT(lvstr,"%lu:",fmt),                       \
                         LOG_VALUES(tmgmt,pthread_self(),##__VA_ARGS__));    \
         }                                                                   \
     }                                                                       \
@@ -67,4 +77,3 @@ const char* log_thread_name_get();
 #endif
 
 #endif /* __CODA_LOGGER_H__ */
-

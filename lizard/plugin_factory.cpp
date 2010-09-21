@@ -11,7 +11,7 @@ lizard::plugin_factory::~plugin_factory()
     unload_module();
 }
 
-void lizard::plugin_factory::load_module(const lizard::lz_config::ROOT::PLUGIN& pd, server_callback * srv)
+void lizard::plugin_factory::load_module(const lizard::lz_config::ROOT::PLUGIN& pd)
 {
     if(0 == pd.easy_threads)
     {
@@ -39,12 +39,12 @@ void lizard::plugin_factory::load_module(const lizard::lz_config::ROOT::PLUGIN& 
     //------------------ UGLY evil hack -----------------
     union conv_union
     {
-        void * v;
-        lizard::plugin * (*f)(lizard::server_callback*);
+        void* v;
+        lizard::plugin* (*f)();
     } conv;
 
     conv.v = dlsym(loaded_module, "get_plugin_instance");
-    lizard::plugin * (*func)(lizard::server_callback*) = conv.f;
+    lizard::plugin* (*func)() = conv.f;
     //---------------------------------------------------
 
     const char * errmsg = dlerror();
@@ -56,7 +56,7 @@ void lizard::plugin_factory::load_module(const lizard::lz_config::ROOT::PLUGIN& 
         throw std::logic_error(buff);
     }
 
-    plugin_handle = (*func)(srv);
+    plugin_handle = (*func)();
 
     if(0 == plugin_handle)
     {

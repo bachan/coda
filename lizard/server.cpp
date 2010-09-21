@@ -12,11 +12,8 @@
 #include <stdexcept>
 #include "server.hpp"
 
-#define MSG_LIZARD_ACCESS_LOG_ID 6548
-
 lizard::statistics stats;
 
-//-----------------------------------------------------------------------------------------------------------
 inline std::string events2string(int events)
 {
     std::string rep;
@@ -120,6 +117,7 @@ namespace lizard
     void * idle_loop_function(void * ptr);
 }
 
+#if 0
 //-----------------------------------------------------------------------------------------------------------
 
 lizard::server::lz_callback::lz_callback() : lz(0)
@@ -145,15 +143,16 @@ void lizard::server::lz_callback::log_message(plugin_log_levels log_level, const
 
     char lstr [4097];
     vsnprintf(lstr, 4096, fmt, ap);
-    rdev_log_message(MSG_LIZARD_ID, log_level, "PLG: %s", lstr);
+    log_msg(log_level, "PLG: %s", lstr);
 }
 
 void lizard::server::lz_callback::vlog_message(plugin_log_levels log_level, const char * fmt, va_list ap)
 {
     char lstr [4097];
     vsnprintf(lstr, 4096, fmt, ap);
-    rdev_log_message(MSG_LIZARD_ID, log_level, "PLG: %s", lstr);
+    log_message(log_level, "PLG: %s", lstr);
 }
+#endif
 
 //-----------------------------------------------------------------------------------------------------------
 
@@ -180,7 +179,7 @@ lizard::server::server() :    incoming_sock(-1),
 
 lizard::server::~server()
 {
-    rdev_log_debug(MSG_LIZARD_ID, "~server()");
+    log_debug("~server()");
 
     quit = 1;
     join_threads();
@@ -199,7 +198,7 @@ lizard::server::~server()
 
     pthread_mutex_destroy(&done_mutex);
 
-    rdev_log_debug(MSG_LIZARD_ID, "/~server()");
+    log_debug("/~server()");
 }
 
 //-----------------------------------------------------------------------------------------------------------
@@ -208,7 +207,7 @@ void lizard::server::init_threads()
 {
     if(0 == pthread_create(&epoll_th, NULL, &epoll_loop_function, this))
     {
-        rdev_log_debug(MSG_LIZARD_ID, "epoll thread created");
+        log_debug("epoll thread created");
         threads_num++;
     }
     else
@@ -219,7 +218,7 @@ void lizard::server::init_threads()
     if(0 == pthread_create(&idle_th, NULL, &idle_loop_function, this))
     {
         threads_num++;
-        rdev_log_debug(MSG_LIZARD_ID, "idle thread created");
+        log_debug("idle thread created");
     }
     else
     {
@@ -229,15 +228,15 @@ void lizard::server::init_threads()
     if(0 == pthread_create(&stats_th, NULL, &stats_loop_function, this))
     {
         threads_num++;
-        rdev_log_debug(MSG_LIZARD_ID, "stats thread created");
+        log_debug("stats thread created");
     }
     else
     {
         throw std::logic_error("error creating stats thread");
     }
-    rdev_log_info(MSG_LIZARD_ID, "%d internal threads created", threads_num);
+    log_info("%d internal threads created", threads_num);
 
-    rdev_log_info(MSG_LIZARD_ID, "requested worker threads {easy: %d, hard: %d}", config.root.plugin.easy_threads, config.root.plugin.hard_threads);
+    log_info("requested worker threads {easy: %d, hard: %d}", config.root.plugin.easy_threads, config.root.plugin.hard_threads);
 
     for(int i = 0; i < config.root.plugin.easy_threads; i++)
     {
@@ -245,7 +244,7 @@ void lizard::server::init_threads()
         int r = pthread_create(&th, NULL, &easy_loop_function, this);
         if(0 == r)
         {
-            rdev_log_debug(MSG_LIZARD_ID, "easy thread created");
+            log_debug("easy thread created");
             easy_th.push_back(th);
 
             threads_num++;
@@ -265,7 +264,7 @@ void lizard::server::init_threads()
         int r = pthread_create(&th, NULL, &hard_loop_function, this);
         if(0 == r)
         {
-            rdev_log_debug(MSG_LIZARD_ID, "hard thread created");
+            log_debug("hard thread created");
             hard_th.push_back(th);
 
             threads_num++;
@@ -279,7 +278,7 @@ void lizard::server::init_threads()
         }
     }
 
-    rdev_log_info(MSG_LIZARD_ID, "all worker threads created");
+    log_info("all worker threads created");
 }
 
 void lizard::server::join_threads()
@@ -300,7 +299,7 @@ void lizard::server::join_threads()
 
     for(size_t i = 0; i < easy_th.size(); i++)
     {
-        rdev_log_debug(MSG_LIZARD_ID, "pthread_join(easy_th[%d], 0)", (int)i);
+        log_debug("pthread_join(easy_th[%d], 0)", (int)i);
         pthread_join(easy_th[i], 0);
         threads_num--;
     }
@@ -309,14 +308,14 @@ void lizard::server::join_threads()
 
     for(size_t i = 0; i < hard_th.size(); i++)
     {
-        rdev_log_debug(MSG_LIZARD_ID, "pthread_join(hard_th[%d], 0)", (int)i);
+        log_debug("pthread_join(hard_th[%d], 0)", (int)i);
         pthread_join(hard_th[i], 0);
         threads_num--;
     }
 
     hard_th.clear();
 
-    rdev_log_debug(MSG_LIZARD_ID, "%d threads left", (int)threads_num);
+    log_debug("%d threads left", (int)threads_num);
 }
 
 void lizard::server::fire_all_threads()
@@ -329,12 +328,12 @@ void lizard::server::fire_all_threads()
     pthread_cond_broadcast(&hard_proc_cond);
     pthread_mutex_unlock(&hard_proc_mutex);
 
-    rdev_log_debug(MSG_LIZARD_ID, "fire_all_threads");
+    log_debug("fire_all_threads");
 }
 
 void lizard::server::epoll_send_wakeup()
 {
-    rdev_log_debug(MSG_LIZARD_ID, "epoll_send_wakeup()");
+    log_debug("epoll_send_wakeup()");
     char b[1] = {'w'};
 
     int ret;
@@ -344,7 +343,7 @@ void lizard::server::epoll_send_wakeup()
         if(ret < 0 && errno != EINTR)
         {
             char buff[1024];
-            rdev_log_error(MSG_LIZARD_ID, "epoll_send_wakeup():write failure: '%s'", strerror_r(errno, buff, 1024));
+            log_error("epoll_send_wakeup():write failure: '%s'", strerror_r(errno, buff, 1024));
         }
     }
     while(ret < 0);
@@ -352,7 +351,7 @@ void lizard::server::epoll_send_wakeup()
 
 void lizard::server::epoll_recv_wakeup()
 {
-    rdev_log_debug(MSG_LIZARD_ID, "epoll_recv_wakeup()");
+    log_debug("epoll_recv_wakeup()");
     char b[1024];
 
     int ret;
@@ -362,7 +361,7 @@ void lizard::server::epoll_recv_wakeup()
         if(ret < 0 && errno != EAGAIN && errno != EINTR)
         {
             char buff[1024];
-            rdev_log_error(MSG_LIZARD_ID, "epoll_recv_wakeup()::read failure: '%s'", strerror_r(errno, buff, 1024));
+            log_error("epoll_recv_wakeup()::read failure: '%s'", strerror_r(errno, buff, 1024));
         }
     }
     while(ret == 1024 || errno == EINTR);
@@ -382,7 +381,7 @@ bool lizard::server::push_easy(http * el)
         easy_queue.push_back(el);
         res = true;
 
-        rdev_log_debug(MSG_LIZARD_ID, "push_easy %d", el->get_fd());
+        log_debug("push_easy %d", el->get_fd());
 
         pthread_cond_signal(&easy_proc_cond);
     }
@@ -406,7 +405,7 @@ bool lizard::server::pop_easy_or_wait(http** el)
     {
         *el = easy_queue.front();
 
-        rdev_log_debug(MSG_LIZARD_ID, "pop_easy %d", (*el)->get_fd());
+        log_debug("pop_easy %d", (*el)->get_fd());
 
         easy_queue.pop_front();
 
@@ -414,7 +413,7 @@ bool lizard::server::pop_easy_or_wait(http** el)
     }
     else
     {
-        rdev_log_debug(MSG_LIZARD_ID, "pop_easy : events empty");
+        log_debug("pop_easy : events empty");
 
         pthread_cond_wait(&easy_proc_cond, &easy_proc_mutex);
     }
@@ -440,7 +439,7 @@ bool lizard::server::push_hard(http * el)
 
         res = true;
 
-        rdev_log_debug(MSG_LIZARD_ID, "push_hard %d", el->get_fd());
+        log_debug("push_hard %d", el->get_fd());
 
         pthread_cond_signal(&hard_proc_cond);
     }
@@ -464,7 +463,7 @@ bool lizard::server::pop_hard_or_wait(http** el)
     {
         *el = hard_queue.front();
 
-        rdev_log_debug(MSG_LIZARD_ID, "pop_hard %d", (*el)->get_fd());
+        log_debug("pop_hard %d", (*el)->get_fd());
 
         hard_queue.pop_front();
 
@@ -472,7 +471,7 @@ bool lizard::server::pop_hard_or_wait(http** el)
     }
     else
     {
-        rdev_log_debug(MSG_LIZARD_ID, "pop_hard : events empty");
+        log_debug("pop_hard : events empty");
 
         pthread_cond_wait(&hard_proc_cond, &hard_proc_mutex);
     }
@@ -489,7 +488,7 @@ bool lizard::server::push_done(http * el)
 
     stats.report_done_queue_len(done_queue.size());
 
-    rdev_log_debug(MSG_LIZARD_ID, "push_done %d", el->get_fd());
+    log_debug("push_done %d", el->get_fd());
 
     pthread_mutex_unlock(&done_mutex);
 
@@ -512,7 +511,7 @@ bool lizard::server::pop_done(http** el)
     {
         *el = done_queue.front();
 
-        rdev_log_debug(MSG_LIZARD_ID, "pop_done %d", (*el)->get_fd());
+        log_debug("pop_done %d", (*el)->get_fd());
 
         done_queue.pop_front();
 
@@ -547,22 +546,29 @@ void lizard::server::load_config(const char *xml_in, std::string &pid_in)
         pid_in = config.root.pid_file_name;
     }
 
-    rdev_log_close(MSG_LIZARD_ID);
+    /* log_close(MSG_LIZARD_ID); */
+    /* int res = log_sstr(MSG_LIZARD_ID, */
+                         /* config.root.log_file_name.c_str(), */
+                           /* config.root.log_level.c_str()); */
+    /* if(res < 0) */
+    /* { */
+        /* std::string s = "logger init from ('" + config.root.log_file_name + "','" + config.root.log_level + "') failed: "; */
+        /* char buff[1024]; */
+        /* s += strerror_r(errno, buff, 1024); */
+        /* throw std::logic_error(s); */
+    /* } */
 
-    int res = rdev_log_sstr(MSG_LIZARD_ID,
-                         config.root.log_file_name.c_str(),
-                           config.root.log_level.c_str());
-    if(res < 0)
-    {
-        std::string s = "logger init from ('" + config.root.log_file_name + "','" + config.root.log_level + "') failed: ";
-        char buff[1024];
+	int res;
+	
+	if (0 > (res = log_create_from_str(config.root.log_file_name.c_str(), config.root.log_level.c_str())))
+	{
+		throw coda_errno (errno, "logger init from (%s, %s) failed",
+			config.root.log_file_name.c_str(),
+			config.root.log_level.c_str());
+	}
 
-        s += strerror_r(errno, buff, 1024);
-        
-        throw std::logic_error(s);
-    }
-
-    rdev_log_close(MSG_LIZARD_ACCESS_LOG_ID);
+#if 0
+    log_close(MSG_LIZARD_ACCESS_LOG_ID);
 
     if(!config.root.access_log_file_name.empty())
     {
@@ -574,7 +580,7 @@ void lizard::server::load_config(const char *xml_in, std::string &pid_in)
          * 
          */
 
-        int r = rdev_log_sacc(MSG_LIZARD_ACCESS_LOG_ID,
+        int r = log_sacc(MSG_LIZARD_ACCESS_LOG_ID,
                         config.root.access_log_file_name.c_str());
 
         if(r < 0)
@@ -586,14 +592,12 @@ void lizard::server::load_config(const char *xml_in, std::string &pid_in)
             throw std::logic_error(s);
         }
     }
+#endif
 }
 
 void lizard::server::prepare()
 {
-    srv_callback.init(this);
-
-    factory.load_module(config.root.plugin, &srv_callback);
-
+    factory.load_module(config.root.plugin);
     epoll_sock = init_epoll();
 
     //----------------------------
@@ -602,7 +606,7 @@ void lizard::server::prepare()
      incoming_sock = lz_utils::add_listener(config.root.plugin.ip.c_str(), config.root.plugin.port.c_str(), LISTEN_QUEUE_SZ);
         if(-1 != incoming_sock)
     {
-            rdev_log_info(MSG_LIZARD_ID, "lizard is bound to %s:%s", config.root.plugin.ip.c_str(), config.root.plugin.port.c_str());
+            log_info("lizard is bound to %s:%s", config.root.plugin.ip.c_str(), config.root.plugin.port.c_str());
     }
 
     lz_utils::set_nonblocking(incoming_sock);
@@ -614,7 +618,7 @@ void lizard::server::prepare()
     stats_sock = lz_utils::add_listener(config.root.stats.ip.c_str(), config.root.stats.port.c_str());
     if(-1 != stats_sock)
     {
-        rdev_log_info(MSG_LIZARD_ID, "lizard statistics is bound to %s:%s", config.root.stats.ip.c_str(), config.root.stats.port.c_str());
+        log_info("lizard statistics is bound to %s:%s", config.root.stats.ip.c_str(), config.root.stats.port.c_str());
     }
 
     lz_utils::set_socket_timeout(stats_sock, 50000);
@@ -676,7 +680,7 @@ void lizard::server::finalize()
 
 int lizard::server::init_epoll()
 {
-    rdev_log_debug(MSG_LIZARD_ID, "init_epoll");
+    log_debug("init_epoll");
 
     int res = epoll_create(HINT_EPOLL_SIZE);
     if(-1 == res)
@@ -685,14 +689,14 @@ int lizard::server::init_epoll()
         throw std::logic_error((std::string)"epoll_create : " + strerror_r(errno, buff, 1024));
     }
 
-    rdev_log_debug(MSG_LIZARD_ID, "epoll inited: %d", res);
+    log_debug("epoll inited: %d", res);
 
     return res;
 }
 
 void lizard::server::add_epoll_action(int fd, int action, uint32_t mask)
 {
-    rdev_log_debug(MSG_LIZARD_ID, "add_epoll_action %d", fd);
+    log_debug("add_epoll_action %d", fd);
 
     struct epoll_event evt;
     memset(&evt, 0, sizeof(evt));
@@ -740,12 +744,12 @@ void lizard::server::epoll_processing_loop()
 
         if(-1 != done_task->get_fd())
         {
-            rdev_log_debug(MSG_LIZARD_ID, "%d is still alive", done_task->get_fd());
+            log_debug("%d is still alive", done_task->get_fd());
             process(done_task);
         }
         else
         {
-            rdev_log_debug(MSG_LIZARD_ID, "%d is already dead while travelling through queues", done_task->get_fd());
+            log_debug("%d is already dead while travelling through queues", done_task->get_fd());
             fds.release(done_task);
         }
     }
@@ -767,14 +771,14 @@ void lizard::server::epoll_processing_loop()
     {
         if(nfds > 1)
         {
-            rdev_log_debug(MSG_LIZARD_ID, "==  epoll_processing %d messages ==", nfds);
+            log_debug("==  epoll_processing %d messages ==", nfds);
         }
         else
         {
-            rdev_log_debug(MSG_LIZARD_ID, "==  epoll_processing 1 message ==");
+            log_debug("==  epoll_processing 1 message ==");
         }
 
-        //rdev_log_info(MSG_LIZARD_ID, "==  %d messages ==", nfds);
+        //log_info("==  %d messages ==", nfds);
     }
 
     for(int i = 0; i < nfds; i++)
@@ -791,7 +795,7 @@ void lizard::server::epoll_processing_loop()
 
             if(client >= 0)
             {
-                rdev_log_debug(MSG_LIZARD_ID, "accept_new_connection: %d from %s", client, inet_ntoa(ip));
+                log_debug("accept_new_connection: %d from %s", client, inet_ntoa(ip));
 
                 lz_utils::set_nonblocking(client);
 
@@ -801,7 +805,7 @@ void lizard::server::epoll_processing_loop()
                 }
                 else
                 {
-                    rdev_log_error(MSG_LIZARD_ID, "ERROR: fd[%d] is still in list of fds", client);
+                    log_error("ERROR: fd[%d] is still in list of fds", client);
                 }
             }
         }
@@ -815,18 +819,19 @@ void lizard::server::epoll_processing_loop()
 
     stats.process();
 
-    if(rotate)
+    if (rotate)
     {
-        rdev_log_rotate(MSG_LIZARD_ID);
-        rdev_log_rotate(MSG_LIZARD_ACCESS_LOG_ID);
-
+		log_rotate(config.root.log_file_name.c_str());
+#if 0
+        log_rotate(MSG_LIZARD_ACCESS_LOG_ID);
+#endif
         rotate = 0;
     }
 }
 
 bool lizard::server::process_event(const epoll_event& ev)
 {
-    rdev_log_debug(MSG_LIZARD_ID, "query event: %s", events2string(ev).c_str());
+    log_debug("query event: %s", events2string(ev).c_str());
 
     http * con = fds.acquire(ev.data.fd);
 
@@ -834,7 +839,7 @@ bool lizard::server::process_event(const epoll_event& ev)
     {
         if(ev.events & (EPOLLHUP | EPOLLERR))
         {
-            rdev_log_debug(MSG_LIZARD_ID, "closing connection: got HUP/ERR!");
+            log_debug("closing connection: got HUP/ERR!");
             con->set_rdeof();
             con->set_wreof();
 
@@ -855,7 +860,7 @@ bool lizard::server::process_event(const epoll_event& ev)
 
             /*if(ev.events & EPOLLRDHUP)
             {
-                rdev_log_debug(MSG_LIZARD_ID, "push_event: RDHUP!");
+                log_debug("push_event: RDHUP!");
 
                 con->set_rdeof();
             }*/
@@ -865,7 +870,7 @@ bool lizard::server::process_event(const epoll_event& ev)
     }
     else
     {
-        rdev_log_error(MSG_LIZARD_ID, "ERROR: process_event: unregistered fd in epoll set: %d", ev.data.fd);
+        log_error("ERROR: process_event: unregistered fd in epoll set: %d", ev.data.fd);
     }
 
     return true;
@@ -879,28 +884,30 @@ bool lizard::server::process(http * con)
 
         if(con->state() == http::sReadyToHandle)
         {
+#if 0
             if(!config.root.access_log_file_name.empty())
             {
                 /*
                  * bachan :
                  *
-                 * You can use rdev_log_access or rdev_log_message(YOUR_ID, RDEV_LOG_ACCESS, ...).
+                 * You can use log_access or log_message(YOUR_ID, RDEV_LOG_ACCESS, ...).
                  * Using another log levels with log, that was opened as access-log is defined as
                  * incorrect, 'cause I can't see any usability of log-levels in access-log-abstraction.
                  *
                  */
 
-                rdev_log_access(MSG_LIZARD_ACCESS_LOG_ID, "%s|%s?%s|", inet_ntoa(con->get_request_ip()),
+                log_access(MSG_LIZARD_ACCESS_LOG_ID, "%s|%s?%s|", inet_ntoa(con->get_request_ip()),
                     con->get_request_uri_path(), con->get_request_uri_params());
             }
+#endif
 
-            rdev_log_debug(MSG_LIZARD_ID, "push_easy(%d)", con->get_fd());
+            log_debug("push_easy(%d)", con->get_fd());
 
             con->lock();
 
             if(false == push_easy(con))
             {
-                rdev_log_debug(MSG_LIZARD_ID, "easy queue full: easy_queue_size == %d", config.root.plugin.easy_queue_limit);
+                log_debug("easy queue full: easy_queue_size == %d", config.root.plugin.easy_queue_limit);
 
                 con->set_response_status(503);
                 con->set_response_header("Content-type", "text/plain");
@@ -911,7 +918,7 @@ bool lizard::server::process(http * con)
         }
         else if(con->state() == http::sDone || con->state() == http::sUndefined)
         {
-            rdev_log_debug(MSG_LIZARD_ID, "%d is done, closing write side of connection", con->get_fd());
+            log_debug("%d is done, closing write side of connection", con->get_fd());
 
             fds.del(con->get_fd());
         }
@@ -930,13 +937,13 @@ void lizard::server::easy_processing_loop()
 
     if(pop_easy_or_wait(&task))
     {
-        rdev_log_debug(MSG_LIZARD_ID, "lizard::easy_loop_function.fd = %d", task->get_fd());
+        log_debug("lizard::easy_loop_function.fd = %d", task->get_fd());
 
         switch(plugin->handle_easy(task))
         {
         case plugin::rSuccess:
 
-            rdev_log_debug(MSG_LIZARD_ID, "easy_loop: processed %d", task->get_fd());
+            log_debug("easy_loop: processed %d", task->get_fd());
 
             push_done(task);
 
@@ -944,14 +951,14 @@ void lizard::server::easy_processing_loop()
 
         case plugin::rHard:
 
-            rdev_log_debug(MSG_LIZARD_ID, "easy thread -> hard thread");
+            log_debug("easy thread -> hard thread");
 
             if(config.root.plugin.hard_threads)
             {
                 bool ret = push_hard(task);
                 if(false == ret)
                 {
-                    rdev_log_debug(MSG_LIZARD_ID, "hard queue full: hard_queue_size == %d", config.root.plugin.hard_queue_limit);
+                    log_debug("hard queue full: hard_queue_size == %d", config.root.plugin.hard_queue_limit);
 
                     task->set_response_status(503);
                     task->set_response_header("Content-type", "text/plain");
@@ -962,7 +969,7 @@ void lizard::server::easy_processing_loop()
             }
             else
             {
-                rdev_log_error(MSG_LIZARD_ID, "easy-thread tried to enqueue hard-thread, but config::plugin::hard_threads = 0");
+                log_error("easy-thread tried to enqueue hard-thread, but config::plugin::hard_threads = 0");
 
                 task->set_response_status(503);
                 task->set_response_header("Content-type", "text/plain");
@@ -975,7 +982,7 @@ void lizard::server::easy_processing_loop()
 
         case plugin::rError:
 
-            rdev_log_error(MSG_LIZARD_ID, "easy thread reports error");
+            log_error("easy thread reports error");
 
             task->set_response_status(503);
             task->set_response_header("Content-type", "text/plain");
@@ -1001,13 +1008,13 @@ void lizard::server::hard_processing_loop()
     if(pop_hard_or_wait(&task))
     {
 
-        rdev_log_debug(MSG_LIZARD_ID, "lizard::hard_loop_function.fd = %d", task->get_fd());
+        log_debug("lizard::hard_loop_function.fd = %d", task->get_fd());
 
         switch(plugin->handle_hard(task))
         {
         case plugin::rSuccess:
 
-            rdev_log_debug(MSG_LIZARD_ID, "hard_loop: processed %d", task->get_fd());
+            log_debug("hard_loop: processed %d", task->get_fd());
 
             push_done(task);
 
@@ -1016,7 +1023,7 @@ void lizard::server::hard_processing_loop()
         case plugin::rHard:
         case plugin::rError:
 
-            rdev_log_error(MSG_LIZARD_ID, "hard_loop reports error");
+            log_error("hard_loop reports error");
 
             task->set_response_status(503);
             task->set_response_header("Content-type", "text/plain");
@@ -1035,7 +1042,7 @@ void lizard::server::idle_processing_loop()
 {
     if(0 == config.root.plugin.idle_timeout)
     {
-        rdev_log_debug(MSG_LIZARD_ID, "idle_loop_function: timing once");
+        log_debug("idle_loop_function: timing once");
 
         factory.idle();
 
@@ -1046,7 +1053,7 @@ void lizard::server::idle_processing_loop()
     }
     else
     {
-        rdev_log_debug(MSG_LIZARD_ID, "idle_loop_function: timing every %d(ms)", (int)config.root.plugin.idle_timeout);
+        log_debug("idle_loop_function: timing every %d(ms)", (int)config.root.plugin.idle_timeout);
 
         long secs = (config.root.plugin.idle_timeout * 1000000LLU) / 1000000000LLU;
         long nsecs = (config.root.plugin.idle_timeout * 1000000LLU) % 1000000000LLU;
@@ -1079,7 +1086,7 @@ void *lizard::epoll_loop_function(void *ptr)
     catch (const std::exception &e)
     {
         quit = 1;
-        rdev_log_crit(MSG_LIZARD_ID, "epoll_loop: exception: %s", e.what());
+        log_crit("epoll_loop: exception: %s", e.what());
     }
 
     srv->fire_all_threads();
@@ -1102,7 +1109,7 @@ void *lizard::easy_loop_function(void *ptr)
     catch (const std::exception &e)
     {
         quit = 1;
-        rdev_log_crit(MSG_LIZARD_ID, "easy_loop: exception: %s", e.what());
+        log_crit("easy_loop: exception: %s", e.what());
     }
 
     srv->fire_all_threads();
@@ -1125,7 +1132,7 @@ void *lizard::hard_loop_function(void *ptr)
     catch (const std::exception &e)
     {
         quit = 1;
-        rdev_log_crit(MSG_LIZARD_ID, "hard_loop: exception: %s", e.what());
+        log_crit("hard_loop: exception: %s", e.what());
     }
 
     srv->fire_all_threads();
@@ -1148,7 +1155,7 @@ void *lizard::idle_loop_function(void *ptr)
     catch (const std::exception &e)
     {
         quit = 1;
-        rdev_log_crit(MSG_LIZARD_ID, "idle_loop: exception: %s", e.what());
+        log_crit("idle_loop: exception: %s", e.what());
     }
 
     srv->fire_all_threads();
@@ -1176,7 +1183,7 @@ void *lizard::stats_loop_function(void *ptr)
 
                     lz_utils::set_socket_timeout(stats_client, 50000);
 
-                    rdev_log_debug(MSG_LIZARD_ID, "stats: accept_new_connection: %d from %s", stats_client, inet_ntoa(ip));
+                    log_debug("stats: accept_new_connection: %d from %s", stats_client, inet_ntoa(ip));
 
                     stats_parser.init(stats_client, ip);
 
@@ -1189,14 +1196,15 @@ void *lizard::stats_loop_function(void *ptr)
 
                         if(stats_parser.state() == http::sReadyToHandle)
                         {
+#if 0
                             if(!srv->config.root.access_log_file_name.empty())
                             {
-                                rdev_log_access(MSG_LIZARD_ACCESS_LOG_ID, "%s|%s?%s|stats",
+                                log_access(MSG_LIZARD_ACCESS_LOG_ID, "%s|%s?%s|stats",
                                         inet_ntoa(stats_parser.get_request_ip()),
                                         stats_parser.get_request_uri_path(),
                                         stats_parser.get_request_uri_params());
                             }
-
+#endif
 
                             stats_parser.set_response_status(200);
                             stats_parser.set_response_header("Content-type", "text/plain");
@@ -1204,16 +1212,17 @@ void *lizard::stats_loop_function(void *ptr)
                             std::string resp = "<lizard_stats>\n";
 
                             //------------------------------------------------------------------------------------
-                            char buff[1024];
 
-                                                        time_t up_time = time(0) - srv->start_time;
+							char buff[1024];
 
-                                                        snprintf(buff, 1024, "\t<lizard_version>"LIZARD_STR_VERSION"</lizard_version>\n\t<uptime>%d</uptime>\n", (int)up_time);
-                                                        resp += buff;
+							time_t up_time = time(0) - srv->start_time;
 
-                                                        snprintf(buff, 1024, "\t<rps>%.4f</rps>\n", stats.get_rps());
-                                                        resp += buff;
-                                                        
+                            snprintf(buff, 1024, "\t<lizard_version>"LIZARD_STR_VERSION"</lizard_version>\n\t<uptime>%d</uptime>\n", (int)up_time);
+							resp += buff;
+
+							snprintf(buff, 1024, "\t<rps>%.4f</rps>\n", stats.get_rps());
+							resp += buff;
+
                             snprintf(buff, 1024, "\t<fd_count>%d</fd_count>\n", (int)srv->fds.fd_count());
                                                         resp += buff; 
 
@@ -1236,7 +1245,6 @@ void *lizard::stats_loop_function(void *ptr)
                                     (int)stats.pages_in_http_pool, (int)stats.objects_in_http_pool);
                             resp += buff;
 
-
                             struct rusage usage;
                             ::getrusage(RUSAGE_SELF, &usage);
 
@@ -1252,7 +1260,7 @@ void *lizard::stats_loop_function(void *ptr)
                         }
                         else if(stats_parser.state() == http::sDone)
                         {
-                            rdev_log_debug(MSG_LIZARD_ID, "%d is done, closing write side of connection", stats_parser.get_fd());
+                            log_debug("%d is done, closing write side of connection", stats_parser.get_fd());
 
                             break;
                         }
@@ -1272,7 +1280,7 @@ void *lizard::stats_loop_function(void *ptr)
     catch (const std::exception &e)
     {
         quit = 1;
-        rdev_log_crit(MSG_LIZARD_ID, "stats_loop: exception: %s", e.what());
+        log_crit("stats_loop: exception: %s", e.what());
     }
 
     srv->fire_all_threads();

@@ -1,19 +1,19 @@
-#include <coda/txml.hpp>
 #include <stdio.h>
+#include <coda/txml.hpp>
 
-struct config : public txml::determination_object
+struct config : public coda::txml_determination_object
 {
-	struct ROOT : public txml::determination_object
+	struct ROOT : public coda::txml_determination_object
 	{
 		std::vector<std::string> s;
-		void determine(txml::parser* p)
+		void determine(coda::txml_parser* p)
 		{
 			p->determineMember("s", s);
 		}
 	};
 
 	ROOT r;
-	void determine(txml::parser* p)
+	void determine(coda::txml_parser* p)
 	{
 		p->determineMember("r", r);
 	}

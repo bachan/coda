@@ -32,9 +32,8 @@ uint64_t lz_utils::fine_clock()
 
 void lz_utils::close_connection(int fd)
 {
-    rdev_log_debug(lizard::MSG_LIZARD_ID, "close_connection %d", fd);
+    /* log_debug("close_connection %d", fd); */
     shutdown(fd, SHUT_RDWR);
-
     close(fd);
 }
 
@@ -46,14 +45,13 @@ void lz_utils::set_socket_timeout(int fd, long timeout)
 
     if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *)&tv,sizeof(struct timeval)) < 0)
     {
-        char buff[1024];
-        rdev_log_warn(lizard::MSG_LIZARD_ID, "setsockopt(SO_RCVTIMEO) - '%s'", strerror_r(errno, buff, 1024));
+		log_err(errno, "setsockopt(SO_RCVTIMEO)");
     }
 }
 
 int lz_utils::set_nonblocking(int fd)
 {
-    rdev_log_debug(lizard::MSG_LIZARD_ID, "set_nonblocking %d", fd);
+    log_debug("set_nonblocking %d", fd);
 
     int flags = fcntl(fd, F_GETFL, 0);
     if ((flags == -1) || (flags & O_NONBLOCK))
@@ -125,8 +123,8 @@ int lz_utils::add_listener(const char * host_desc, const char * port_desc, int l
     {
         close_connection(fd);
 
-        throw rdev_error("listen(%s:%s) failed: %d: %s", host_desc,
-            port_desc, errno, rdev_strerror(errno));
+        throw coda_errno (errno, "listen(%s:%s) failed",
+			host_desc, port_desc);
 #if 0
         char buff[1024];
         throw std::logic_error((std::string)"listen(" +
@@ -196,8 +194,7 @@ int lz_utils::accept_new_connection(int fd, struct in_addr& ip)
 
     if(connection < 0 && errno != EAGAIN)
     {
-        char buff[1024];
-        rdev_log_error(lizard::MSG_LIZARD_ID, "accept failure: '%s'", strerror_r(errno, buff, 1024));
+		log_err(errno, "accept failure");
     }
 
     ip = sa.sin_addr;

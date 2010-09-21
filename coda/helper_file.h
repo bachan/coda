@@ -1,5 +1,11 @@
-#ifndef __CODA_HELPER_FILE_H__
-#define __CODA_HELPER_FILE_H__
+#ifndef __CODA_FILE_H__
+#define __CODA_FILE_H__
+
+#include <errno.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 static inline
 int coda_fdmove(int fd, int nd) /* if nd is ebadf or eq-to-fd => fd is returned */
@@ -54,4 +60,4 @@ int coda_mkpath(char* path)
     return 0;
 }
 
-#endif /* __CODA_HELPER_FILE_H__ */
+#endif /* __CODA_FILE_H__ */

@@ -1,138 +1,128 @@
-/*
-
-   Copyright (c) 2004--2010, Usrsrc Team:
-   Alexander Pankov (pianist@usrsrc.ru)
-
-   txml library is free software; you can redistribute it and/or
-   modify it under the terms of the GNU Lesser General Public
-   License as published by the Free Software Foundation; either
-   version 2.1 of the License, or (at your option) any later version.
-
-   The GNU C Library is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-   Lesser General Public License for more details.
-
-*/
-
-#ifndef __CODA_TXML_TXML_HPP__8584928795827345723958234__
-#define __CODA_TXML_TXML_HPP__8584928795827345723958234__
+#ifndef __CODA_XML_PARSER_HPP__
+#define __CODA_XML_PARSER_HPP__
 
 #include <stdint.h>
-#include <sys/types.h>
 #include <expat.h>
 #include <string>
 #include <vector>
 #include <list>
 
-namespace txml {
+namespace coda {
 
-class parser;
-	
-struct determination_object
+struct txml_parser;
+struct txml_determination_object
 {
-	virtual void determine(parser* p) = 0;
-	void load_from_file(const char* fname);
-	void load_from_string(const char* s);
-	virtual ~determination_object()
-	{
-	}
+    virtual ~txml_determination_object() {}
+    virtual void determine(txml_parser* p) = 0;
+
+    void load_from_file(const char* filename);
+    void load_from_string(const char* s);
+    void load_from_string(const char* s, size_t len);
 };
 
-class parser
+struct txml_parser
 {
-	friend class determination_object;
-	std::string filename;
-
 	struct level_desc
 	{
 		std::string key;
 		int pushed;
-		level_desc(const char* k)
-			: key(k)
-			, pushed(0)
-		{
-		};
+
+		level_desc(const char *k)
+            : key(k)
+            , pushed(0)
+        {}
 	};
 
+	XML_Parser p;
+	txml_determination_object* data;
+
+	std::string filename;
+	std::string current_value;
 	std::vector<level_desc> levels;
 	std::vector<level_desc>::iterator det_iter;
 
-	std::string current_value;
-	determination_object* data;
+	void parse(const char* szDataSource, unsigned int iDataLength, bool bIsFinal = true);
+	void raise(const char* err);
 
 	void determine();
 	void setValue(std::string& var);
-	void setValue(int32_t& var);
-	void setValue(uint32_t& var);
-	void setValue(int64_t& var);
-	void setValue(u_int64_t& var);
-	
+	void setValue(       bool& var);
+	void setValue(    int32_t& var);
+	void setValue(   uint32_t& var);
+	void setValue(    int64_t& var);
+	void setValue(   uint64_t& var);
+	void setValue(    uint8_t& var);
+    void setValue(      float& var);
+    void setValue(     double& var);
+    void setValue(long double& var);
+
 	template <typename _T>
-	void setValue(_T& var)
+    void setValue(_T& var)
 	{
 		var.determine(this);
 	}
 
 	template <typename _T>
-	void setValue(std::list<_T>& var)
+    void setValue(std::list<_T>& var)
 	{
-		det_iter--;
+		--det_iter;
+
 		if (!det_iter->pushed)
 		{
 			det_iter->pushed = 1;
 			var.push_back(_T());
 		}
-		_T &item = var.back();
-		det_iter++;
+
+		_T& item = var.back();
+		++det_iter;
 		setValue(item);
 	}
 
 	template <typename _T>
-	void setValue(std::vector<_T>& var)
+    void setValue(std::vector<_T>& var)
 	{
-		det_iter--;
+		--det_iter;
+
 		if (!det_iter->pushed)
 		{
 			det_iter->pushed = 1;
 			var.push_back(_T());
 		}
-		_T &item = var.back();
-		det_iter++;
+
+		_T& item = var.back();
+		++det_iter;
 		setValue(item);
 	}
 
-	XML_Parser the_parser;
-	void parse(const char* szDataSource, unsigned int iDataLength, bool bIsFinal = true);
-public:
-	parser(determination_object* d);
-	~parser();
-	void raiseError(const std::string& err);
+	txml_parser(txml_determination_object *d);
+	~txml_parser();
 
 	template <typename _T>
-	bool determineMember(const std::string& key, _T& var)
+    bool determineMember(const std::string& key, _T& var)
 	{
-		if (det_iter == levels.end())
+		if (levels.end() == det_iter)
 		{
 			if (!key.empty()) return false;
 			setValue(var);
 			return true;
 		}
-		if (det_iter->key == key)
+
+		if (key == det_iter->key)
 		{
 			det_iter++;
 			setValue(var);
 			det_iter--;
 			return true;
 		}
+
 		return false;
 	}
 
-	void characters(const char* szChars, unsigned int iLength);
-	void start_element(const char* szName, const char** pszAttributes);
-	void end_element(const char* szName);
+    void characters(const char* szChars, unsigned int iLength);
+	void begelement(const char* szName, const char** pszAttributes);
+	void endelement(const char* szName);
 };
 
-}
+} /* namespace coda */
 
-#endif
+#endif /* __CODA_XML_PARSER_HPP__ */

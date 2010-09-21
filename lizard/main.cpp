@@ -1,8 +1,8 @@
 #include <getopt.h>
 #include <signal.h>
 #include <sys/time.h>
-#include "rdev_error.h"
-#include "rdev_logger.h"
+#include <coda/error.h>
+#include <coda/logger.h>
 #include "server.hpp"
 
 namespace lizard {
@@ -28,13 +28,13 @@ static void onPipe(int /*v*/)
 static void onTerm(int /*v*/)
 {
     lizard::quit = 1;
-    rdev_log_warn(lizard::MSG_LIZARD_ID, "TERM received");
+    log_warn("TERM received");
 }
 
 static void onInt(int /*v*/)
 {
     lizard::quit = 1;
-    rdev_log_warn(lizard::MSG_LIZARD_ID, "INT received");
+    log_warn("INT received");
 }
 
 static void onHUP(int /*v*/)
@@ -149,46 +149,34 @@ int main(int argc, char * argv[])
 
         while(!lizard::quit)
         {
-            rdev_log_info(lizard::MSG_LIZARD_ID, "loading config...");
+            log_info("loading config...");
             server.load_config(cfg_file_name.c_str(), pid_file_name);
 
-            rdev_log_info(lizard::MSG_LIZARD_ID, "prepare...");
+            log_info("prepare...");
             server.prepare();
 
-            rdev_log_info(lizard::MSG_LIZARD_ID, "init lizard...");
+            log_info("init lizard...");
 
             if(!pid_file_name.empty() && false == lz_utils::pid_file_init(pid_file_name.c_str()))
             {
-                char buff[100];
-                rdev_log_error(lizard::MSG_LIZARD_ID, "create pid-file failed: %s", strerror_r(errno, buff, 100));
-
-                exit(EXIT_FAILURE);
+				log_die(errno, "create pid-file failed");
             }
 
-            //---------------------------------------
             server.init_threads();
-
-            rdev_log_info(lizard::MSG_LIZARD_ID, "all threads started!");
-
-            //~~~
+            log_info("all threads started!");
 
             server.join_threads();
-
-            rdev_log_info(lizard::MSG_LIZARD_ID, "all threads ended!");
-            //---------------------------------------
+            log_info("all threads ended!");
 
             if(!pid_file_name.empty())
             {
                 if(false == lz_utils::pid_file_free(pid_file_name.c_str()))
                 {
-                    char buff[100];
-                    rdev_log_error(lizard::MSG_LIZARD_ID, "free pid-file failed: %s", strerror_r(errno, buff, 100));
-
-                    exit(EXIT_FAILURE);
+					log_die(errno, "free pid-file failed");
                 }
             }
 
-            rdev_log_info(lizard::MSG_LIZARD_ID, "finalizing...");
+            log_info("finalizing...");
             server.finalize();
 
             lizard::hup = 0;
@@ -199,16 +187,13 @@ int main(int argc, char * argv[])
         lizard::quit = 1;
 
         if (no_daemon) fprintf(stderr, "main: exception: %s\n", e.what());
-        rdev_log_crit(lizard::MSG_LIZARD_ID, "main: exception: %s", e.what());
+        log_crit("main: exception: %s", e.what());
 
         if (!pid_file_name.empty())
         {
             if (false == lz_utils::pid_file_free(pid_file_name.c_str()))
             {
-                rdev_log_error(lizard::MSG_LIZARD_ID, "free pid-file failed: %d: %s",
-                    errno, rdev_strerror(errno));
-
-                exit(EXIT_FAILURE);
+				log_die(errno, "free pid-file failed");
             }
         }
     }

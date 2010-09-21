@@ -140,7 +140,7 @@ void lizard::http::init(int new_fd, const struct in_addr& ip)
     }
     else
     {
-        rdev_log_warn(MSG_LIZARD_ID, "lizard::http::[%d] tried to double-init on %d", fd, new_fd);
+        log_warn("lizard::http::[%d] tried to double-init on %d", fd, new_fd);
     }
 
     in_ip = ip;
@@ -175,12 +175,12 @@ void lizard::http::init(int new_fd, const struct in_addr& ip)
 
     state_ = sUndefined;
 
-    //rdev_log_debug(MSG_LIZARD_ID, "lizard::http::init(%d, %s)", new_fd, inet_ntoa(in_ip));
+    /* log_debug("lizard::http::init(%d, %s)", new_fd, inet_ntoa(in_ip)); */
 }
 
 void lizard::http::destroy()
 {
-    //rdev_log_debug(MSG_LIZARD_ID, "lizard::http::destroy(%d)", fd);
+    /* log_debug("lizard::http::destroy(%d)", fd); */
 
     if(-1 != fd)
     {
@@ -215,20 +215,19 @@ bool lizard::http::ready_write()const
 void lizard::http::allow_read()
 {
     can_read = true;
-    //rdev_log_debug(MSG_LIZARD_ID, "lizard::http::process::allow_read(%d)", fd);
+    /* log_debug("lizard::http::process::allow_read(%d)", fd); */
 }
 
 void lizard::http::allow_write()
 {
     can_write = true;
-    //rdev_log_debug(MSG_LIZARD_ID, "lizard::http::process::allow_write(%d)", fd);
+    /* log_debug("lizard::http::process::allow_write(%d)", fd); */
 }
 
 bool lizard::http::ready()const
 {
-    //rdev_log_debug(MSG_LIZARD_ID, "lizard::http::ready() : read{c:%d w:%d st:%d}, write{c:%d w:%d st:%d}",
-    //    can_read,  want_read, stop_reading,
-      //    can_write, want_write, stop_writing);
+    /* log_debug("lizard::http::ready() : read{c:%d w:%d st:%d}, write{c:%d w:%d st:%d}", */
+		/* can_read, want_read, stop_reading, can_write, want_write, stop_writing); */
 
     return ready_read() || ready_write();
 }
@@ -242,7 +241,7 @@ void lizard::http::set_rdeof()
 {
     stop_reading = true;
     //can_read = false;
-    //rdev_log_debug(MSG_LIZARD_ID, "set_rdeof()");
+    /* log_debug("set_rdeof()"); */
 }
 
 bool lizard::http::get_wreof()
@@ -254,7 +253,7 @@ void lizard::http::set_wreof()
 {
     stop_writing = true;
     can_write = false;
-    //rdev_log_debug(MSG_LIZARD_ID, "set_wreof()");
+    /* log_debug("set_wreof()"); */
 }
 
 int lizard::http::get_fd()const
@@ -264,13 +263,13 @@ int lizard::http::get_fd()const
 
 void lizard::http::lock()
 {
-    //rdev_log_debug(MSG_LIZARD_ID, "http(%d)::lock()", fd);
+    /* log_debug("http(%d)::lock()", fd); */
     locked = true;
 }
 
 void lizard::http::unlock()
 {
-    //rdev_log_debug(MSG_LIZARD_ID, "http(%d)::unlock()", fd);
+    /* log_debug("http(%d)::unlock()", fd); */
     locked = false;
 }
 
@@ -389,7 +388,7 @@ void lizard::http::append_response_body(const char * data, size_t sz)
 
 void lizard::http::process()
 {
-    //rdev_log_debug(MSG_LIZARD_ID, "lizard::http::process()");
+    /* log_debug("lizard::http::process()"); */
 
     bool quit = false;
     int res = 0;
@@ -408,12 +407,12 @@ void lizard::http::process()
             break;
 
         case sReadingHead:
-            //rdev_log_debug(MSG_LIZARD_ID, "lizard::http::process(): sReadingHead");
+            /* log_debug("lizard::http::process(): sReadingHead"); */
             res = parse_title();
 
             if(res > 0)
             {
-                //rdev_log_debug(MSG_LIZARD_ID, "process():  parse_title() error %d", res);
+                /* log_debug("process():  parse_title() error %d", res); */
                 state_ = sDone;
                 quit = true;
             }
@@ -425,12 +424,12 @@ void lizard::http::process()
             break;
 
         case sReadingHeaders:
-            //rdev_log_debug(MSG_LIZARD_ID, "lizard::http::process(): sReadingHeaders");
+            /* log_debug("lizard::http::process(): sReadingHeaders"); */
             res = parse_header_line();
 
             if(res > 0)
             {
-                //rdev_log_debug(MSG_LIZARD_ID, "process():  parse_header_line() error %d", res);
+                /* log_debug("process():  parse_header_line() error %d", res); */
                 state_ = sDone;
                 quit = true;
             }
@@ -458,7 +457,7 @@ void lizard::http::process()
             break;
 
         case sReadyToHandle:
-            //rdev_log_debug(MSG_LIZARD_ID, "lizard::http::process(): sReadyToHandle");
+            /* log_debug("lizard::http::process(): sReadyToHandle"); */
 
             commit();
             state_ = sWriting;
@@ -467,7 +466,7 @@ void lizard::http::process()
             break;
 
         case sWriting:
-            //rdev_log_debug(MSG_LIZARD_ID, "sWriting:");
+            /* log_debug("sWriting:"); */
             want_write = true;
 
             res = write_data();
@@ -480,7 +479,7 @@ void lizard::http::process()
             break;
 
         case sDone:
-            //rdev_log_debug(MSG_LIZARD_ID, "lizard::http::process(): sDone reached!");
+            /* log_debug("lizard::http::process(): sDone reached!"); */
             quit = true;
 
             break;
@@ -496,10 +495,8 @@ bool lizard::http::network_tryread()
 {
     if(-1 != fd)
     {
-           // rdev_log_debug(MSG_LIZARD_ID, "lizard::http::process::ready_read(%d)", fd);
-           // rdev_log_debug(MSG_LIZARD_ID, "read{c:%d w:%d st:%d}, write{c:%d w:%d st:%d}",
-           //                     can_read,  want_read, stop_reading,
-           //                 can_write, want_write, stop_writing);
+		/* log_debug("lizard::http::process::ready_read(%d)", fd); */
+		/* log_debug("read{c:%d w:%d st:%d}, write{c:%d w:%d st:%d}", can_read, want_read, stop_reading, can_write, want_write, stop_writing); */
 
         while(can_read && !stop_reading/* && want_read*/)
         {
@@ -521,8 +518,8 @@ bool lizard::http::network_trywrite()
 {
     if(-1 != fd)
     {
-        //rdev_log_debug(MSG_LIZARD_ID, "lizard::http::process::ready_write(%d)", fd);
-        //rdev_log_debug(MSG_LIZARD_ID, "read{c:%d w:%d st:%d}, write{c:%d w:%d st:%d}",
+        /* log_debug("lizard::http::process::ready_write(%d)", fd); */
+        /* log_debug("read{c:%d w:%d st:%d}, write{c:%d w:%d st:%d}", */
          //                   can_read,  want_read, stop_reading,
           //                  can_write, want_write, stop_writing);
 
@@ -530,27 +527,29 @@ bool lizard::http::network_trywrite()
 
         if(can_write && !stop_writing)
         {
-            //rdev_log_debug(MSG_LIZARD_ID, "out_title.write_to_fd");
+            /* log_debug("out_title.write_to_fd"); */
             out_title.write_to_fd(fd, can_write, want_write, stop_writing);
         }
 
-/*        want_write = true;
+#if 0
+		want_write = true;
 
-        if(can_write && !stop_writing)
+        if (can_write && !stop_writing)
         {
-            rdev_log_debug(MSG_LIZARD_ID, "out_headers.write_to_fd");
+            /* log_debug("out_headers.write_to_fd"); */
             out_headers.write_to_fd(fd, can_write, want_write, stop_writing);
         }
-*/
+#endif
+
         want_write = true;
 
         if(out_post.get_data_size() && can_write && !stop_writing)
         {
-            //rdev_log_debug(MSG_LIZARD_ID, "out_post.write_to_fd");
+            /* log_debug("out_post.write_to_fd"); */
             out_post.write_to_fd(fd, can_write, want_write, stop_writing);
         }
 
-        //rdev_log_debug(MSG_LIZARD_ID, "all writings done");
+        /* log_debug("all writings done"); */
         set_wreof();
     }
 
@@ -615,7 +614,7 @@ char * lizard::http::read_header_line()
         }
         else //can read && !want_read && !stop_reading
         {
-            //rdev_log_message_r(MSG_LIZARD_ID, LOG_ERROR, "header is larger than %d", (int)in_headers.page_size());
+            /* log_message_r(LOG_ERROR, "header is larger than %d", (int)in_headers.page_size()); */
             state_ = sDone;
             break;
         }
@@ -626,15 +625,15 @@ char * lizard::http::read_header_line()
 
 int lizard::http::parse_title()
 {
-    //rdev_log_debug(MSG_LIZARD_ID, "parse_title()");
+    /* log_debug("parse_title()"); */
     char * line = read_header_line();
     if(!line)
     {
-        //rdev_log_debug(MSG_LIZARD_ID, "got 0");
+        /* log_debug("got 0"); */
         return -1;
     }
 
-    //rdev_log_debug(MSG_LIZARD_ID, "read_header_line() = '%s'", line);
+    /* log_debug("read_header_line() = '%s'", line); */
 
     state_ = sDone;
 
@@ -725,21 +724,21 @@ int lizard::http::parse_title()
 
 int lizard::http::parse_header_line()
 {
-    //rdev_log_debug(MSG_LIZARD_ID, "parse_header_line()");
+    /* log_debug("parse_header_line()"); */
     char * key = read_header_line();
     if(!key)
     {
         return -1;
     }
 
-    rdev_log_debug(MSG_LIZARD_ID, "read_header_line() = '%s'", key);
+    /* log_debug("read_header_line() = '%s'", key); */
 
     if(0 == *key)
     {
         if(method == requestPOST)
         {
             state_ = sReadingPost;
-            rdev_log_debug(MSG_LIZARD_ID, "->sReadingPost");
+            /* log_debug("->sReadingPost"); */
 
             in_post.append_data((char*)in_headers.get_data() + in_headers.marker(), in_headers.get_data_size() - in_headers.marker());
         }
@@ -747,7 +746,7 @@ int lizard::http::parse_header_line()
         {
             state_ = sReadyToHandle;
 
-            rdev_log_debug(MSG_LIZARD_ID, "->sReadyToHandle");
+            /* log_debug("->sReadyToHandle"); */
         }
 
         return 0;
@@ -772,7 +771,7 @@ int lizard::http::parse_header_line()
 
         header_items_num++;
 
-        rdev_log_debug(MSG_LIZARD_ID, "header_items['%s']='%s'", key, val);
+        /* log_debug("header_items['%s']='%s'", key, val); */
 
     }
 
@@ -785,17 +784,17 @@ int lizard::http::parse_header_line()
         int sz = atoi(val);
         in_post.resize(sz);
 
-        rdev_log_debug(MSG_LIZARD_ID, "post body found (%d bytes)", sz);
+        /* log_debug("post body found (%d bytes)", sz); */
     }
     else if(!strcasecmp(key, "expect") && !strcasecmp(val, "100-continue")) //EVIL HACK for answering on "Expect: 100-continue"
     {       
         const char * ret_str = "HTTP/1.1 100 Continue\r\n\r\n";
         int ret_str_sz = 25;//strlen(ret_str);
         
-                ssize_t wr = write(fd, ret_str, ret_str_sz);
+        ssize_t wr = write(fd, ret_str, ret_str_sz);
         if(wr == -1 || wr < ret_str_sz)
         {
-                      rdev_log_warn(MSG_LIZARD_ID, "client didn't receive '100 Continue'");       
+                      log_warn("client didn't receive '100 Continue'");       
         }
     }
 
@@ -806,7 +805,7 @@ int lizard::http::parse_header_line()
 
 int lizard::http::parse_post()
 {
-    rdev_log_debug(MSG_LIZARD_ID, "parse_post() (%d bytes)", (int)in_post.size());
+    /* log_debug("parse_post() (%d bytes)", (int)in_post.size()); */
 
     in_post.read_from_fd(fd, can_read, want_read, stop_reading);
 
@@ -884,7 +883,7 @@ int lizard::http::commit()
 
     out_title.append_data(out_headers.get_data(), out_headers.get_data_size());
 
-    //rdev_log_debug(MSG_LIZARD_ID, "out_headers:---\n%s\n---", (char*)out_headers.get_data());
+    //log_debug("out_headers:---\n%s\n---", (char*)out_headers.get_data());
 
     return 0;
 }
