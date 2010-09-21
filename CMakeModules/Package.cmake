@@ -93,19 +93,37 @@ ENDMACRO (USE_PACKAGE)
 # USE_PKG (pkg)
 # -----------------------------------------------------------------------------
 # Find package using USE_PACKAGE and some heuristic on naming traditions.
+# TODO merge with USE_PACKAGE using optional arguments.
 
 MACRO (USE_PKG pkg)
   STRING (TOUPPER ${pkg} var)
   USE_PACKAGE (${var} ${pkg} ${pkg}.h)
 ENDMACRO (USE_PKG)
 
+# ADD_STATIC (lib)
+# -----------------------------------------------------------------------------
+# TODO
+
+MACRO (ADD_STATIC lib)
+  AUX_SOURCE_DIRECTORY (${lib} SRC_${lib})
+  ADD_LIBRARY (${lib} STATIC ${SRC_${lib}})
+  IF (${ARGC} GREATER 1)
+    TARGET_LINK_LIBRARIES (${lib} ${ARGN})
+  ENDIF (${ARGC} GREATER 1)
+  # TODO SET_TARGET_PROPERTIES (...)
+  INSTALL (TARGETS ${lib} DESTINATION ${LIBDIR})
+  # TODO ETOT EBUCHIJ PATTERN NADO POFIXIT, PIZDEC BLJAD CMAKE GOVNO SRANOE, DAJE PATTERNI U NIH SVOI BLJAD!!!!!
+  INSTALL (DIRECTORY ${lib}/ DESTINATION include FILES_MATCHING PATTERN "*.{h,hpp,tcc}")
+ENDMACRO (ADD_STATIC)
+
 # GET_LOCALTIME (var [format [tmzone]])
 # -----------------------------------------------------------------------------
 # Print system date and time regarding to specified [format] and [tmzone]. If
 # either [format] or [tmzone] is omitted, the default settings for the current
 # locale will take the place.
+# TODO make variadic.
 
-#MACRO (GET_LOCALTIME var format tmzone) # XXX make variadic
+#MACRO (GET_LOCALTIME var format tmzone)
 #  SET_IF_NOT_SET (o_format "${format}")
 #  SET_IF_NOT_SET (o_format "%c")
 #  SET_IF_NOT_SET (o_tmzone "${tmzone}")

@@ -2,22 +2,17 @@
 #include <fcntl.h>
 #include <stdarg.h>
 #include <unistd.h>
+#include <pthread.h>
 #include "logger.h"
 
-volatile int log_lvmask = LOG_INFO;
+volatile int log_level = LOG_INFO;
 
-pthread_key_t logger = ...;
-
-pthread_setspecific(logger, name);
-
-
-
-int log_lvread(const char* lv)
+int log_levels(const char* level)
 {
-    switch (lv[0])
+    switch (level[0])
     {
     case 'a': case 'A':
-        switch (lv[1])
+        switch (level[1])
         {
         case 'c': case 'C': return LOG_ACCESS;
         case 'l': case 'L': return LOG_ALERT;
@@ -25,7 +20,7 @@ int log_lvread(const char* lv)
         break;
     case 'c': case 'C': return LOG_CRIT;
     case 'e': case 'E':
-        switch (lv[1])
+        switch (level[1])
         {
         case 'm': case 'M': return LOG_EMERG;
         case 'r': case 'R': return LOG_ERROR;
@@ -39,23 +34,49 @@ int log_lvread(const char* lv)
     return LOG_INFO; /* default */
 }
 
-int log_create(const char* fn, int lv)
+int log_create(const char* path, int level)
 {
-    if (0 > mkpath((char *) fn)) return -1;
-    if (0 > fdopen(STDERR_FILENO, fn, O_CREAT|O_APPEND|O_WRONLY))
+    if (0 > coda_mkpath((char *) path))
+    {
         return -1;
+    }
 
-    log_lvmask = lv;
+    if (0 > coda_fdopen(STDERR_FILENO, path,
+        O_CREAT|O_APPEND|O_WRONLY))
+    {
+        return -1;
+    }
+
+    log_level = level;
 
     return STDERR_FILENO;
 }
 
+/* thread */
 
-pthread_key_t log_thread_name;
+pthread_key_t  log_thread_name;
+pthread_once_t log_thread_name_once = PTHREAD_ONCE_INIT;
 
-int log_set_thread_name(const char* name)
+static
+void log_thread_name_key()
 {
-    pthread_setspecific(log_thread_name, (const void*) name);
+    pthread_key_create(&log_thread_name, NULL);
 }
 
+int log_thread_name_set(const char* name)
+{
+    pthread_once(&log_thread_name_once,
+        log_thread_name_key);
+
+    return pthread_setspecific(log_thread_name,
+        (const void*) name);
+}
+
+const char* log_thread_name_get()
+{
+    pthread_once(&log_thread_name_once,
+        log_thread_name_key);
+
+    return pthread_getspecific(log_thread_name);
+}
 
