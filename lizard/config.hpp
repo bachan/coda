@@ -30,8 +30,8 @@ struct lz_config : public coda::txml_determination_object
 
             void determine(coda::txml_parser* p)
             {
-                p->determineMember("ip", ip);
-                p->determineMember("port", port);
+				txml_member(p, ip);
+				txml_member(p, port);
             }
 
             void clear()
@@ -70,19 +70,16 @@ struct lz_config : public coda::txml_determination_object
 
             void determine(coda::txml_parser* p)
             {
-                p->determineMember("ip", ip);
-                p->determineMember("port", port);
-                p->determineMember("connection_timeout", connection_timeout);
-                p->determineMember("idle_timeout", idle_timeout);
-
-                p->determineMember("library", library);
-                p->determineMember("params", params);
-
-                p->determineMember("easy_threads", easy_threads);
-                p->determineMember("hard_threads", hard_threads);
-
-                p->determineMember("easy_queue_limit", easy_queue_limit);
-                p->determineMember("hard_queue_limit", hard_queue_limit);
+				txml_member(p, ip);
+				txml_member(p, port);
+				txml_member(p, connection_timeout);
+				txml_member(p, idle_timeout);
+				txml_member(p, library);
+				txml_member(p, params);
+				txml_member(p, easy_threads);
+				txml_member(p, hard_threads);
+				txml_member(p, easy_queue_limit);
+				txml_member(p, hard_queue_limit);
             }
 
             void clear()
@@ -121,15 +118,12 @@ struct lz_config : public coda::txml_determination_object
 
         void determine(coda::txml_parser* p)
         {
-            p->determineMember("pid_file_name", pid_file_name);
-            p->determineMember("log_file_name", log_file_name);
-            p->determineMember("log_level", log_level);
-
-            p->determineMember("access_log_file_name", access_log_file_name);
-
-            p->determineMember("stats", stats);
-            p->determineMember("plugin", plugin);
-
+			txml_member(p, pid_file_name);
+			txml_member(p, log_file_name);
+			txml_member(p, log_level);
+			txml_member(p, access_log_file_name);
+			txml_member(p, stats);
+			txml_member(p, plugin);
         }
 
         void clear()
@@ -137,9 +131,7 @@ struct lz_config : public coda::txml_determination_object
             pid_file_name.clear();
             log_file_name.clear();
             log_level.clear();
-
             access_log_file_name.clear();
-
             stats.clear();
             plugin.clear();
         }
@@ -157,7 +149,7 @@ struct lz_config : public coda::txml_determination_object
 
     void determine(coda::txml_parser* p)
     {
-        p->determineMember("lizard", root);
+		txml_member(p, root);
     }
 
     void clear()
@@ -171,7 +163,6 @@ struct lz_config : public coda::txml_determination_object
     }
 };
 
-//----------------------------------------------------------------------------------
 }
 
 #endif

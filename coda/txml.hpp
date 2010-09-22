@@ -7,6 +7,8 @@
 #include <vector>
 #include <list>
 
+#define txml_member(p,m) (p)->determineMember(#m, (m))
+
 namespace coda {
 
 struct txml_parser;
