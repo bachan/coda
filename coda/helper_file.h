@@ -10,54 +10,54 @@
 static inline
 int coda_fdmove(int fd, int nd) /* if nd is ebadf or eq-to-fd => fd is returned */
 {
-    if (0 > nd || fd == nd)
-    {
-        return fd;
-    }
+	if (0 > nd || fd == nd)
+	{
+		return fd;
+	}
 
-    nd = dup2(fd, nd);
-    if (0 > nd) return -1;
+	nd = dup2(fd, nd);
+	if (0 > nd) return -1;
 
-    if (0 > close(fd))
-    {
-        return -1;
-    }
+	if (0 > close(fd))
+	{
+		return -1;
+	}
 
-    return nd;
+	return nd;
 }
 
 static inline
 int coda_fdopen(int fd, const char* path, int flags)
 {
-    int td;
+	int td;
 
-    td = open(path, flags, 0644);
-    if (0 > td) return -1;
+	td = open(path, flags, 0644);
+	if (0 > td) return -1;
 
-    return coda_fdmove(td, fd);
+	return coda_fdmove(td, fd);
 }
 
 static inline
 int coda_mkpath(char* path)
 {
-    int rc;
-    char* p = path + 1;
+	int rc;
+	char* p = path + 1;
 
-    for (; *p; ++p)
-    {
-        if (*p != '/') continue;
+	for (; *p; ++p)
+	{
+		if (*p != '/') continue;
 
-        *p = 0;
-        rc = mkdir(path, 0755);
-        *p = '/';
+		*p = 0;
+		rc = mkdir(path, 0755);
+		*p = '/';
 
-        if (0 > rc && EEXIST != errno)
-        {
-            return -1;
-        }
-    }
+		if (0 > rc && EEXIST != errno)
+		{
+			return -1;
+		}
+	}
 
-    return 0;
+	return 0;
 }
 
 #endif /* __CODA_FILE_H__ */

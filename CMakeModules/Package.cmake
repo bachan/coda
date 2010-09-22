@@ -33,6 +33,7 @@ INCLUDE_DIRECTORIES (${PROJECT_BINARY_DIR})
 INCLUDE_DIRECTORIES (${PROJECT_SOURCE_DIR})
 #INCLUDE_DIRECTORIES (${PROJECT_SOURCE_DIR}/include)
 
+###############################################################################
 # USE_LIBRARY (var lib)
 # -----------------------------------------------------------------------------
 # Find library [lib] using standard FIND_LIBRARY command and save its path into
@@ -100,42 +101,58 @@ MACRO (USE_PKG pkg)
   USE_PACKAGE (${var} ${pkg} ${pkg}.h)
 ENDMACRO (USE_PKG)
 
-# ADD_EXE (pkg)
+###############################################################################
+# MAKE_PROGRAM (apath)
 # -----------------------------------------------------------------------------
-# TODO
+# Make program (executable) from source code inside the [apath] subfolder and
+# install it.
 
-MACRO (ADD_EXE tgt)
-  AUX_SOURCE_DIRECTORY (${tgt} SRC_${tgt})
-  ADD_EXECUTABLE (${tgt} ${SRC_${tgt}})
+MACRO (MAKE_PROGRAM apath)
+  GET_FILENAME_COMPONENT (${apath}_NAME "${apath}" NAME)
+  AUX_SOURCE_DIRECTORY (${apath} SRC_${${apath}_NAME})
+  ADD_EXECUTABLE (${${apath}_NAME} ${SRC_${${apath}_NAME}})
   IF (${ARGC} GREATER 1)
-    TARGET_LINK_LIBRARIES (${tgt} ${ARGN})
+    TARGET_LINK_LIBRARIES (${${apath}_NAME} ${ARGN})
   ENDIF (${ARGC} GREATER 1)
-  INSTALL (TARGETS ${tgt} DESTINATION bin)
-ENDMACRO (ADD_EXE)
+  INSTALL (TARGETS ${${apath}_NAME} DESTINATION bin)
+ENDMACRO (MAKE_PROGRAM)
 
-MACRO (ADD_LIB lib typ)
-  GET_FILENAME_COMPONENT (${lib}_NAME "${lib}" NAME)
-  AUX_SOURCE_DIRECTORY (${lib} SRC_${${lib}_NAME})
-  ADD_LIBRARY (${${lib}_NAME} ${typ} ${SRC_${${lib}_NAME}})
+# MAKE_LIBRARY (apath <SHARED|STATIC> [LIBRARIES_TO_LINK_WITH [...]])
+# -----------------------------------------------------------------------------
+# Make library of SHARED or STATIC type from source code inside the [apath]
+# subfolder and install it and all header files from the subfolder.
+
+MACRO (MAKE_LIBRARY apath atype)
+  GET_FILENAME_COMPONENT (${apath}_NAME "${apath}" NAME)
+  AUX_SOURCE_DIRECTORY (${apath} SRC_${${apath}_NAME})
+  ADD_LIBRARY (${${apath}_NAME} ${atype} ${SRC_${${apath}_NAME}})
   IF (${ARGC} GREATER 2)
-    TARGET_LINK_LIBRARIES (${${lib}_NAME} ${ARGN})
+    TARGET_LINK_LIBRARIES (${${apath}_NAME} ${ARGN})
   ENDIF (${ARGC} GREATER 2)
   # TODO SET_TARGET_PROPERTIES (...)
-  INSTALL (TARGETS ${${lib}_NAME} DESTINATION ${LIBDIR})
-  INSTALL (DIRECTORY ${lib} DESTINATION include FILES_MATCHING PATTERN "*.h")
-  INSTALL (DIRECTORY ${lib} DESTINATION include FILES_MATCHING PATTERN "*.hpp")
-  INSTALL (DIRECTORY ${lib} DESTINATION include FILES_MATCHING PATTERN "*.tcc")
-ENDMACRO (ADD_LIB)
+  INSTALL (TARGETS ${${apath}_NAME} DESTINATION ${LIBDIR})
+  INSTALL (DIRECTORY ${apath} DESTINATION include FILES_MATCHING PATTERN "*.h")
+  INSTALL (DIRECTORY ${apath} DESTINATION include FILES_MATCHING PATTERN "*.hpp")
+  INSTALL (DIRECTORY ${apath} DESTINATION include FILES_MATCHING PATTERN "*.tcc")
+ENDMACRO (MAKE_LIBRARY)
 
-MACRO (ADD_SHARED lib)
-  ADD_LIB (${lib} SHARED ${ARGN})
-ENDMACRO (ADD_SHARED)
+# MAKE_SHARED (apath [LIBRARIES_TO_LINK_WITH [...]])
+# -----------------------------------------------------------------------------
+# Make SHARED library with MAKE_LIBRARY macro.
 
-MACRO (ADD_STATIC lib)
-  ADD_LIB (${lib} STATIC ${ARGN})
-ENDMACRO (ADD_STATIC)
+MACRO (MAKE_SHARED apath)
+  MAKE_LIBRARY (${apath} SHARED ${ARGN})
+ENDMACRO (MAKE_SHARED)
 
+# MAKE_STATIC (apath [LIBRARIES_TO_LINK_WITH [...]])
+# -----------------------------------------------------------------------------
+# Make STATIC library with MAKE_LIBRARY macro.
 
+MACRO (MAKE_STATIC apath)
+  MAKE_LIBRARY (${apath} STATIC ${ARGN})
+ENDMACRO (MAKE_STATIC)
+
+###############################################################################
 # GET_LOCALTIME (var [format [tmzone]])
 # -----------------------------------------------------------------------------
 # Print system date and time regarding to specified [format] and [tmzone]. If

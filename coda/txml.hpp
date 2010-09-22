@@ -12,12 +12,12 @@ namespace coda {
 struct txml_parser;
 struct txml_determination_object
 {
-    virtual ~txml_determination_object() {}
-    virtual void determine(txml_parser* p) = 0;
+	virtual ~txml_determination_object() {}
+	virtual void determine(txml_parser* p) = 0;
 
-    void load_from_file(const char* filename);
-    void load_from_string(const char* s);
-    void load_from_string(const char* s, size_t len);
+	void load_from_file(const char* filename);
+	void load_from_string(const char* s);
+	void load_from_string(const char* s, size_t len);
 };
 
 struct txml_parser
@@ -28,9 +28,9 @@ struct txml_parser
 		int pushed;
 
 		level_desc(const char *k)
-            : key(k)
-            , pushed(0)
-        {}
+			: key(k)
+			, pushed(0)
+		{}
 	};
 
 	XML_Parser p;
@@ -52,18 +52,18 @@ struct txml_parser
 	void setValue(    int64_t& var);
 	void setValue(   uint64_t& var);
 	void setValue(    uint8_t& var);
-    void setValue(      float& var);
-    void setValue(     double& var);
-    void setValue(long double& var);
+	void setValue(      float& var);
+	void setValue(     double& var);
+	void setValue(long double& var);
 
 	template <typename _T>
-    void setValue(_T& var)
+	void setValue(_T& var)
 	{
 		var.determine(this);
 	}
 
 	template <typename _T>
-    void setValue(std::list<_T>& var)
+	void setValue(std::list<_T>& var)
 	{
 		--det_iter;
 
@@ -79,7 +79,7 @@ struct txml_parser
 	}
 
 	template <typename _T>
-    void setValue(std::vector<_T>& var)
+	void setValue(std::vector<_T>& var)
 	{
 		--det_iter;
 
@@ -98,7 +98,7 @@ struct txml_parser
 	~txml_parser();
 
 	template <typename _T>
-    bool determineMember(const std::string& key, _T& var)
+	bool determineMember(const std::string& key, _T& var)
 	{
 		if (levels.end() == det_iter)
 		{
@@ -118,7 +118,7 @@ struct txml_parser
 		return false;
 	}
 
-    void characters(const char* szChars, unsigned int iLength);
+	void characters(const char* szChars, unsigned int iLength);
 	void begelement(const char* szName, const char** pszAttributes);
 	void endelement(const char* szName);
 };
