@@ -1,8 +1,9 @@
 #ifndef __CODA_LOGGER_H__
 #define __CODA_LOGGER_H__
 
-#include "helper_file.h"
-#include "helper_time.h"
+#include <pthread.h>
+#include "gmtime.h"
+#include "system.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -21,6 +22,11 @@ extern "C" {
 #define log_err(err,fmt,...) log_msg(error,fmt " (%d: %s)\n", ##__VA_ARGS__, err, coda_strerror(err))
 #define log_ret(err,fmt,...) log_msg(error,fmt " (%d: %s)\n", ##__VA_ARGS__, err, coda_strerror(err)), err
 #define log_die(err,fmt,...) log_msg(emerg,fmt " (%d: %s)\n", ##__VA_ARGS__, err, coda_strerror(err)); exit(EXIT_FAILURE)
+
+#define msg(fmt,...)     dprintf(STDERR_FILENO, fmt          "\n", ##__VA_ARGS__)
+#define err(err,fmt,...) dprintf(STDERR_FILENO, fmt " (%d: %s)\n", ##__VA_ARGS__, err, coda_strerror(err))
+#define ret(err,fmt,...) dprintf(STDERR_FILENO, fmt " (%d: %s)\n", ##__VA_ARGS__, err, coda_strerror(err)), err
+#define die(err,fmt,...) dprintf(STDERR_FILENO, fmt " (%d: %s)\n", ##__VA_ARGS__, err, coda_strerror(err)); exit(EXIT_FAILURE)
 
 #define log_access( fmt,...) log_msg(access,fmt,##__VA_ARGS__)
 #define log_emerg(  fmt,...) log_msg(emerg, fmt,##__VA_ARGS__)
