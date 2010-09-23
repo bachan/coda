@@ -34,20 +34,6 @@ INCLUDE_DIRECTORIES (${PROJECT_SOURCE_DIR})
 #INCLUDE_DIRECTORIES (${PROJECT_SOURCE_DIR}/include)
 
 ###############################################################################
-# USE_LIBRARY (var lib)
-# -----------------------------------------------------------------------------
-# Find library [lib] using standard FIND_LIBRARY command and save its path into
-# variable named [var].
-
-MACRO (USE_LIBRARY var lib)
-  FIND_LIBRARY (${var} ${lib})
-  IF (${var})
-    MESSAGE (STATUS "FOUND ${${var}}")  # SHOULD BE BOLD GREEN
-  ELSE (${var})
-    MESSAGE (STATUS "ERROR ${${var}}")  # SHOULD BE BOLD RED
-  ENDIF (${var})
-ENDMACRO (USE_LIBRARY)
-
 # USE_INCLUDE (var inc [FIND_PATH_ARGS ...])
 # -----------------------------------------------------------------------------
 # Find include [inc] using standard FIND_PATH command and save its dirname into
@@ -63,6 +49,29 @@ MACRO (USE_INCLUDE var inc)
   ENDIF (${var})
 ENDMACRO (USE_INCLUDE)
 
+# USE_LIBRARY (var lib)
+# -----------------------------------------------------------------------------
+# Find library [lib] using standard FIND_LIBRARY command and save its path into
+# variable named [var].
+
+MACRO (USE_LIBRARY var lib)
+  FIND_LIBRARY (${var} ${lib})
+  IF (${var})
+    MESSAGE (STATUS "FOUND ${${var}}")  # SHOULD BE BOLD GREEN
+  ELSE (${var})
+    MESSAGE (STATUS "ERROR ${${var}}")  # SHOULD BE BOLD RED
+  ENDIF (${var})
+ENDMACRO (USE_LIBRARY)
+
+# USE_PACKAGE (var lib inc [FIND_PATH_ARGS ...])
+# -----------------------------------------------------------------------------
+# Find package using USE_LIBRARY and USE_INCLUDE macros.
+
+MACRO (USE_PACKAGE lib inc)
+  USE_LIBRARY (LIB_${lib} ${lib})
+  USE_INCLUDE (INC_${lib} ${inc} ${ARGN})
+ENDMACRO (USE_PACKAGE)
+
 # USE_SUBPATH (var sub)
 # -----------------------------------------------------------------------------
 # Find subpath [sub] using standard FIND_PATH command and save its dirname into
@@ -77,29 +86,6 @@ MACRO (USE_SUBPATH var sub)
     MESSAGE (STATUS "ERROR ${var}")
   ENDIF (${var}_PREFIX)
 ENDMACRO (USE_SUBPATH)
-
-# USE_PACKAGE (var lib inc [FIND_PATH_ARGS ...])
-# -----------------------------------------------------------------------------
-# Find package using USE_LIBRARY and USE_INCLUDE macros.
-
-MACRO (USE_PACKAGE var lib inc)
-  IF (NOT ${lib} STREQUAL "NO_LIB")
-    USE_LIBRARY (LIB_${var} ${lib})
-  ENDIF (NOT ${lib} STREQUAL "NO_LIB")
-  IF (NOT ${inc} STREQUAL "NO_INC")
-    USE_INCLUDE (INC_${var} ${inc} ${ARGN})
-  ENDIF (NOT ${inc} STREQUAL "NO_INC")
-ENDMACRO (USE_PACKAGE)
-
-# USE_PKG (pkg)
-# -----------------------------------------------------------------------------
-# Find package using USE_PACKAGE and some heuristic on naming traditions.
-# TODO merge with USE_PACKAGE using optional arguments.
-
-MACRO (USE_PKG pkg)
-  STRING (TOUPPER ${pkg} var)
-  USE_PACKAGE (${var} ${pkg} ${pkg}.h)
-ENDMACRO (USE_PKG)
 
 ###############################################################################
 # MAKE_PROGRAM (apath)
