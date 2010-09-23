@@ -11,13 +11,9 @@ SET_TARGET_PROPERTIES(coda PROPERTIES VERSION 0.1 SOVERSION 1)
 
 MAKE_PROGRAM (blizzard coda ${LIB_Judy} ${LIB_expat} pthread dl)
 INSTALL (FILES blizzard/plugin.hpp DESTINATION include/blizzard)
-
+INSTALL_TEMPLATE (blizzard/blizzard.xml.in DESTINATION etc/blizzard)
 MAKE_SHARED (tests/blizzard/blzmod_example)
-#ADD_LIBRARY (lz_test SHARED lizard/plugin_test.cpp) # XXX
-CONFIGURE_FILE (blizzard/blizzard.xml.in ${PROJECT_BINARY_DIR}/auto/blizzard/blizzard.xml)
 
 ENABLE_TESTING()
-ADD_EXECUTABLE(test_txml tests/txml/test_txml.cpp)
-TARGET_LINK_LIBRARIES(test_txml coda)
-ADD_TEST(test_txml test_txml)
+MAKE_TEST (tests/txml coda)
 

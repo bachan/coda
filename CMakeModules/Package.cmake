@@ -88,21 +88,6 @@ MACRO (USE_SUBPATH var sub)
 ENDMACRO (USE_SUBPATH)
 
 ###############################################################################
-# MAKE_PROGRAM (apath)
-# -----------------------------------------------------------------------------
-# Make program (executable) from source code inside the [apath] subfolder and
-# install it.
-
-MACRO (MAKE_PROGRAM apath)
-  GET_FILENAME_COMPONENT (${apath}_NAME "${apath}" NAME)
-  AUX_SOURCE_DIRECTORY (${apath} SRC_${${apath}_NAME})
-  ADD_EXECUTABLE (${${apath}_NAME} ${SRC_${${apath}_NAME}})
-  IF (${ARGC} GREATER 1)
-    TARGET_LINK_LIBRARIES (${${apath}_NAME} ${ARGN})
-  ENDIF (${ARGC} GREATER 1)
-  INSTALL (TARGETS ${${apath}_NAME} DESTINATION bin)
-ENDMACRO (MAKE_PROGRAM)
-
 # MAKE_LIBRARY (apath <SHARED|STATIC> [LIBRARIES_TO_LINK_WITH [...]])
 # -----------------------------------------------------------------------------
 # Make library of SHARED or STATIC type from source code inside the [apath]
@@ -137,6 +122,46 @@ ENDMACRO (MAKE_SHARED)
 MACRO (MAKE_STATIC apath)
   MAKE_LIBRARY (${apath} STATIC ${ARGN})
 ENDMACRO (MAKE_STATIC)
+
+# MAKE_PROGRAM (apath)
+# -----------------------------------------------------------------------------
+# Make program (executable) from source code inside the [apath] subfolder and
+# install it.
+
+MACRO (MAKE_PROGRAM apath)
+  GET_FILENAME_COMPONENT (${apath}_NAME "${apath}" NAME)
+  AUX_SOURCE_DIRECTORY (${apath} SRC_${${apath}_NAME})
+  ADD_EXECUTABLE (${${apath}_NAME} ${SRC_${${apath}_NAME}})
+  IF (${ARGC} GREATER 1)
+    TARGET_LINK_LIBRARIES (${${apath}_NAME} ${ARGN})
+  ENDIF (${ARGC} GREATER 1)
+  INSTALL (TARGETS ${${apath}_NAME} DESTINATION bin)
+ENDMACRO (MAKE_PROGRAM)
+
+# MAKE_TEST (apath)
+# -----------------------------------------------------------------------------
+# Make test from source code inside the [apath] subfolder.
+
+MACRO (MAKE_TEST apath)
+  GET_FILENAME_COMPONENT (${apath}_NAME "${apath}" NAME)
+  AUX_SOURCE_DIRECTORY (${apath} SRC_test_${${apath}_NAME})
+  ADD_EXECUTABLE (test_${${apath}_NAME} ${SRC_test_${${apath}_NAME}})
+  IF (${ARGC} GREATER 1)
+    TARGET_LINK_LIBRARIES (test_${${apath}_NAME} ${ARGN})
+  ENDIF (${ARGC} GREATER 1)
+  ADD_TEST (test_${${apath}_NAME} test_${${apath}_NAME}})
+ENDMACRO (MAKE_TEST)
+
+# INSTALL_TEMPLATE (sub [INSTALL_ARGS [...]])
+# -----------------------------------------------------------------------------
+# Install template files (*.in) with one line of code, all arguments except the
+# first one will be left untouched and proxied to INSTALL (FILES) call.
+
+MACRO (INSTALL_TEMPLATE sub)
+  STRING (REGEX REPLACE "\\.in$" "" ${sub}_NOIN ${sub})
+  CONFIGURE_FILE (${sub} ${PROJECT_BINARY_DIR}/auto/${${sub}_NOIN})
+  INSTALL (FILES ${PROJECT_BINARY_DIR}/auto/${${sub}_NOIN} ${ARGN})
+ENDMACRO (INSTALL_TEMPLATE)
 
 ###############################################################################
 # GET_LOCALTIME (var [format [tmzone]])
