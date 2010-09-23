@@ -10,6 +10,7 @@
 #include <sys/time.h>
 #include <pthread.h>
 #include <stdexcept>
+#include <coda/daemon.h>
 #include "server.hpp"
 
 lizard::statistics stats;
@@ -102,6 +103,7 @@ inline std::string events2string(const epoll_event& ev)
 
 namespace lizard
 {
+#if 0
     extern volatile sig_atomic_t    quit;
     extern volatile sig_atomic_t    hup;
     extern volatile sig_atomic_t    rotate;
@@ -109,12 +111,13 @@ namespace lizard
     extern int             MSG_LIZARD_ID;
 
     //statistics stats;
+#endif
 
-    void * epoll_loop_function(void * ptr);
-    void * easy_loop_function(void * ptr);
-    void * hard_loop_function(void * ptr);
-    void * stats_loop_function(void * ptr);
-    void * idle_loop_function(void * ptr);
+    void* epoll_loop_function(void* ptr);
+    void*  easy_loop_function(void* ptr);
+    void*  hard_loop_function(void* ptr);
+    void* stats_loop_function(void* ptr);
+    void*  idle_loop_function(void* ptr);
 }
 
 #if 0
@@ -156,13 +159,14 @@ void lizard::server::lz_callback::vlog_message(plugin_log_levels log_level, cons
 
 //-----------------------------------------------------------------------------------------------------------
 
-lizard::server::server() :    incoming_sock(-1),
-                       stats_sock(-1),
-                       epoll_sock(-1),
-                epoll_wakeup_isock(-1),
-                epoll_wakeup_osock(-1),
-                threads_num(0),
-                start_time(0)
+lizard::server::server()
+	: incoming_sock(-1)
+	, stats_sock(-1)
+	, epoll_sock(-1)
+	, epoll_wakeup_isock(-1)
+	, epoll_wakeup_osock(-1)
+	, threads_num(0)
+	, start_time(0)
 {
     pthread_mutex_init(&done_mutex, 0);
 
@@ -174,14 +178,14 @@ lizard::server::server() :    incoming_sock(-1),
     pthread_cond_init(&hard_proc_cond, 0);
     pthread_cond_init(&stats_proc_cond, 0);
 
-    start_time = time(0);
+    start_time = time(NULL);
 }
 
 lizard::server::~server()
 {
     log_debug("~server()");
 
-    quit = 1;
+	coda_terminate = 1;
     join_threads();
 
     finalize();
@@ -200,8 +204,6 @@ lizard::server::~server()
 
     log_debug("/~server()");
 }
-
-//-----------------------------------------------------------------------------------------------------------
 
 void lizard::server::init_threads()
 {
@@ -525,7 +527,7 @@ bool lizard::server::pop_done(http** el)
 
 //-----------------------------------------------------------------------------------------------------------
 
-void lizard::server::load_config(const char *xml_in, std::string &pid_in)
+void lizard::server::load_config(const char* xml_in)
 {
     if(::access(xml_in, F_OK) < 0)
     {
@@ -540,11 +542,6 @@ void lizard::server::load_config(const char *xml_in, std::string &pid_in)
     config.clear();
     config.load_from_file(xml_in);
     config.check();
-
-    if (pid_in.empty())
-    {
-        pid_in = config.root.pid_file_name;
-    }
 
     /* log_close(MSG_LIZARD_ID); */
     /* int res = log_sstr(MSG_LIZARD_ID, */
@@ -819,13 +816,13 @@ void lizard::server::epoll_processing_loop()
 
     stats.process();
 
-    if (rotate)
+	if (0 != coda_rotatelog)
     {
 		log_rotate(config.root.log_file_name.c_str());
 #if 0
         log_rotate(MSG_LIZARD_ACCESS_LOG_ID);
 #endif
-        rotate = 0;
+		coda_rotatelog = 0;
     }
 }
 
@@ -1038,33 +1035,27 @@ void lizard::server::hard_processing_loop()
     }
 }
 
+
+
 void lizard::server::idle_processing_loop()
 {
-    if(0 == config.root.plugin.idle_timeout)
+    if (0 == config.root.plugin.idle_timeout)
     {
-        log_debug("idle_loop_function: timing once");
-
         factory.idle();
 
-        while(!quit && !hup)
+        while (0 == coda_terminate && 0 == coda_changecfg)
         {
             sleep(1);
         }
     }
-    else
-    {
-        log_debug("idle_loop_function: timing every %d(ms)", (int)config.root.plugin.idle_timeout);
-
-        long secs = (config.root.plugin.idle_timeout * 1000000LLU) / 1000000000LLU;
-        long nsecs = (config.root.plugin.idle_timeout * 1000000LLU) % 1000000000LLU;
-
-        while(!quit && !hup)
-        {
-            factory.idle();
-
-            lz_utils::uwait(secs, nsecs);
-        }
-    }
+	else
+	{
+		while (0 == coda_terminate && 0 == coda_changecfg)
+		{
+			factory.idle();
+			coda_msleep(config.root.plugin.idle_timeout);
+		}
+	}
 }
 
 
@@ -1078,14 +1069,14 @@ void *lizard::epoll_loop_function(void *ptr)
 
     try
     {
-        while (!quit && !hup)
+        while (0 == coda_terminate && 0 == coda_changecfg)
         {
             srv->epoll_processing_loop();
         }
     }
     catch (const std::exception &e)
     {
-        quit = 1;
+		coda_terminate = 1;
         log_crit("epoll_loop: exception: %s", e.what());
     }
 
@@ -1101,14 +1092,14 @@ void *lizard::easy_loop_function(void *ptr)
 
     try
     {
-        while (!quit && !hup)
+        while (0 == coda_terminate && 0 == coda_changecfg)
         {
             srv->easy_processing_loop();
         }
     }
     catch (const std::exception &e)
     {
-        quit = 1;
+        coda_terminate = 1;
         log_crit("easy_loop: exception: %s", e.what());
     }
 
@@ -1124,14 +1115,14 @@ void *lizard::hard_loop_function(void *ptr)
 
     try
     {
-        while (!quit && !hup)
+        while (0 == coda_terminate && 0 == coda_changecfg)
         {
              srv->hard_processing_loop();
         }
     }
     catch (const std::exception &e)
     {
-        quit = 1;
+        coda_terminate = 1;
         log_crit("hard_loop: exception: %s", e.what());
     }
 
@@ -1147,14 +1138,14 @@ void *lizard::idle_loop_function(void *ptr)
 
     try
     {
-        while (!quit && !hup)
+        while (0 == coda_terminate && 0 == coda_changecfg)
         {
              srv->idle_processing_loop();
         }
     }
     catch (const std::exception &e)
     {
-        quit = 1;
+        coda_terminate = 1;
         log_crit("idle_loop: exception: %s", e.what());
     }
 
@@ -1171,7 +1162,7 @@ void *lizard::stats_loop_function(void *ptr)
 
     try
     {
-        while (!quit && !hup)
+        while (0 == coda_terminate && 0 == coda_changecfg)
         {
             if(srv->stats_sock != -1)
             {
@@ -1279,7 +1270,7 @@ void *lizard::stats_loop_function(void *ptr)
     }
     catch (const std::exception &e)
     {
-        quit = 1;
+        coda_terminate = 1;
         log_crit("stats_loop: exception: %s", e.what());
     }
 

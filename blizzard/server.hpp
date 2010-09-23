@@ -28,53 +28,44 @@ class server
     pthread_t stats_th;
     pthread_t idle_th;
 
-    mutable pthread_mutex_t    easy_proc_mutex;
-    mutable pthread_cond_t    easy_proc_cond;
+    mutable pthread_mutex_t  easy_proc_mutex;
+    mutable pthread_cond_t   easy_proc_cond;
+    mutable pthread_mutex_t  hard_proc_mutex;
+    mutable pthread_cond_t   hard_proc_cond;
+    mutable pthread_mutex_t stats_proc_mutex;
+    mutable pthread_cond_t  stats_proc_cond;
+    mutable pthread_mutex_t       done_mutex;
 
-    mutable pthread_mutex_t    hard_proc_mutex;
-    mutable pthread_cond_t    hard_proc_cond;
+    std::deque<http*> easy_queue;
+    std::deque<http*> hard_queue;
+    std::deque<http*> done_queue;
 
-    mutable pthread_mutex_t    stats_proc_mutex;
-    mutable pthread_cond_t    stats_proc_cond;
+    fd_map fds;
+    plugin_factory factory;
+    lz_config config;
 
-    mutable pthread_mutex_t    done_mutex;
+    int incoming_sock;
+    int stats_sock;
+    int epoll_sock;
+    int epoll_wakeup_isock;
+    int epoll_wakeup_osock;
+    int threads_num;
+    time_t start_time;
 
-    std::deque<http*>    easy_queue;
-    std::deque<http*>    hard_queue;
-    std::deque<http*>    done_queue;
-
-    fd_map            fds;
-
-    plugin_factory      factory;
-
-    lz_config        config;
-
-    int             incoming_sock;
-    int             stats_sock;
-    int            epoll_sock;
-
-    int            epoll_wakeup_isock;
-    int            epoll_wakeup_osock;
-
-    int            threads_num;
-
-    time_t            start_time;
-    // network part
+	/* network part */
 
     int  init_epoll();
-
     void add_epoll_action(int fd, int action, uint32_t mask);
-
     void timeouts_kill_oldest();
 
-    void epoll_processing_loop();
-        void easy_processing_loop();
-    void hard_processing_loop();
-        void idle_processing_loop();
+	void epoll_processing_loop();
+	void  easy_processing_loop();
+	void  hard_processing_loop();
+	void  idle_processing_loop();
 
     //void stats_print();
 
-    // pthreads part
+    /* pthreads part */
 
     bool process_event(const epoll_event&);
     bool process(http *);
@@ -93,26 +84,26 @@ class server
 
     void fire_all_threads();
 
-    friend void * epoll_loop_function(void * ptr);
-    friend void * easy_loop_function(void * ptr);
-    friend void * hard_loop_function(void * ptr);
-    friend void * stats_loop_function(void * ptr);
-    friend void * idle_loop_function(void * ptr);
+    friend void* epoll_loop_function(void* ptr);
+    friend void*  easy_loop_function(void* ptr);
+    friend void*  hard_loop_function(void* ptr);
+    friend void* stats_loop_function(void* ptr);
+    friend void*  idle_loop_function(void* ptr);
 
 public:
     server();
     ~server();
 
-    void load_config(const char *xml_in, std::string &pid_in);
+    void load_config(const char* xml_in);
     void prepare();
     void finalize();
 
     void init_threads();
     void join_threads();
 
-    bool pid_file_init();
-    bool pid_file_is_set()const;
-    void pid_file_free();
+    /* bool pid_file_init(); */
+    /* bool pid_file_is_set()const; */
+    /* void pid_file_free(); */
 };
 
 //-----------------------------------------------------------------

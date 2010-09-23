@@ -202,6 +202,7 @@ int lz_utils::accept_new_connection(int fd, struct in_addr& ip)
     return connection;
 }
 
+#if 0
 bool lz_utils::pid_file_init(const char * pid_fn)
 {
     char buf[32];
@@ -230,3 +231,4 @@ bool lz_utils::pid_file_free(const char * pid_fn)
 {
     return ::unlink(pid_fn) == 0;
 }
+#endif
