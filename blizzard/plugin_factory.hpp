@@ -1,30 +1,28 @@
-#ifndef T_SERV_PLUGIN_FACTORY_HPP___
-#define T_SERV_PLUGIN_FACTORY_HPP___
+#ifndef __BLZ_PLUGIN_FACTORY_HPP__
+#define __BLZ_PLUGIN_FACTORY_HPP__
 
 #include <pthread.h>
 #include "config.hpp"
 #include "plugin.hpp"
 
-namespace lizard
-{
+namespace lizard {
 
 class plugin_factory
 {
     void* loaded_module;
-    lizard::plugin* plugin_handle;
+    blz_plugin* plugin_handle;
 
 public:
-    plugin_factory();
-    ~plugin_factory();
+	 plugin_factory();
+	~plugin_factory();
 
-    void load_module(const lizard::lz_config::ROOT::PLUGIN& pd);
-    void unload_module();
+	blz_plugin* open_plugin() const;
 
-    lizard::plugin* get_plugin() const;
-
-    void idle();
+	void load_module(const blz_config::BLZ::PLUGIN& pd);
+	void stop_module();
+	void idle();
 };
 
 }
 
-#endif
+#endif /* __BLZ_PLUGIN_FACTORY_HPP__ */

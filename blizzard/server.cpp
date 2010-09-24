@@ -238,9 +238,9 @@ void lizard::server::init_threads()
     }
     log_info("%d internal threads created", threads_num);
 
-    log_info("requested worker threads {easy: %d, hard: %d}", config.root.plugin.easy_threads, config.root.plugin.hard_threads);
+    log_info("requested worker threads {easy: %d, hard: %d}", config.blz.plugin.easy_threads, config.blz.plugin.hard_threads);
 
-    for(int i = 0; i < config.root.plugin.easy_threads; i++)
+    for(int i = 0; i < config.blz.plugin.easy_threads; i++)
     {
         pthread_t th;
         int r = pthread_create(&th, NULL, &easy_loop_function, this);
@@ -260,7 +260,7 @@ void lizard::server::init_threads()
         }
     }
 
-    for(int i = 0; i < config.root.plugin.hard_threads; i++)
+    for(int i = 0; i < config.blz.plugin.hard_threads; i++)
     {
         pthread_t th;
         int r = pthread_create(&th, NULL, &hard_loop_function, this);
@@ -378,7 +378,7 @@ bool lizard::server::push_easy(http * el)
     size_t eq_sz = easy_queue.size(); 
     stats.report_easy_queue_len(eq_sz);
 
-    if(config.root.plugin.easy_queue_limit == 0 || (eq_sz < (size_t)config.root.plugin.easy_queue_limit))
+    if(config.blz.plugin.easy_queue_limit == 0 || (eq_sz < (size_t)config.blz.plugin.easy_queue_limit))
     {
         easy_queue.push_back(el);
         res = true;
@@ -435,7 +435,7 @@ bool lizard::server::push_hard(http * el)
 
     stats.report_hard_queue_len(hq_sz);
 
-    if(config.root.plugin.hard_queue_limit == 0 || (hq_sz < (size_t)config.root.plugin.hard_queue_limit))
+    if(config.blz.plugin.hard_queue_limit == 0 || (hq_sz < (size_t)config.blz.plugin.hard_queue_limit))
     {
         hard_queue.push_back(el);
 
@@ -531,7 +531,7 @@ void lizard::server::load_config(const char* xml_in)
 {
     if(::access(xml_in, F_OK) < 0)
     {
-        std::string s = "access('" + config.root.log_file_name + "') failed : ";
+        std::string s = "access('" + config.blz.log_file_name + "') failed : ";
         char buff[1024];
 
                 s += strerror_r(errno, buff, 1024); 
@@ -545,11 +545,11 @@ void lizard::server::load_config(const char* xml_in)
 
     /* log_close(MSG_LIZARD_ID); */
     /* int res = log_sstr(MSG_LIZARD_ID, */
-                         /* config.root.log_file_name.c_str(), */
-                           /* config.root.log_level.c_str()); */
+                         /* config.blz.log_file_name.c_str(), */
+                           /* config.blz.log_level.c_str()); */
     /* if(res < 0) */
     /* { */
-        /* std::string s = "logger init from ('" + config.root.log_file_name + "','" + config.root.log_level + "') failed: "; */
+        /* std::string s = "logger init from ('" + config.blz.log_file_name + "','" + config.blz.log_level + "') failed: "; */
         /* char buff[1024]; */
         /* s += strerror_r(errno, buff, 1024); */
         /* throw std::logic_error(s); */
@@ -557,17 +557,17 @@ void lizard::server::load_config(const char* xml_in)
 
 	int res;
 	
-	if (0 > (res = log_create_from_str(config.root.log_file_name.c_str(), config.root.log_level.c_str())))
+	if (0 > (res = log_create_from_str(config.blz.log_file_name.c_str(), config.blz.log_level.c_str())))
 	{
 		throw coda_errno (errno, "logger init from (%s, %s) failed",
-			config.root.log_file_name.c_str(),
-			config.root.log_level.c_str());
+			config.blz.log_file_name.c_str(),
+			config.blz.log_level.c_str());
 	}
 
 #if 0
     log_close(MSG_LIZARD_ACCESS_LOG_ID);
 
-    if(!config.root.access_log_file_name.empty())
+    if(!config.blz.access_log_file_name.empty())
     {
         /* 
          * bachan :
@@ -578,11 +578,11 @@ void lizard::server::load_config(const char* xml_in)
          */
 
         int r = log_sacc(MSG_LIZARD_ACCESS_LOG_ID,
-                        config.root.access_log_file_name.c_str());
+                        config.blz.access_log_file_name.c_str());
 
         if(r < 0)
         {
-            std::string s = "access_log init from " + config.root.access_log_file_name + " failed: ";
+            std::string s = "access_log init from " + config.blz.access_log_file_name + " failed: ";
             char buff[1024];
 
             s += strerror_r(errno, buff, 1024);
@@ -594,16 +594,16 @@ void lizard::server::load_config(const char* xml_in)
 
 void lizard::server::prepare()
 {
-    factory.load_module(config.root.plugin);
+    factory.load_module(config.blz.plugin);
     epoll_sock = init_epoll();
 
     //----------------------------
     //add incoming sock
 
-     incoming_sock = lz_utils::add_listener(config.root.plugin.ip.c_str(), config.root.plugin.port.c_str(), LISTEN_QUEUE_SZ);
+     incoming_sock = lz_utils::add_listener(config.blz.plugin.ip.c_str(), config.blz.plugin.port.c_str(), LISTEN_QUEUE_SZ);
         if(-1 != incoming_sock)
     {
-            log_info("lizard is bound to %s:%s", config.root.plugin.ip.c_str(), config.root.plugin.port.c_str());
+            log_info("lizard is bound to %s:%s", config.blz.plugin.ip.c_str(), config.blz.plugin.port.c_str());
     }
 
     lz_utils::set_nonblocking(incoming_sock);
@@ -612,10 +612,10 @@ void lizard::server::prepare()
     //----------------------------
     //add stats sock
 
-    stats_sock = lz_utils::add_listener(config.root.stats.ip.c_str(), config.root.stats.port.c_str());
+    stats_sock = lz_utils::add_listener(config.blz.stats.ip.c_str(), config.blz.stats.port.c_str());
     if(-1 != stats_sock)
     {
-        log_info("lizard statistics is bound to %s:%s", config.root.stats.ip.c_str(), config.root.stats.port.c_str());
+        log_info("lizard statistics is bound to %s:%s", config.blz.stats.ip.c_str(), config.blz.stats.port.c_str());
     }
 
     lz_utils::set_socket_timeout(stats_sock, 50000);
@@ -670,7 +670,7 @@ void lizard::server::finalize()
         epoll_sock = -1;
     }
 
-    factory.unload_module();
+    factory.stop_module();
 }
 
 //-----------------------------------------------------------------------------------------------------------
@@ -812,13 +812,13 @@ void lizard::server::epoll_processing_loop()
         }
     }
 
-    fds.kill_oldest(1000 * config.root.plugin.connection_timeout);
+    fds.kill_oldest(1000 * config.blz.plugin.connection_timeout);
 
     stats.process();
 
 	if (0 != coda_rotatelog)
     {
-		log_rotate(config.root.log_file_name.c_str());
+		log_rotate(config.blz.log_file_name.c_str());
 #if 0
         log_rotate(MSG_LIZARD_ACCESS_LOG_ID);
 #endif
@@ -882,7 +882,7 @@ bool lizard::server::process(http * con)
         if(con->state() == http::sReadyToHandle)
         {
 #if 0
-            if(!config.root.access_log_file_name.empty())
+            if(!config.blz.access_log_file_name.empty())
             {
                 /*
                  * bachan :
@@ -904,11 +904,11 @@ bool lizard::server::process(http * con)
 
             if(false == push_easy(con))
             {
-                log_debug("easy queue full: easy_queue_size == %d", config.root.plugin.easy_queue_limit);
+                log_debug("easy queue full: easy_queue_size == %d", config.blz.plugin.easy_queue_limit);
 
                 con->set_response_status(503);
-                con->set_response_header("Content-type", "text/plain");
-                con->append_response_body("easy queue filled!", strlen("easy queue filled!"));
+                con->add_response_header("Content-type", "text/plain");
+                con->add_response_buffer("easy queue filled!", strlen("easy queue filled!"));
 
                 push_done(con);
             }
@@ -926,67 +926,53 @@ bool lizard::server::process(http * con)
 
 void lizard::server::easy_processing_loop()
 {
-    lizard::plugin * plugin = factory.get_plugin();
+    blz_plugin* plugin = factory.open_plugin();
 
-    //lizard::statistics::reporter easy_reporter(stats, lizard::statistics::reporter::repEasy);
+	/* lizard::statistics::reporter easy_reporter(stats, lizard::statistics::reporter::repEasy); */
 
-    http * task = 0;
+    http* task = 0;
 
     if(pop_easy_or_wait(&task))
     {
         log_debug("lizard::easy_loop_function.fd = %d", task->get_fd());
 
-        switch(plugin->handle_easy(task))
+        switch(plugin->easy(task))
         {
-        case plugin::rSuccess:
-
+        case BLZ_OK:
             log_debug("easy_loop: processed %d", task->get_fd());
-
             push_done(task);
-
             break;
 
-        case plugin::rHard:
+		case BLZ_ERROR:
+            log_error("easy thread reports error");
+            task->set_response_status(503);
+            task->add_response_header("Content-type", "text/plain");
+            task->add_response_buffer("easy loop error", strlen("easy loop error"));
+            push_done(task);
+            break;
 
+        case BLZ_AGAIN:
             log_debug("easy thread -> hard thread");
-
-            if(config.root.plugin.hard_threads)
+            if(config.blz.plugin.hard_threads)
             {
                 bool ret = push_hard(task);
                 if(false == ret)
                 {
-                    log_debug("hard queue full: hard_queue_size == %d", config.root.plugin.hard_queue_limit);
-
+                    log_debug("hard queue full: hard_queue_size == %d", config.blz.plugin.hard_queue_limit);
                     task->set_response_status(503);
-                    task->set_response_header("Content-type", "text/plain");
-                    task->append_response_body("hard queue filled!", strlen("hard queue filled!"));
-
+                    task->add_response_header("Content-type", "text/plain");
+                    task->add_response_buffer("hard queue filled!", strlen("hard queue filled!"));
                     push_done(task);
                 }
             }
             else
             {
                 log_error("easy-thread tried to enqueue hard-thread, but config::plugin::hard_threads = 0");
-
                 task->set_response_status(503);
-                task->set_response_header("Content-type", "text/plain");
-                task->append_response_body("easy loop error", strlen("easy loop error"));
-
+                task->add_response_header("Content-type", "text/plain");
+                task->add_response_buffer("easy loop error", strlen("easy loop error"));
                 push_done(task);
             }
-
-            break;
-
-        case plugin::rError:
-
-            log_error("easy thread reports error");
-
-            task->set_response_status(503);
-            task->set_response_header("Content-type", "text/plain");
-            task->append_response_body("easy loop error", strlen("easy loop error"));
-
-            push_done(task);
-
             break;
         }
 
@@ -996,50 +982,40 @@ void lizard::server::easy_processing_loop()
 
 void lizard::server::hard_processing_loop()
 {
-     lizard::plugin * plugin = factory.get_plugin();
+	blz_plugin* plugin = factory.open_plugin();
 
-//    lizard::statistics::reporter hard_reporter(stats, lizard::statistics::reporter::repHard);
+	/* lizard::statistics::reporter hard_reporter(stats, lizard::statistics::reporter::repHard); */
 
-    http * task = 0;
+    http* task = 0;
 
-    if(pop_hard_or_wait(&task))
+    if (pop_hard_or_wait(&task))
     {
-
         log_debug("lizard::hard_loop_function.fd = %d", task->get_fd());
 
-        switch(plugin->handle_hard(task))
+        switch (plugin->hard(task))
         {
-        case plugin::rSuccess:
-
+        case BLZ_OK:
             log_debug("hard_loop: processed %d", task->get_fd());
-
             push_done(task);
-
             break;
 
-        case plugin::rHard:
-        case plugin::rError:
-
+        case BLZ_ERROR:
+        case BLZ_AGAIN:
             log_error("hard_loop reports error");
-
             task->set_response_status(503);
-            task->set_response_header("Content-type", "text/plain");
-            task->append_response_body("hard loop error", strlen("hard loop error"));
-
+            task->add_response_header("Content-type", "text/plain");
+            task->add_response_buffer("hard loop error", strlen("hard loop error"));
             push_done(task);
-
             break;
         }
 
-        //easy_reporter.commit();
+		/* easy_reporter.commit(); */
     }
 }
 
-
-
 void lizard::server::idle_processing_loop()
 {
-    if (0 == config.root.plugin.idle_timeout)
+    if (0 == config.blz.plugin.idle_timeout)
     {
         factory.idle();
 
@@ -1053,7 +1029,7 @@ void lizard::server::idle_processing_loop()
 		while (0 == coda_terminate && 0 == coda_changecfg)
 		{
 			factory.idle();
-			coda_msleep(config.root.plugin.idle_timeout);
+			coda_msleep(config.blz.plugin.idle_timeout);
 		}
 	}
 }
@@ -1188,7 +1164,7 @@ void *lizard::stats_loop_function(void *ptr)
                         if(stats_parser.state() == http::sReadyToHandle)
                         {
 #if 0
-                            if(!srv->config.root.access_log_file_name.empty())
+                            if(!srv->config.blz.access_log_file_name.empty())
                             {
                                 log_access(MSG_LIZARD_ACCESS_LOG_ID, "%s|%s?%s|stats",
                                         inet_ntoa(stats_parser.get_request_ip()),
@@ -1198,7 +1174,7 @@ void *lizard::stats_loop_function(void *ptr)
 #endif
 
                             stats_parser.set_response_status(200);
-                            stats_parser.set_response_header("Content-type", "text/plain");
+                            stats_parser.add_response_header("Content-type", "text/plain");
 
                             std::string resp = "<lizard_stats>\n";
 
@@ -1208,7 +1184,7 @@ void *lizard::stats_loop_function(void *ptr)
 
 							time_t up_time = time(0) - srv->start_time;
 
-                            snprintf(buff, 1024, "\t<lizard_version>"LIZARD_STR_VERSION"</lizard_version>\n\t<uptime>%d</uptime>\n", (int)up_time);
+                            snprintf(buff, 1024, "\t<lizard_version>"BLZ_VERSION"</lizard_version>\n\t<uptime>%d</uptime>\n", (int)up_time);
 							resp += buff;
 
 							snprintf(buff, 1024, "\t<rps>%.4f</rps>\n", stats.get_rps());
@@ -1246,7 +1222,7 @@ void *lizard::stats_loop_function(void *ptr)
                             //------------------------------------------------------------------------------------
                             resp += "</lizard_stats>\n";
 
-                            stats_parser.append_response_body(resp.data(), resp.size());
+                            stats_parser.add_response_buffer(resp.data(), resp.size());
 
                         }
                         else if(stats_parser.state() == http::sDone)

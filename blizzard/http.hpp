@@ -9,9 +9,7 @@
 namespace lizard
 {
 
-//---------------------------------------------------------------------------------------
-
-class http : public lizard::task
+class http : public blz_task
 {
 public:
     enum http_state {sUndefined, sReadingHead, sReadingHeaders, sReadingPost, sReadyToHandle, sWriting, sDone};
@@ -59,8 +57,7 @@ protected:
     header_items[MAX_HEADER_ITEMS];
 
     int header_items_num;
-
-    task::request_method_t method;
+    int method;
 
     int protocol_major;
     int protocol_minor;
@@ -115,7 +112,7 @@ public:
 
     http_state state()const;
 
-    request_method_t get_request_method()const;
+    int get_request_method() const;
 
     int              get_version_major()const;
     int              get_version_minor()const;
@@ -124,22 +121,22 @@ public:
 
     struct in_addr   get_request_ip()const;
 
-    const char *     get_request_uri_path()const;
-    const char *     get_request_uri_params()const;
+    const char*      get_request_uri_path()const;
+    const char*      get_request_uri_params()const;
 
     size_t           get_request_body_len()const;
-    const uint8_t *  get_request_body()const;
+    const uint8_t*   get_request_body()const;
 
-    const char *     get_request_header(const char *)const;
+    const char*      get_request_header(const char *)const;
     size_t           get_request_headers_num()const;
-    const char *     get_request_header_key(int)const;
-    const char *     get_request_header_value(int)const;
+    const char*      get_request_header_key(int)const;
+    const char*      get_request_header_value(int)const;
 
-    void set_response_status(int);
-    void set_keepalive(bool);
     void set_cache(bool);
-    void set_response_header(const char * header_nm, const char * val);
-    void append_response_body(const char * data, size_t sz);
+    void set_keepalive(bool);
+    void set_response_status(int);
+    void add_response_header(const char* name, const char* data);
+    void add_response_buffer(const char* data, size_t size);
 };
 
 //---------------------------------------------------------------------------------------

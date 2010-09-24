@@ -1,27 +1,30 @@
 #include <dlfcn.h>
 #include "server.hpp"
 
-lizard::plugin_factory::plugin_factory() : loaded_module(0), plugin_handle(0)
+lizard::plugin_factory::plugin_factory()
+	: loaded_module(NULL)
+	, plugin_handle(NULL)
 {
 
 }
 
 lizard::plugin_factory::~plugin_factory()
 {
-    unload_module();
+    stop_module();
 }
 
-void lizard::plugin_factory::load_module(const lizard::lz_config::ROOT::PLUGIN& pd)
+void lizard::plugin_factory::load_module(const blz_config::BLZ::PLUGIN& pd)
 {
-    if(0 == pd.easy_threads)
+    if (0 == pd.easy_threads)
     {
         return;
     }
 
-    if(0 == loaded_module)
+    if (0 == loaded_module)
     {
         loaded_module = dlopen(pd.library.c_str(), RTLD_NOW | RTLD_LOCAL);
-        if(loaded_module == 0)
+
+        if (loaded_module == 0)
         {
             char buff[2048];
             snprintf(buff, 2048, "loading module '%s' failed: %s", pd.library.c_str(), dlerror());
@@ -36,16 +39,14 @@ void lizard::plugin_factory::load_module(const lizard::lz_config::ROOT::PLUGIN& 
 
     dlerror();
 
-    //------------------ UGLY evil hack -----------------
     union conv_union
     {
         void* v;
-        lizard::plugin* (*f)();
+        blz_plugin* (*f)();
     } conv;
 
     conv.v = dlsym(loaded_module, "get_plugin_instance");
-    lizard::plugin* (*func)() = conv.f;
-    //---------------------------------------------------
+    blz_plugin* (*func)() = conv.f;
 
     const char * errmsg = dlerror();
     if(0 != errmsg)
@@ -66,14 +67,13 @@ void lizard::plugin_factory::load_module(const lizard::lz_config::ROOT::PLUGIN& 
         throw std::logic_error(buff);
     }
 
-    if(plugin::rSuccess != plugin_handle->set_param(pd.params.c_str()))
+    if (BLZ_OK != plugin_handle->load(pd.params.c_str()))
     {
         throw std::logic_error("Plugin init failed");
     }
-
 }
 
-void lizard::plugin_factory::unload_module()
+void lizard::plugin_factory::stop_module()
 {
     if(plugin_handle)
     {
@@ -88,7 +88,7 @@ void lizard::plugin_factory::unload_module()
     }
 }
 
-lizard::plugin * lizard::plugin_factory::get_plugin()const
+blz_plugin* lizard::plugin_factory::open_plugin() const
 {
     return plugin_handle;
 }

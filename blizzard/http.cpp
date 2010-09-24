@@ -283,7 +283,7 @@ lizard::http::http_state lizard::http::state()const
     return state_;
 }
 
-lizard::task::request_method_t lizard::http::get_request_method()const
+int lizard::http::get_request_method()const
 {
     return method;
 }
@@ -348,12 +348,12 @@ size_t lizard::http::get_request_headers_num()const
     return header_items_num;
 }
 
-const char * lizard::http::get_request_header_key(int sz)const
+const char* lizard::http::get_request_header_key(int sz)const
 {
     return header_items[sz].key;
 }
 
-const char * lizard::http::get_request_header_value(int sz)const
+const char* lizard::http::get_request_header_value(int sz)const
 {
     return header_items[sz].value;
 }
@@ -373,17 +373,17 @@ void lizard::http::set_response_status(int st)
     response_status = st;
 }
 
-void lizard::http::set_response_header(const char * header_nm, const char * val)
+void lizard::http::add_response_header(const char* name, const char* data)
 {
-    out_headers.append_data(header_nm, strlen(header_nm));
+    out_headers.append_data(name, strlen(name));
     out_headers.append_data(":", 1);
-    out_headers.append_data(val, strlen(val));
+    out_headers.append_data(data, strlen(data));
     out_headers.append_data("\r\n", 2);
 }
 
-void lizard::http::append_response_body(const char * data, size_t sz)
+void lizard::http::add_response_buffer(const char* data, size_t size)
 {
-    out_post.append_data(data, sz);
+    out_post.append_data(data, size);
 }
 
 void lizard::http::process()
@@ -683,31 +683,23 @@ int lizard::http::parse_title()
     {
         case 'g':
         case 'G':
-
-            method = requestGET;
-
+            method = BLZ_METHOD_GET;
             break;
 
         case 'h':
         case 'H':
-
-            method = requestHEAD;
-
+            method = BLZ_METHOD_HEAD;
             break;
 
         case 'p':
         case 'P':
-
             if(mthd[1] == 'o' || mthd[1] == 'O')
             {
-                method = requestPOST;
+                method = BLZ_METHOD_POST;
             }
-
             break;
         default:
-
-            method = requestUNDEF;
-
+            method = BLZ_METHOD_UNDEF;
             return 501;
     }
 
@@ -735,7 +727,7 @@ int lizard::http::parse_header_line()
 
     if(0 == *key)
     {
-        if(method == requestPOST)
+        if(method == BLZ_METHOD_POST)
         {
             state_ = sReadingPost;
             /* log_debug("->sReadingPost"); */
@@ -847,7 +839,7 @@ int lizard::http::commit()
 
     int l = snprintf(buff, 1023,
             "HTTP/%d.%d %d %s\r\n"
-            "Server: lizard/" LIZARD_STR_VERSION "\r\n"
+            "Server: lizard/" BLZ_VERSION "\r\n"
             "Date: %s\r\n",
                protocol_major, protocol_minor, response_status, resp_status_str, now_str);
 
@@ -858,22 +850,22 @@ int lizard::http::commit()
         const char m[] = "Pragma: no-cache\r\nCache-control: no-cache\r\n";
         out_headers.append_data(m, sizeof(m) - 1);
 
-        //set_response_header("Pragma", "no-cache");
-        //set_response_header("Cache-control", "no-cache");
+        /* add_response_header("Pragma", "no-cache"); */
+		/* add_response_header("Cache-control", "no-cache"); */
     }
 
-    if(keep_alive)
+    if (keep_alive)
     {
-        set_response_header("Connection", "keep-alive");
+        add_response_header("Connection", "keep-alive");
     }
     else
     {
-        set_response_header("Connection", "close");
+        add_response_header("Connection", "close");
     }
 
     if(out_post.get_data_size())
     {
-        set_response_header("Accept-Ranges", "bytes");
+        add_response_header("Accept-Ranges", "bytes");
 
         l = snprintf(buff, 1023, "Content-Length: %d\r\n", (int)out_post.get_total_data_size());
         out_headers.append_data(buff, l);

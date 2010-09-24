@@ -42,7 +42,7 @@ class server
 
     fd_map fds;
     plugin_factory factory;
-    lz_config config;
+    blz_config config;
 
     int incoming_sock;
     int stats_sock;
