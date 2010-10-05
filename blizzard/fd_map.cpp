@@ -6,36 +6,36 @@ enum {EPOLL_TIMEOUT = 100};
 //TODO: min_timeout(): we should calculate next timeout for epoll here but I decided to set it to 10ms manually for now
 
 //--------------------------------------------------------------------------------
-lizard::fd_map::container::container() : first_access(0), last_access(0)
+blizzard::fd_map::container::container() : first_access(0), last_access(0)
 {
 
 }
 
-lizard::fd_map::container::~container()
+blizzard::fd_map::container::~container()
 {
 
 }
 //--------------------------------------------------------------------------------------------------------
-void lizard::fd_map::container::init_time()
+void blizzard::fd_map::container::init_time()
 {
     last_access = first_access = lz_utils::fine_clock();
 }
 //--------------------------------------------------------------------------------------------------------
-void lizard::fd_map::container::touch_time()
+void blizzard::fd_map::container::touch_time()
 {
     last_access = lz_utils::fine_clock();
 }
 //--------------------------------------------------------------------------------------------------------
-uint64_t lizard::fd_map::container::get_lifetime()const
+uint64_t blizzard::fd_map::container::get_lifetime()const
 {
     return last_access - first_access;
 }
 //--------------------------------------------------------------------------------
-lizard::fd_map::fd_map() : map_handle(0), timeouts(10)
+blizzard::fd_map::fd_map() : map_handle(0), timeouts(10)
 {
 }
 //--------------------------------------------------------------------------------------------------------
-lizard::fd_map::~fd_map()
+blizzard::fd_map::~fd_map()
 {
     if(map_handle)
     {
@@ -43,7 +43,7 @@ lizard::fd_map::~fd_map()
     }
 }
 //--------------------------------------------------------------------------------------------------------
-bool lizard::fd_map::create(int fd, const in_addr& ip)
+bool blizzard::fd_map::create(int fd, const in_addr& ip)
 {
     bool ret = true;
 
@@ -75,7 +75,7 @@ bool lizard::fd_map::create(int fd, const in_addr& ip)
     return ret;
 }
 
-lizard::http* lizard::fd_map::acquire(int fd)
+blizzard::http* blizzard::fd_map::acquire(int fd)
 {
 	/* log_debug("fds.acquire(%d)", fd); */
 
@@ -96,7 +96,7 @@ lizard::http* lizard::fd_map::acquire(int fd)
     return ret;
 }
 
-bool lizard::fd_map::release(http * el)
+bool blizzard::fd_map::release(http * el)
 {
     container * c = static_cast<container*>(el);
 
@@ -118,7 +118,7 @@ bool lizard::fd_map::release(http * el)
     }
 }
 //--------------------------------------------------------------------------------------------------------
-bool lizard::fd_map::del(int fd)
+bool blizzard::fd_map::del(int fd)
 {
     bool ret = false;
 
@@ -146,7 +146,7 @@ bool lizard::fd_map::del(int fd)
     return ret;
 }
 //--------------------------------------------------------------------------------------------------------
-void lizard::fd_map::kill_oldest(int timeout)
+void blizzard::fd_map::kill_oldest(int timeout)
 {
     timeline::iterator it;
 
@@ -166,12 +166,12 @@ void lizard::fd_map::kill_oldest(int timeout)
 
 }
 //--------------------------------------------------------------------------------------------------------
-int lizard::fd_map::min_timeout()const
+int blizzard::fd_map::min_timeout()const
 {
     return EPOLL_TIMEOUT;
 }
 //--------------------------------------------------------------------------------------------------------
-size_t lizard::fd_map::fd_count()const
+size_t blizzard::fd_map::fd_count()const
 {
      return (size_t)JudyLCount(map_handle, 0, -1, 0);
 }

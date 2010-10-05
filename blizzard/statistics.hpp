@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <time.h>
 
-namespace lizard {
+namespace blizzard {
 
 struct statistics
 {
@@ -51,6 +51,6 @@ public:
     double get_rps()const;
 };
 
-} /* namespace lizard */
+} /* namespace blizzard */
 
 #endif /* __LIZARD_STATS_HPP___ */

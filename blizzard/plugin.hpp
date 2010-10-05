@@ -16,29 +16,29 @@
 
 struct blz_task
 {
-    virtual ~blz_task(){};
-    virtual int get_request_method() const = 0;
+	virtual ~blz_task(){};
+	virtual int get_request_method() const = 0;
 
-    virtual int              get_version_major() const = 0;
-    virtual int              get_version_minor() const = 0;
-    virtual bool             get_keepalive() const = 0;
-    virtual bool             get_cache() const = 0;
-    virtual struct in_addr   get_request_ip() const = 0;
-    virtual const char*      get_request_uri_path() const = 0;
-    virtual const char*      get_request_uri_params() const = 0;
-    virtual size_t           get_request_body_len() const = 0;
-    virtual const uint8_t*   get_request_body() const = 0;
-    virtual const char*      get_request_header(const char*) const = 0;
-    virtual size_t           get_request_headers_num() const = 0;
-    virtual const char*      get_request_header_key(int) const = 0;
-    virtual const char*      get_request_header_value(int) const = 0;
+	virtual int              get_version_major() const = 0;
+	virtual int              get_version_minor() const = 0;
+	virtual bool             get_keepalive() const = 0;
+	virtual bool             get_cache() const = 0;
+	virtual struct in_addr   get_request_ip() const = 0;
+	virtual const char*      get_request_uri_path() const = 0;
+	virtual const char*      get_request_uri_params() const = 0;
+	virtual size_t           get_request_body_len() const = 0;
+	virtual const uint8_t*   get_request_body() const = 0;
+	virtual const char*      get_request_header(const char*) const = 0;
+	virtual size_t           get_request_headers_num() const = 0;
+	virtual const char*      get_request_header_key(int) const = 0;
+	virtual const char*      get_request_header_value(int) const = 0;
 
-    virtual void set_response_status(int) = 0;
-    virtual void set_keepalive(bool) = 0;
-    virtual void set_cache(bool) = 0;
+	virtual void set_response_status(int) = 0;
+	virtual void set_keepalive(bool) = 0;
+	virtual void set_cache(bool) = 0;
 
-    virtual void add_response_header(const char* name, const char* data) = 0;
-    virtual void add_response_buffer(const char* data, size_t sz) = 0;
+	virtual void add_response_header(const char* name, const char* data) = 0;
+	virtual void add_response_buffer(const char* data, size_t sz) = 0;
 };
 
 #define BLZ_OK 0
@@ -47,13 +47,13 @@ struct blz_task
 
 struct blz_plugin
 {
-    blz_plugin() {}
-    virtual ~blz_plugin() {}
+	blz_plugin() {}
+	virtual ~blz_plugin() throw() {}
 
-    virtual int load(const char* cfg) = 0;
-    virtual int easy(blz_task* tsk) = 0;
-    virtual int hard(blz_task* tsk) = 0;
-    virtual int idle() {}
+	virtual int load(const char* cfg) = 0;
+	virtual int easy(blz_task* tsk) = 0;
+	virtual int hard(blz_task* tsk) = 0;
+	virtual int idle() { return BLZ_OK; }
 };
 
 extern "C" blz_plugin* get_plugin_instance();

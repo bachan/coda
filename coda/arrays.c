@@ -10,7 +10,7 @@ char* coda_strnchr(const char* s, char c, size_t len)
 	return NULL;
 }
 
-char* rdev_strnstr(const char* s, const char* n, size_t len)
+char* coda_strnstr(const char* s, const char* n, size_t len)
 {
 	size_t nsz;
 	const char* es;

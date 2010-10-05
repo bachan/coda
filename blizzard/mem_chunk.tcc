@@ -1,4 +1,4 @@
-namespace lizard
+namespace blizzard
 {
 //-------------------------------------------------------------------------------------------------------------------
 template <typename T>
@@ -82,7 +82,7 @@ inline size_t mem_chunk<data_size>::get_total_data_size()const
 
 
 template<int data_size>
-inline typename lizard::mem_chunk<data_size> * mem_chunk<data_size>::get_next()const
+inline typename blizzard::mem_chunk<data_size> * mem_chunk<data_size>::get_next()const
 {
     return next;
 }

@@ -11,7 +11,7 @@
 #include "timeline.hpp"
 #include "statistics.hpp"
 
-namespace lizard
+namespace blizzard
 {
 //-----------------------------------------------------------------
 
@@ -62,6 +62,6 @@ public:
 
 }
 
-extern lizard::statistics stats;
+extern blizzard::statistics stats;
 
 #endif

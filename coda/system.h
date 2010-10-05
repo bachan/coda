@@ -1,9 +1,13 @@
 #ifndef __CODA_SYSTEM_H__
 #define __CODA_SYSTEM_H__
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
+#include <stdio.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <stdio.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/types.h>

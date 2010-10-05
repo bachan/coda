@@ -2,7 +2,7 @@
 
 #define MAX_TIME 1e10
 
-lizard::statistics::statistics()
+blizzard::statistics::statistics()
 {
     last_processed_time = time(0);
 
@@ -21,27 +21,27 @@ lizard::statistics::statistics()
     max_t = 0;
 }
 
-double lizard::statistics::get_min_lifetime()const
+double blizzard::statistics::get_min_lifetime()const
 {
     return resp_time_min < MAX_TIME ? resp_time_min/1000.0 : 0;
 }
 
-double lizard::statistics::get_mid_lifetime()const
+double blizzard::statistics::get_mid_lifetime()const
 {
     return resp_time_mid/1000.0;
 }
 
-double lizard::statistics::get_max_lifetime()const
+double blizzard::statistics::get_max_lifetime()const
 {
     return resp_time_max/1000.0;
 }
 
-double lizard::statistics::get_rps()const
+double blizzard::statistics::get_rps()const
 {
          return avg_rps;
 }
 
-void lizard::statistics::process()
+void blizzard::statistics::process()
 {
     time_t curr_time = time(0);
 
@@ -69,7 +69,7 @@ void lizard::statistics::process()
     }
 }
 
-void lizard::statistics::report_response_time(uint64_t t)
+void blizzard::statistics::report_response_time(uint64_t t)
 {
     resp_time_total += t;
 
@@ -86,7 +86,7 @@ void lizard::statistics::report_response_time(uint64_t t)
     requests_count++;
 }
 
-void lizard::statistics::report_easy_queue_len(size_t len)
+void blizzard::statistics::report_easy_queue_len(size_t len)
 {
      easy_queue_len = len;
 
@@ -96,7 +96,7 @@ void lizard::statistics::report_easy_queue_len(size_t len)
     }
 }
 
-void lizard::statistics::report_hard_queue_len(size_t len)
+void blizzard::statistics::report_hard_queue_len(size_t len)
 {
         hard_queue_len = len;
         
@@ -106,7 +106,7 @@ void lizard::statistics::report_hard_queue_len(size_t len)
     }
 }
 
-void lizard::statistics::report_done_queue_len(size_t len)
+void blizzard::statistics::report_done_queue_len(size_t len)
 {
         done_queue_len = len;
         

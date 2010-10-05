@@ -65,10 +65,10 @@ codes_table[] = {
 enum {HTTP_CODES_MAX_SIZE = 1024};
 const char * http_codes_array[HTTP_CODES_MAX_SIZE];
 
-const char ** lizard::http::http_codes = 0;
-int lizard::http::http_codes_num = 0;
+const char ** blizzard::http::http_codes = 0;
+int blizzard::http::http_codes_num = 0;
 
-lizard::http::http() :
+blizzard::http::http() :
     fd(-1),
     want_read(false),
     want_write(false),
@@ -117,7 +117,7 @@ lizard::http::http() :
     }
 }
 
-lizard::http::~http()
+blizzard::http::~http()
 {
     if(-1 != fd)
     {
@@ -132,7 +132,7 @@ lizard::http::~http()
     state_ = sUndefined;
 }
 
-void lizard::http::init(int new_fd, const struct in_addr& ip)
+void blizzard::http::init(int new_fd, const struct in_addr& ip)
 {
     if(-1 == fd)
     {
@@ -140,7 +140,7 @@ void lizard::http::init(int new_fd, const struct in_addr& ip)
     }
     else
     {
-        log_warn("lizard::http::[%d] tried to double-init on %d", fd, new_fd);
+        log_warn("blizzard::http::[%d] tried to double-init on %d", fd, new_fd);
     }
 
     in_ip = ip;
@@ -175,12 +175,12 @@ void lizard::http::init(int new_fd, const struct in_addr& ip)
 
     state_ = sUndefined;
 
-    /* log_debug("lizard::http::init(%d, %s)", new_fd, inet_ntoa(in_ip)); */
+    /* log_debug("blizzard::http::init(%d, %s)", new_fd, inet_ntoa(in_ip)); */
 }
 
-void lizard::http::destroy()
+void blizzard::http::destroy()
 {
-    /* log_debug("lizard::http::destroy(%d)", fd); */
+    /* log_debug("blizzard::http::destroy(%d)", fd); */
 
     if(-1 != fd)
     {
@@ -200,139 +200,139 @@ void lizard::http::destroy()
 }
 
 
-bool lizard::http::ready_read()const
+bool blizzard::http::ready_read()const
 {
     return can_read/* && want_read*/;// && !stop_reading;
 }
 
-bool lizard::http::ready_write()const
+bool blizzard::http::ready_write()const
 {
     return can_write && want_write;// && !stop_writing;
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
-void lizard::http::allow_read()
+void blizzard::http::allow_read()
 {
     can_read = true;
-    /* log_debug("lizard::http::process::allow_read(%d)", fd); */
+    /* log_debug("blizzard::http::process::allow_read(%d)", fd); */
 }
 
-void lizard::http::allow_write()
+void blizzard::http::allow_write()
 {
     can_write = true;
-    /* log_debug("lizard::http::process::allow_write(%d)", fd); */
+    /* log_debug("blizzard::http::process::allow_write(%d)", fd); */
 }
 
-bool lizard::http::ready()const
+bool blizzard::http::ready()const
 {
-    /* log_debug("lizard::http::ready() : read{c:%d w:%d st:%d}, write{c:%d w:%d st:%d}", */
+    /* log_debug("blizzard::http::ready() : read{c:%d w:%d st:%d}, write{c:%d w:%d st:%d}", */
 		/* can_read, want_read, stop_reading, can_write, want_write, stop_writing); */
 
     return ready_read() || ready_write();
 }
 
-bool lizard::http::get_rdeof()
+bool blizzard::http::get_rdeof()
 {
     return stop_reading;
 }
 
-void lizard::http::set_rdeof()
+void blizzard::http::set_rdeof()
 {
     stop_reading = true;
     //can_read = false;
     /* log_debug("set_rdeof()"); */
 }
 
-bool lizard::http::get_wreof()
+bool blizzard::http::get_wreof()
 {
     return stop_writing;
 }
 
-void lizard::http::set_wreof()
+void blizzard::http::set_wreof()
 {
     stop_writing = true;
     can_write = false;
     /* log_debug("set_wreof()"); */
 }
 
-int lizard::http::get_fd()const
+int blizzard::http::get_fd()const
 {
     return fd;
 }
 
-void lizard::http::lock()
+void blizzard::http::lock()
 {
     /* log_debug("http(%d)::lock()", fd); */
     locked = true;
 }
 
-void lizard::http::unlock()
+void blizzard::http::unlock()
 {
     /* log_debug("http(%d)::unlock()", fd); */
     locked = false;
 }
 
-bool lizard::http::is_locked()const
+bool blizzard::http::is_locked()const
 {
     return locked;
 }
 
-lizard::http::http_state lizard::http::state()const
+blizzard::http::http_state blizzard::http::state()const
 {
     return state_;
 }
 
-int lizard::http::get_request_method()const
+int blizzard::http::get_request_method()const
 {
     return method;
 }
 
-int lizard::http::get_version_major()const
+int blizzard::http::get_version_major()const
 {
     return protocol_major;
 }
-int lizard::http::get_version_minor()const
+int blizzard::http::get_version_minor()const
 {
     return protocol_minor;
 }
 
-bool lizard::http::get_keepalive()const
+bool blizzard::http::get_keepalive()const
 {
     return keep_alive;
 }
 
-bool lizard::http::get_cache()const
+bool blizzard::http::get_cache()const
 {
     return cache;
 }
 
-struct in_addr lizard::http::get_request_ip()const
+struct in_addr blizzard::http::get_request_ip()const
 {
     return in_ip;
 }
 
-const char * lizard::http::get_request_uri_path()const
+const char * blizzard::http::get_request_uri_path()const
 {
     return uri_path;
 }
 
-const char * lizard::http::get_request_uri_params()const
+const char * blizzard::http::get_request_uri_params()const
 {
     return uri_params;
 }
 
-size_t lizard::http::get_request_body_len()const
+size_t blizzard::http::get_request_body_len()const
 {
     return in_post.size();
 }
 
-const uint8_t * lizard::http::get_request_body()const
+const uint8_t * blizzard::http::get_request_body()const
 {
     return (const uint8_t *)in_post.get_data();
 }
 
-const char * lizard::http::get_request_header(const char * hk)const
+const char * blizzard::http::get_request_header(const char * hk)const
 {
     for(size_t i = 0; i < get_request_headers_num(); i++)
     {
@@ -343,37 +343,37 @@ const char * lizard::http::get_request_header(const char * hk)const
     return 0;
 }
 
-size_t lizard::http::get_request_headers_num()const
+size_t blizzard::http::get_request_headers_num()const
 {
     return header_items_num;
 }
 
-const char* lizard::http::get_request_header_key(int sz)const
+const char* blizzard::http::get_request_header_key(int sz)const
 {
     return header_items[sz].key;
 }
 
-const char* lizard::http::get_request_header_value(int sz)const
+const char* blizzard::http::get_request_header_value(int sz)const
 {
     return header_items[sz].value;
 }
 
-void lizard::http::set_keepalive(bool st)
+void blizzard::http::set_keepalive(bool st)
 {
     keep_alive = st;
 }
 
-void lizard::http::set_cache(bool ch)
+void blizzard::http::set_cache(bool ch)
 {
     cache = ch;
 }
 
-void lizard::http::set_response_status(int st)
+void blizzard::http::set_response_status(int st)
 {
     response_status = st;
 }
 
-void lizard::http::add_response_header(const char* name, const char* data)
+void blizzard::http::add_response_header(const char* name, const char* data)
 {
     out_headers.append_data(name, strlen(name));
     out_headers.append_data(":", 1);
@@ -381,14 +381,14 @@ void lizard::http::add_response_header(const char* name, const char* data)
     out_headers.append_data("\r\n", 2);
 }
 
-void lizard::http::add_response_buffer(const char* data, size_t size)
+void blizzard::http::add_response_buffer(const char* data, size_t size)
 {
     out_post.append_data(data, size);
 }
 
-void lizard::http::process()
+void blizzard::http::process()
 {
-    /* log_debug("lizard::http::process()"); */
+    /* log_debug("blizzard::http::process()"); */
 
     bool quit = false;
     int res = 0;
@@ -407,7 +407,7 @@ void lizard::http::process()
             break;
 
         case sReadingHead:
-            /* log_debug("lizard::http::process(): sReadingHead"); */
+            /* log_debug("blizzard::http::process(): sReadingHead"); */
             res = parse_title();
 
             if(res > 0)
@@ -424,7 +424,7 @@ void lizard::http::process()
             break;
 
         case sReadingHeaders:
-            /* log_debug("lizard::http::process(): sReadingHeaders"); */
+            /* log_debug("blizzard::http::process(): sReadingHeaders"); */
             res = parse_header_line();
 
             if(res > 0)
@@ -457,7 +457,7 @@ void lizard::http::process()
             break;
 
         case sReadyToHandle:
-            /* log_debug("lizard::http::process(): sReadyToHandle"); */
+            /* log_debug("blizzard::http::process(): sReadyToHandle"); */
 
             commit();
             state_ = sWriting;
@@ -479,7 +479,7 @@ void lizard::http::process()
             break;
 
         case sDone:
-            /* log_debug("lizard::http::process(): sDone reached!"); */
+            /* log_debug("blizzard::http::process(): sDone reached!"); */
             quit = true;
 
             break;
@@ -491,11 +491,11 @@ void lizard::http::process()
     }
 }
 
-bool lizard::http::network_tryread()
+bool blizzard::http::network_tryread()
 {
     if(-1 != fd)
     {
-		/* log_debug("lizard::http::process::ready_read(%d)", fd); */
+		/* log_debug("blizzard::http::process::ready_read(%d)", fd); */
 		/* log_debug("read{c:%d w:%d st:%d}, write{c:%d w:%d st:%d}", can_read, want_read, stop_reading, can_write, want_write, stop_writing); */
 
         while(can_read && !stop_reading/* && want_read*/)
@@ -514,11 +514,11 @@ bool lizard::http::network_tryread()
 }
 
 
-bool lizard::http::network_trywrite()
+bool blizzard::http::network_trywrite()
 {
     if(-1 != fd)
     {
-        /* log_debug("lizard::http::process::ready_write(%d)", fd); */
+        /* log_debug("blizzard::http::process::ready_write(%d)", fd); */
         /* log_debug("read{c:%d w:%d st:%d}, write{c:%d w:%d st:%d}", */
          //                   can_read,  want_read, stop_reading,
           //                  can_write, want_write, stop_writing);
@@ -556,7 +556,7 @@ bool lizard::http::network_trywrite()
     return 0;
 }
 
-int lizard::http::write_data()
+int blizzard::http::write_data()
 {
     while(can_write)
     {
@@ -577,7 +577,7 @@ int lizard::http::write_data()
     }
 }
 
-char * lizard::http::read_header_line()
+char * blizzard::http::read_header_line()
 {
     while(true)
     {
@@ -623,7 +623,7 @@ char * lizard::http::read_header_line()
     return 0;
 }
 
-int lizard::http::parse_title()
+int blizzard::http::parse_title()
 {
     /* log_debug("parse_title()"); */
     char * line = read_header_line();
@@ -714,7 +714,7 @@ int lizard::http::parse_title()
     return 0;
 }
 
-int lizard::http::parse_header_line()
+int blizzard::http::parse_header_line()
 {
     /* log_debug("parse_header_line()"); */
     char * key = read_header_line();
@@ -795,7 +795,7 @@ int lizard::http::parse_header_line()
     return 0;
 }
 
-int lizard::http::parse_post()
+int blizzard::http::parse_post()
 {
     /* log_debug("parse_post() (%d bytes)", (int)in_post.size()); */
 
@@ -815,7 +815,7 @@ int lizard::http::parse_post()
     return -1;
 }
 
-int lizard::http::commit()
+int blizzard::http::commit()
 {
     char buff[1024];
 
@@ -839,7 +839,7 @@ int lizard::http::commit()
 
     int l = snprintf(buff, 1023,
             "HTTP/%d.%d %d %s\r\n"
-            "Server: lizard/" BLZ_VERSION "\r\n"
+            "Server: blizzard/" BLZ_VERSION "\r\n"
             "Date: %s\r\n",
                protocol_major, protocol_minor, response_status, resp_status_str, now_str);
 

@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <errno.h>
 #include <fcntl.h>
 #include <stdarg.h>
@@ -18,6 +19,7 @@ int log_levels(const char* level)
 		case 'l': case 'L': return LOG_alert;
 		}
 		break;
+	case 'd': case 'D': return LOG_debug;
 	case 'c': case 'C': return LOG_crit;
 	case 'e': case 'E':
 		switch (level[1])
@@ -36,19 +38,10 @@ int log_levels(const char* level)
 
 int log_create(const char* path, int level)
 {
-	if (0 > coda_mkpath((char *) path))
-	{
-		return -1;
-	}
-
-	if (0 > coda_fdopen(STDERR_FILENO, path,
-		O_CREAT|O_APPEND|O_WRONLY))
-	{
-		return -1;
-	}
+	if (0 > coda_mkpath((char *) path)) return -1;
+	if (0 > coda_fdopen(STDERR_FILENO, path, O_CREAT|O_APPEND|O_WRONLY)) return -1;
 
 	log_level = level;
-
 	return STDERR_FILENO;
 }
 

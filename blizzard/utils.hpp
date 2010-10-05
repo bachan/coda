@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <coda/logger.h>
 
-/* namespace lizard { */
+/* namespace blizzard { */
 /* extern int MSG_LIZARD_ID; */
 /* } */
 

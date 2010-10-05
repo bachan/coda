@@ -5,7 +5,7 @@
 #include "config.hpp"
 #include "plugin.hpp"
 
-namespace lizard {
+namespace blizzard {
 
 class plugin_factory
 {

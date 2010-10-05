@@ -142,7 +142,7 @@ struct blz_config : public coda::txml_determination_object
 
 		void check()
 		{
-			const char *curns = "lizard";
+			const char *curns = "blizzard";
 
 			if (log_level.empty()) throw coda_error ("<%s:log_level> is empty in config", curns);
 
@@ -155,6 +155,7 @@ struct blz_config : public coda::txml_determination_object
 
 	void determine(coda::txml_parser* p)
 	{
+		p->determineMember("blizzard", blz);
 		txml_member(p, blz);
 	}
 

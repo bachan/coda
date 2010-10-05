@@ -6,7 +6,7 @@
 #include "plugin.hpp"
 #include "utils.hpp"
 
-namespace lizard
+namespace blizzard
 {
 
 class http : public blz_task

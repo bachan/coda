@@ -13,7 +13,7 @@
 struct blzmod_example : public blz_plugin
 {
 	 blzmod_example() {}
-	~blzmod_example() {}
+	virtual ~blzmod_example() throw() {}
 
 	int load(const char* cfg);
 	int idle();
@@ -24,16 +24,16 @@ struct blzmod_example : public blz_plugin
 
 extern "C" blz_plugin* get_plugin_instance()
 {
-    try
-    {
-        return new blzmod_example ();
-    }
-    catch (const std::exception& e)        
-    {
-        log_crit("load blzmod_example plugin failed: %s", e.what());
-    }
+	try
+	{
+	    return new blzmod_example ();
+	}
+	catch (const std::exception& e)        
+	{
+	    log_crit("load blzmod_example plugin failed: %s", e.what());
+	}
 
-    return NULL;
+	return NULL;
 }
 
 int blzmod_example::load(const char* cfg)

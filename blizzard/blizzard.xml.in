@@ -1,9 +1,9 @@
-<lizard>
-    <pid_file_name>${CMAKE_INSTALL_PREFIX}/var/run/lizard.pid</pid_file_name>
-    <log_file_name>${CMAKE_INSTALL_PREFIX}/var/log/lizard.log</log_file_name>
+<blizzard>
+    <pid_file_name>${CMAKE_INSTALL_PREFIX}/var/run/blizzard.pid</pid_file_name>
+    <log_file_name>${CMAKE_INSTALL_PREFIX}/var/log/blizzard.log</log_file_name>
     <log_level>notice</log_level>
 
-    <access_log_file_name>${CMAKE_INSTALL_PREFIX}/var/log/lizard.access.log</access_log_file_name>
+    <access_log_file_name>${CMAKE_INSTALL_PREFIX}/var/log/blizzard.access.log</access_log_file_name>
 
     <stats ip="0.0.0.0" port="11111" />
 
@@ -20,4 +20,4 @@
         <easy_queue_limit>200</easy_queue_limit>
         <hard_queue_limit>300</hard_queue_limit>
     </plugin>
-</lizard>
+</blizzard>
