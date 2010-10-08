@@ -10,10 +10,15 @@
 namespace mysql {
 
 CLogParser::CLogParser()
-	: _mysql(NULL), _port(0), _fmt(NULL),
-	  _binlog_pos(0), _binlog_flags(0), _server_id(0),
-	  _err(NULL), _dispatch(1)
+	: _port(0)
+	, _fmt(0)
+	, _binlog_pos(0)
+	, _binlog_flags(0)
+	, _server_id(0)
+	, _err(0)
+	, _dispatch(1)
 {
+	mysql_init(&mysql);
 }
 
 CLogParser::~CLogParser()
@@ -24,16 +29,16 @@ CLogParser::~CLogParser()
 MYSQL*	CLogParser::connect()
 {
 	disconnect();
-	MYSQL *mysql = mysql_init(NULL);
+	MYSQL *mysql = mysql_init(0);
 	if( !mysql )
 	{
-		on_error("mysql_init failed", NULL);
-		return NULL;
+		on_error("mysql_init failed", 0);
+		return 0;
 	}
 
 	_mysql = mysql;
 
-	mysql = mysql_real_connect( _mysql, _host.c_str(), _user.c_str(), _passwd.c_str(), 0, _port, NULL, 0);
+	mysql = mysql_real_connect( _mysql, _host.c_str(), _user.c_str(), _passwd.c_str(), 0, _port, 0, 0);
 	if( !mysql )
 		on_error("mysql_real_connect() failed", _mysql);
 	else
@@ -52,7 +57,7 @@ void	CLogParser::disconnect()
 	if( _mysql )
 	{
 		mysql_close(_mysql);
-		_mysql = NULL;
+		_mysql = 0;
 	}
 }
 
@@ -76,10 +81,10 @@ void CLogParser::set_binlog_position(const char *fname, uint32_t pos, uint32_t s
 
 CFormatDescriptionLogEvent* CLogParser::get_binlog_format(MYSQL *mysql)
 {
-	MYSQL_RES* res = NULL;
+	MYSQL_RES* res = 0;
 	MYSQL_ROW row;
 	const char* version;
-	CFormatDescriptionLogEvent* fmt = NULL;
+	CFormatDescriptionLogEvent* fmt = 0;
 
 
 	if( mysql_query(mysql, "SELECT VERSION()") )
@@ -108,13 +113,13 @@ CFormatDescriptionLogEvent* CLogParser::get_binlog_format(MYSQL *mysql)
 
 	if( *version != '5' )
 	{
-		on_error("invalid server version", NULL);
+		on_error("invalid server version", 0);
 		goto err;
 	}
 
 	 fmt = new CFormatDescriptionLogEvent(4);
 	 if( !fmt || !fmt->is_valid() )
-		 on_error("could not create CFormatDescriptionLogEvent", NULL);
+		 on_error("could not create CFormatDescriptionLogEvent", 0);
 err:
 	if( res )
 		mysql_free_result(res);
@@ -169,7 +174,7 @@ int CLogParser::dispatch_events()
 	if( _fmt )
 	{
 		delete _fmt;
-		_fmt = NULL;
+		_fmt = 0;
 	}
 
 	_fmt = get_binlog_format(_mysql);
@@ -195,15 +200,15 @@ int CLogParser::dispatch_events()
 						buf[EVENT_TYPE_OFFSET] >= ENUM_END_EVENT ||
 							(uint32_t) len != uint4korr(buf+EVENT_LEN_OFFSET))
 				{
-					on_error("event sanity check failed", NULL);
-					return NULL;
+					on_error("event sanity check failed", 0);
+					return 0;
 				}
 
 				event_type = buf[EVENT_TYPE_OFFSET];
 				if( event_type > _fmt->_number_of_event_types && event_type != FORMAT_DESCRIPTION_EVENT )
 				{
-					on_error("event not supported", NULL);
-					return NULL;
+					on_error("event not supported", 0);
+					return 0;
 				}
 
 				CTableMapLogEvent *tmev;
@@ -286,15 +291,15 @@ CLogEvent* CLogParser::build_event(uint8_t *buf, size_t len, CFormatDescriptionL
 			buf[EVENT_TYPE_OFFSET] >= ENUM_END_EVENT ||
 				(uint32_t) len != uint4korr(buf+EVENT_LEN_OFFSET))
 	{
-		on_error("event sanity check failed", NULL);
-		return NULL;
+		on_error("event sanity check failed", 0);
+		return 0;
 	}
 
 	event_type = buf[EVENT_TYPE_OFFSET];
 	if( event_type > fmt->_number_of_event_types && event_type != FORMAT_DESCRIPTION_EVENT )
 	{
-		on_error("event not supported", NULL);
-		return NULL;
+		on_error("event not supported", 0);
+		return 0;
 	}
 
 

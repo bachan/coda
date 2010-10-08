@@ -37,7 +37,7 @@ public:
 	typedef std::map<uint32_t, CTableMapLogEvent*> TTablesRepo;
 public:
 	CLogParser();
-	virtual ~CLogParser();
+	virtual ~CLogParser() throw();
 
 	MYSQL*	connect();
 	MYSQL*	reconnect();
@@ -67,20 +67,20 @@ protected:
 
 protected:
 	TTablesRepo _tables;
-	MYSQL*	_mysql;
-	std::string	_host;
-	int 	 	_port;
-	std::string	_user;
-	std::string	_passwd;
-	CFormatDescriptionLogEvent *_fmt;
+	MYSQL _mysql;
+	std::string _host;
+	int _port;
+	std::string _user;
+	std::string _passwd;
+	CFormatDescriptionLogEvent* _fmt;
 
 	std::string _binlog_name;
-	uint32_t	_binlog_pos;
-	uint32_t	_binlog_flags;
-	uint32_t	_server_id;
+	uint32_t _binlog_pos;
+	uint32_t _binlog_flags;
+	uint32_t _server_id;
 
 private:
-	const char *_err;
+	const char* _err;
 	int _dispatch;
 };
 
