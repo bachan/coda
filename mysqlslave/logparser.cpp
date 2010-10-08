@@ -21,7 +21,7 @@ CLogParser::CLogParser()
 	mysql_init(&mysql);
 }
 
-CLogParser::~CLogParser()
+CLogParser::~CLogParser() throw()
 {
 	disconnect();
 }
