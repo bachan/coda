@@ -39,21 +39,17 @@ public:
 	CLogParser();
 	virtual ~CLogParser() throw();
 
-	MYSQL*	connect();
-	MYSQL*	reconnect();
-	void	disconnect();
-	void	set_connection_params(const char *host, const char *user, const char *passwd, int port = 0);
-	void	set_binlog_position(const char *fname, uint32_t pos, uint32_t srv_id, uint16_t flags = 0);
+	void set_connection_params(const char *host, const char *user, const char *passwd, int port = 0);
+	void set_binlog_position(const char *fname, uint32_t pos, uint32_t srv_id, uint16_t flags = 0);
+
+	void connect();
+	void reconnect();
+	void disconnect();
 
 	int dispatch_events();
 
-	inline MYSQL* get_handle() const {
-		return _mysql;
-	}
-
-
 protected:
-	int	request_binlog_dump(const char *fname, uint32_t pos, uint32_t srv_id, uint16_t flags = 0);
+	int request_binlog_dump(const char *fname, uint32_t pos, uint32_t srv_id, uint16_t flags = 0);
 	void Dump(uint8_t *buf, size_t len);
 protected:
 	virtual	 int on_update_rows(CRowLogEvent *rlev);
