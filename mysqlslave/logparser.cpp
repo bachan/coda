@@ -18,7 +18,7 @@ CLogParser::CLogParser()
 	, _err(0)
 	, _dispatch(1)
 {
-	mysql_init(&mysql);
+	mysql_init(&_mysql);
 }
 
 CLogParser::~CLogParser() throw()
@@ -26,39 +26,27 @@ CLogParser::~CLogParser() throw()
 	disconnect();
 }
 
-MYSQL*	CLogParser::connect()
+void CLogParser::connect()
 {
 	disconnect();
-	MYSQL *mysql = mysql_init(0);
-	if( !mysql )
+	if( !mysql_init(&_mysql) )
 	{
 		on_error("mysql_init failed", 0);
-		return 0;
+		return;
 	}
 
-	_mysql = mysql;
-
-	mysql = mysql_real_connect( _mysql, _host.c_str(), _user.c_str(), _passwd.c_str(), 0, _port, 0, 0);
-	if( !mysql )
-		on_error("mysql_real_connect() failed", _mysql);
-	else
-		_mysql = mysql;
-
-	return mysql;
+	if( !mysql_real_connect(&_mysql, _host.c_str(), _user.c_str(), _passwd.c_str(), 0, _port, 0, 0) )
+		on_error("mysql_real_connect() failed", &_mysql);
 }
 
-MYSQL*	CLogParser::reconnect()
+void CLogParser::reconnect()
 {
-	return connect();
+	connect();
 }
 
-void	CLogParser::disconnect()
+void CLogParser::disconnect()
 {
-	if( _mysql )
-	{
-		mysql_close(_mysql);
-		_mysql = 0;
-	}
+	mysql_close(&_mysql);
 }
 
 
@@ -147,9 +135,9 @@ int	CLogParser::request_binlog_dump(const char *fname, uint32_t pos, uint32_t sr
 	int4store(buf + 6, srv_id);
 	memcpy(buf + 10, fname, len);
 
-	if( simple_command(_mysql, COM_BINLOG_DUMP, (const unsigned char*)buf, len + 10, 1) )
+	if( simple_command(&_mysql, COM_BINLOG_DUMP, (const unsigned char*)buf, len + 10, 1) )
 	{
-		on_error("COM_BINLOG_DUMP", _mysql);
+		on_error("COM_BINLOG_DUMP", &_mysql);
 		return -1;
 	}
 
@@ -166,9 +154,6 @@ int CLogParser::dispatch_events()
 {
 	CLogEvent *ev;
 
-	if( !_mysql )
-		return -1;
-
 	unsigned long len;
 
 	if( _fmt )
@@ -177,7 +162,7 @@ int CLogParser::dispatch_events()
 		_fmt = 0;
 	}
 
-	_fmt = get_binlog_format(_mysql);
+	_fmt = get_binlog_format(&_mysql);
 	if( !_fmt )
 		return -1;
 
@@ -188,10 +173,10 @@ int CLogParser::dispatch_events()
 	uint8_t *buf;
 	do
 	{
-		len = cli_safe_read(_mysql);
+		len = cli_safe_read(&_mysql);
 		if( len != packet_error )
 		{
-			buf = _mysql->net.read_pos;
+			buf = _mysql.net.read_pos;
 			if( (_dispatch = !(len < 8 && buf[0] == 254)) != 0 )
 			{
 				buf++; len--;
@@ -218,13 +203,13 @@ int CLogParser::dispatch_events()
 				{
 				case TABLE_MAP_EVENT:
 				{
-					uint64_t table_id = CTableMapLogEvent::get_table_id(buf, len, fmt);
+					uint64_t table_id = CTableMapLogEvent::get_table_id(buf, len, _fmt);
 
 					it = _tables.find(table_id);
 					if( it == _tables.end() )
 					{
 						fprintf(stdout, "new table_id %llu\n", (unsigned long long)table_id);
-						tmev = new CTableMapLogEvent(buf, len, fmt);
+						tmev = new CTableMapLogEvent(buf, len, _fmt);
 						_tables[table_id] = tmev;
 					}
 					else
@@ -251,7 +236,7 @@ int CLogParser::dispatch_events()
 
 					}
 					else
-						on_error("invalid row log event");
+						on_error("invalid row log event", 0);
 				}
 
 				}
@@ -265,7 +250,7 @@ int CLogParser::dispatch_events()
 		}
 		else
 		{
-			on_error("cli_safe_read error", _mysql);
+			on_error("cli_safe_read error", &_mysql);
 			_dispatch = 0;
 		}
 	}
