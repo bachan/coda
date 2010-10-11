@@ -19,6 +19,8 @@ FIND_LIBRARY(MYSQL_LIBRARY
 MAKE_STATIC (coda ${LIB_expat} pthread dl)
 SET_TARGET_PROPERTIES(coda PROPERTIES VERSION 0.1 SOVERSION 1)
 
+MAKE_STATIC (mysqlslave ${MYSQL_LIBRARY})
+
 MAKE_PROGRAM (blizzard coda ${LIB_Judy} ${LIB_expat} pthread dl)
 INSTALL (FILES blizzard/plugin.hpp DESTINATION include/blizzard)
 INSTALL_TEMPLATE (blizzard/blizzard.xml.in DESTINATION etc/blizzard)
