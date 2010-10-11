@@ -26,19 +26,25 @@
 #include <my_dbug.h>
 
 #include "logevent.h"
+#include "database.h"
 
 #include <map>
+#include <set>
 
 namespace mysql {
 
 class CLogParser
 {
 public:
+	typedef std::map<std::string, CDatabase*> TDatabases;
+//	typedef std::set<uint64_t> 
 	typedef std::map<uint32_t, CTableMapLogEvent*> TTablesRepo;
 public:
 	CLogParser();
 	virtual ~CLogParser() throw();
 
+	CDatabase* monitor_db(std::string db_name);
+	
 	void set_connection_params(const char *host, const char *user, const char *passwd, int port = 0);
 	void set_binlog_position(const char *fname, uint32_t pos, uint32_t srv_id, uint16_t flags = 0);
 
@@ -62,7 +68,7 @@ protected:
 
 
 protected:
-	TTablesRepo _tables;
+	TDatabases _db_repo;
 	MYSQL _mysql;
 	std::string _host;
 	int _port;

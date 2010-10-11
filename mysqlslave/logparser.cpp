@@ -24,6 +24,15 @@ CLogParser::CLogParser()
 CLogParser::~CLogParser() throw()
 {
 	disconnect();
+	
+	TDatabases::iterator it;
+	for( it = _db_repo.begin(); it != _db_repo.end(); ++it )
+		if( it->second )
+		{
+			delete it->second;
+			it->second = NULL;
+		}
+	
 }
 
 void CLogParser::connect()
@@ -205,7 +214,7 @@ int CLogParser::dispatch_events()
 				{
 					uint64_t table_id = CTableMapLogEvent::get_table_id(buf, len, _fmt);
 
-					it = _tables.find(table_id);
+/*					it = _tables.find(table_id);
 					if( it == _tables.end() )
 					{
 						fprintf(stdout, "new table_id %llu\n", (unsigned long long)table_id);
@@ -218,14 +227,14 @@ int CLogParser::dispatch_events()
 						tmev = it->second;
 					}
 
-					ev = tmev;
+					ev = tmev;*/
 					break;
 				}
 				case WRITE_ROWS_EVENT:
 				case UPDATE_ROWS_EVENT:
 				case DELETE_ROWS_EVENT:
 				{
-					rlev.tune(buf, len, _fmt);
+/*					rlev.tune(buf, len, _fmt);
 					if( rlev.is_valid() )
 					{
 						it = _tables.find(rlev._table_id);
@@ -236,7 +245,7 @@ int CLogParser::dispatch_events()
 
 					}
 					else
-						on_error("invalid row log event", 0);
+						on_error("invalid row log event", 0);*/
 				}
 
 				}
@@ -298,7 +307,7 @@ CLogEvent* CLogParser::build_event(uint8_t *buf, size_t len, CFormatDescriptionL
 		break;
 	case TABLE_MAP_EVENT:
 	{
-		CTableMapLogEvent *tmev;
+/*		CTableMapLogEvent *tmev;
 		uint64_t table_id = CTableMapLogEvent::get_table_id(buf, len, fmt);
 		TTablesRepo::iterator it;
 
@@ -315,7 +324,7 @@ CLogEvent* CLogParser::build_event(uint8_t *buf, size_t len, CFormatDescriptionL
 			tmev = it->second;
 		}
 
-		ev = tmev;
+		ev = tmev;*/
 		break;
 	}
 	default:
@@ -344,6 +353,21 @@ void CLogParser::on_error(const char *err, MYSQL *mysql)
 }
 
 
+CDatabase* CLogParser::monitor_db(std::string db_name)
+{
+	CDatabase *db;
+	TDatabases::iterator it = _db_repo.find(db_name);
+	if( it == _db_repo.end() )
+	{
+		db = new CDatabase();
+		db->name(db_name);
+		_db_repo[db_name] = db;
+	}
+	else
+		db = it->second;
+
+	db;
+}
 
 
 
