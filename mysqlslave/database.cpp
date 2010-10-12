@@ -3,6 +3,11 @@
 
 namespace mysql {
 
+/* 
+ * ========================================= CValue
+ * ========================================================
+ */	
+	
 int CValue::calc_field_size(CValue::EColumnType ftype, uint8_t *pfield, uint32_t metadata)
 {
 	uint32_t length;
@@ -169,15 +174,23 @@ bool CValue::operator!=(const CValue &val) const
 	return !operator==(val);
 }
 	
+
+/* 
+ * ========================================= CTable
+ * ========================================================
+ */	
+	
 CTable::CTable()
-	: _db(NULL)
+	: _columns(_items)
+	, _db(NULL)
 	, _id(0)
 {
 }
 
-CTable::CTable(CDatabase *db, std::string &name)
-	: _db(db)
-	, _name(name)
+CTable::CTable(CDatabase *db, std::string &name) 
+	: CItem(name) 
+	, _columns(_items)
+	,_db(db)
 	, _id(0)
 {
 }
@@ -185,39 +198,30 @@ CTable::CTable(CDatabase *db, std::string &name)
 CTable::~CTable() throw()
 {
 }
-	
-	
-	
-CDatabase::CDatabase()
-{
-}
 
-CDatabase::~CDatabase() throw()
+CItem* CTable::watch(std::string name)
 {
-	TTablesByName::iterator it_bn;
-	for( it_bn = _tbl_by_name.begin(); it_bn != _tbl_by_name.end(); ++it_bn )
-		if( it_bn->second )
-		{
-			delete it_bn->second;
-			it_bn->second = NULL;
-		}
+//	std::pair<TItems::iterator, int> rc = 
+	_columns.insert(std::pair<std::string, CItem*>(name, NULL));
+	return NULL;
 }
 
 
-CTable* CDatabase::monitor_table(std::string table_name)
+
+/* 
+ * ========================================= CDatabase
+ * ========================================================
+ */	
+
+CItem* CDatabase::watch(std::string name)
 {
-	CTable *tbl;
-	TTablesByName::iterator it;
-	it = _tbl_by_name.find(table_name);
-	if( it == _tbl_by_name.end() )
+	CItem *table = find(name);
+	if( !table )
 	{
-		tbl = new CTable(this, table_name);
-		_tbl_by_name[table_name] = tbl;
+		table = new CTable(this, name);
+		_tables[name] = table;
 	}
-	else
-		tbl =  it->second;
-	
-	return tbl;
+	return table;//tbl;
 }
 
 

@@ -3,14 +3,19 @@
 
 
 #include <stdint.h>
+#include <strings.h>
+
 #include <string>
 #include <map>
 
+#include <vector>
+
 namespace mysql {
 	
-class CDatabase;
-
-	
+/* 
+ * ========================================= CValue
+ * ========================================================
+ */	
 class CValue 
 {
 public:
@@ -45,6 +50,7 @@ public:
 	};
 	
 	static int calc_field_size(CValue::EColumnType ftype, uint8_t *pfield, uint32_t metadata);
+	
 public:
 	CValue();
     CValue(const CValue& val);
@@ -60,14 +66,77 @@ protected:
 	const char *_storage;
 	uint32_t _metadata;
 	bool _is_null;
-	
 };
 
 
-class CTable 
+/* 
+ * ========================================= CItem
+ * ========================================================
+ */	
+
+class CItem
+{
+protected:
+	class _items_nocase_comparer {
+		public: bool operator() (const std::string &s1, const std::string &s2) const {
+			return (bool)strcasecmp(s1.c_str(), s2.c_str());	
+		}
+	};
+	typedef std::map<std::string, CItem*, CItem::_items_nocase_comparer> TItems;
+public:
+	CItem() {
+	}
+	CItem(std::string &name) {
+		_name = name;
+	}
+	
+	virtual ~CItem() throw() {
+		try 
+		{
+			for( TItems::iterator it = _items.begin(); it != _items.end(); ++it )
+				if( it->second )
+				{
+					delete it->second;
+					it->second = NULL;
+				}
+		}
+		catch(...)
+		{
+			;
+		}
+	}
+	
+	const std::string& name() const {
+		return _name;
+	}
+	void name(std::string &name) {
+		_name = name;
+	}
+	CItem* find(std::string &name) {
+		TItems::const_iterator it = _items.find(name);
+		return it != _items.end() ? it->second : NULL;
+	}
+	
+	
+	virtual CItem* watch(std::string name) = 0;
+protected:
+	std::string _name;
+	TItems _items;
+};
+
+
+
+/* 
+ * ========================================= CTable
+ * ========================================================
+ */	
+
+class CDatabase;
+class CTable : public CItem
 {
 public:
-	typedef std::map<std::string, CValue::EColumnType> TColumnsByName;
+//	typedef std::map<std::string, CValue::EColumnType> TColumnsByName;
+	typedef std::vector<CValue*> TRow;
 public:
 	CTable();
 	CTable(CDatabase *db, std::string &name);
@@ -80,13 +149,6 @@ public:
 		_id = id;
 	}
 	
-	const std::string& name() const {
-		return _name;
-	}
-	void id(std::string &name) {
-		_name = name;
-	}
-
 	CDatabase* db() const {
 		return _db;
 	}
@@ -94,37 +156,41 @@ public:
 		_db = db;
 	}
 	
+	virtual CItem* watch(std::string name);
 
 protected:
-	CDatabase* _db;
-	std::string _name;
+	TItems &_columns;
+	CDatabase *_db;
 	uint64_t _id;
+//	TRow _row;
 };	
 	
 
-class CDatabase
+/* 
+ * ========================================= CDatabase
+ * ========================================================
+ */	
+class CDatabase : public CItem
 {
 public:
-	typedef std::map<std::string, CTable*> TTablesByName;
 	typedef std::map<uint64_t, CTable*> TTablesByID;
 public:
-    CDatabase();
-    virtual ~CDatabase() throw();
+    CDatabase() 
+		: _tables(_items)
+	{
+	}
+    CDatabase(std::string &name) 
+		: CItem(name)
+		, _tables(_items)
+	{
+	}
+    virtual ~CDatabase() throw() 
+	{
+	}
 	
-	const std::string& name() const {
-		return _name;
-	}
-	void name(std::string &name) {
-		_name = name;
-	}
-	void id(std::string &name) {
-		_name = name;
-	}
-	
-	CTable* monitor_table(std::string table_name);
+	CItem* watch(std::string name);
 protected:
-	std::string _name;
-	TTablesByName _tbl_by_name;
+	TItems &_tables;
 	TTablesByID _tbl_by_id;
 };
 

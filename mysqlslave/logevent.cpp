@@ -173,8 +173,6 @@ CQueryLogEvent::CQueryLogEvent(uint8_t *data, size_t size, const CFormatDescript
 	uint8_t common_header_len, post_header_len;
 	uint64_t data_len;
 
-
-
 	_query[0] = '\0';
 
 	common_header_len = fmt->_common_header_len;
@@ -191,7 +189,7 @@ CQueryLogEvent::CQueryLogEvent(uint8_t *data, size_t size, const CFormatDescript
 	if( post_header_len - QUERY_HEADER_MINIMAL_LEN )
 	{
 		_status_vars_len= uint2korr(data + Q_STATUS_VARS_LEN_OFFSET);
-	    if( _status_vars_len > min(data_len, MAX_SIZE_LOG_EVENT_STATUS) )
+	    if( _status_vars_len > data_len || _status_vars_len > MAX_SIZE_LOG_EVENT_STATUS )
 	    	return;
 
 	    data_len -= _status_vars_len;

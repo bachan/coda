@@ -20,6 +20,11 @@
 #include <my_attribute.h>
 #include <my_dbug.h>
 
+// -- mysql developers are gays begin
+#undef max
+#undef min
+// -- mysql developers are gays end
+
 #include <stdint.h>
 #include <stdlib.h>
 

@@ -29,5 +29,5 @@ MAKE_SHARED (tests/blizzard/blzmod_example)
 
 ENABLE_TESTING()
 MAKE_TEST (tests/txml coda)
-MAKE_TEST (tests/mysqlslave mysqlslave)
+MAKE_TEST (tests/mysqlslave mysqlslave boost_thread)
 

@@ -10,7 +10,8 @@
 namespace mysql {
 
 CLogParser::CLogParser()
-	: _port(0)
+	: _databases(_items)
+	, _port(0)
 	, _fmt(0)
 	, _binlog_pos(0)
 	, _binlog_flags(0)
@@ -24,33 +25,34 @@ CLogParser::CLogParser()
 CLogParser::~CLogParser() throw()
 {
 	disconnect();
-	
-	TDatabases::iterator it;
-	for( it = _db_repo.begin(); it != _db_repo.end(); ++it )
-		if( it->second )
-		{
-			delete it->second;
-			it->second = NULL;
-		}
-	
 }
 
-void CLogParser::connect()
+int CLogParser::connect()
 {
 	disconnect();
 	if( !mysql_init(&_mysql) )
 	{
 		on_error("mysql_init failed", 0);
-		return;
+		return -1;
 	}
 
 	if( !mysql_real_connect(&_mysql, _host.c_str(), _user.c_str(), _passwd.c_str(), 0, _port, 0, 0) )
+	{
 		on_error("mysql_real_connect() failed", &_mysql);
+		return -1;
+	}
+	
+	if( _fmt )
+		delete _fmt;
+	
+	_fmt = get_binlog_format();
+	
+	return _fmt ? 0 : 1;
 }
 
-void CLogParser::reconnect()
+int CLogParser::reconnect()
 {
-	connect();
+	return connect();
 }
 
 void CLogParser::disconnect()
@@ -76,7 +78,7 @@ void CLogParser::set_binlog_position(const char *fname, uint32_t pos, uint32_t s
 }
 
 
-CFormatDescriptionLogEvent* CLogParser::get_binlog_format(MYSQL *mysql)
+CFormatDescriptionLogEvent* CLogParser::get_binlog_format()
 {
 	MYSQL_RES* res = 0;
 	MYSQL_ROW row;
@@ -84,27 +86,13 @@ CFormatDescriptionLogEvent* CLogParser::get_binlog_format(MYSQL *mysql)
 	CFormatDescriptionLogEvent* fmt = 0;
 
 
-	if( mysql_query(mysql, "SELECT VERSION()") )
+	if( mysql_query(&_mysql, "SELECT VERSION()") || 
+		!( res = mysql_store_result(&_mysql) ) ||
+		!( row = mysql_fetch_row(res) ) || 
+		!( version = row[0] )
+	)
 	{
-		on_error("could not find server version", mysql);
-		goto err;
-	}
-
-	if( !( res = mysql_store_result(mysql) ) )
-	{
-		on_error("could not find server version", mysql);
-		goto err;
-	}
-
-	if( !( row = mysql_fetch_row(res) ) )
-	{
-		on_error("could not find server version", mysql);
-		goto err;
-	}
-
-	if( !(version = row[0]) )
-	{
-		on_error("could not find server version", mysql);
+		on_error("could not find server version", &_mysql);
 		goto err;
 	}
 
@@ -153,28 +141,20 @@ int	CLogParser::request_binlog_dump(const char *fname, uint32_t pos, uint32_t sr
 	return 0;
 }
 
-int CLogParser::on_update_rows(CRowLogEvent *rlev)
-{
-	return 0;
-}
 
-
-int CLogParser::dispatch_events()
+void CLogParser::dispatch_events()
 {
 	CLogEvent *ev;
-
 	unsigned long len;
 
-	if( _fmt )
+	while( connect() != 0 )
 	{
-		delete _fmt;
-		_fmt = 0;
+		if( !_dispatch )
+			return;
+		sleep(1);
 	}
-
-	_fmt = get_binlog_format(&_mysql);
-	if( !_fmt )
-		return -1;
-
+		
+	// пока что так, потом будем позиционироваться автоматически
 	request_binlog_dump(_binlog_name.c_str(), _binlog_pos, _server_id, _binlog_flags);
 
 	CRowLogEvent rlev;
@@ -195,14 +175,14 @@ int CLogParser::dispatch_events()
 							(uint32_t) len != uint4korr(buf+EVENT_LEN_OFFSET))
 				{
 					on_error("event sanity check failed", 0);
-					return 0;
+					break;
 				}
 
 				event_type = buf[EVENT_TYPE_OFFSET];
 				if( event_type > _fmt->_number_of_event_types && event_type != FORMAT_DESCRIPTION_EVENT )
 				{
 					on_error("event not supported", 0);
-					return 0;
+					break;
 				}
 
 				CTableMapLogEvent *tmev;
@@ -260,78 +240,28 @@ int CLogParser::dispatch_events()
 		else
 		{
 			on_error("cli_safe_read error", &_mysql);
-			_dispatch = 0;
+			on_reconnect(&_mysql);
+			
+			while( _dispatch && reconnect() != 0 )
+				sleep(1);
 		}
 	}
 	while( _dispatch );
 
-//	fprintf(stderr, "read %u bytes, wow!\n", len);
-
-
-
-
-
-	return 0;
+	disconnect();
 }
 
+void CLogParser::on_reconnect(MYSQL *mysql) {
+	// stop_event_loop();
+}
 
-CLogEvent* CLogParser::build_event(uint8_t *buf, size_t len, CFormatDescriptionLogEvent *fmt)
+void CLogParser::on_data_incoming(MYSQL *mysql) {
+	// stop_event_loop(); // при желании 
+}
+
+void CLogParser::stop_event_loop() 
 {
-	CLogEvent *ev;
-	uint32_t event_type;
-
-	/* Check the integrity */
-	if( len < EVENT_LEN_OFFSET ||
-			buf[EVENT_TYPE_OFFSET] >= ENUM_END_EVENT ||
-				(uint32_t) len != uint4korr(buf+EVENT_LEN_OFFSET))
-	{
-		on_error("event sanity check failed", 0);
-		return 0;
-	}
-
-	event_type = buf[EVENT_TYPE_OFFSET];
-	if( event_type > fmt->_number_of_event_types && event_type != FORMAT_DESCRIPTION_EVENT )
-	{
-		on_error("event not supported", 0);
-		return 0;
-	}
-
-
-	switch( event_type )
-	{
-	case QUERY_EVENT:
-		ev = new CQueryLogEvent(buf, len, fmt, QUERY_EVENT);
-		break;
-	case INTVAR_EVENT:
-		ev = new CIntvarLogEvent(buf, len, fmt);
-		break;
-	case TABLE_MAP_EVENT:
-	{
-/*		CTableMapLogEvent *tmev;
-		uint64_t table_id = CTableMapLogEvent::get_table_id(buf, len, fmt);
-		TTablesRepo::iterator it;
-
-		it = _tables.find(table_id);
-		if( it == _tables.end() )
-		{
-			fprintf(stdout, "new table_id %llu\n", (unsigned long long)table_id);
-			tmev = new CTableMapLogEvent(buf, len, fmt);
-			_tables[table_id] = tmev;
-		}
-		else
-		{
-			fprintf(stdout, "found table_id %llu\n", (unsigned long long)table_id);
-			tmev = it->second;
-		}
-
-		ev = tmev;*/
-		break;
-	}
-	default:
-		ev = new CUnknownLogEvent(buf, len, fmt);
-	}
-
-	return ev;
+	_dispatch = 0;	
 }
 
 
@@ -353,20 +283,15 @@ void CLogParser::on_error(const char *err, MYSQL *mysql)
 }
 
 
-CDatabase* CLogParser::monitor_db(std::string db_name)
+CItem* CLogParser::watch(std::string name)
 {
-	CDatabase *db;
-	TDatabases::iterator it = _db_repo.find(db_name);
-	if( it == _db_repo.end() )
+	CItem *db = find(name);
+	if( !db )
 	{
-		db = new CDatabase();
-		db->name(db_name);
-		_db_repo[db_name] = db;
+		db = new CDatabase(name);
+		_databases[name] = db;
 	}
-	else
-		db = it->second;
-
-	db;
+	return db;
 }
 
 
