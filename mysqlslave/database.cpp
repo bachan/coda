@@ -134,7 +134,7 @@ int CValue::calc_field_size(CValue::EColumnType ftype, uint8_t *pfield, uint32_t
 }
 	
 	
-CValue::CValue()
+CValue::CValue() 
 	: _size(0)
 	, _storage(NULL)
 	, _metadata(0)
@@ -187,10 +187,9 @@ CTable::CTable()
 {
 }
 
-CTable::CTable(CDatabase *db, std::string &name) 
-	: CItem(name) 
-	, _columns(_items)
-	,_db(db)
+CTable::CTable(CDatabase *db) 
+	: _columns(_items)
+	, _db(db)
 	, _id(0)
 {
 }
@@ -199,10 +198,10 @@ CTable::~CTable() throw()
 {
 }
 
-CItem* CTable::watch(std::string name)
+IItem* CTable::watch(std::string name)
 {
 //	std::pair<TItems::iterator, int> rc = 
-	_columns.insert(std::pair<std::string, CItem*>(name, NULL));
+	_columns.insert(std::pair<std::string, IItem*>(name, NULL));
 	return NULL;
 }
 
@@ -213,12 +212,12 @@ CItem* CTable::watch(std::string name)
  * ========================================================
  */	
 
-CItem* CDatabase::watch(std::string name)
+IItem* CDatabase::watch(std::string name)
 {
-	CItem *table = find(name);
+	IItem *table = find(&name);
 	if( !table )
 	{
-		table = new CTable(this, name);
+		table = new CTable(this);
 		_tables[name] = table;
 	}
 	return table;//tbl;

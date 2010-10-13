@@ -24,7 +24,7 @@
 #undef max
 #undef min
 // -- mysql developers are gays end
-
+#include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -431,17 +431,17 @@ class CLogEvent
 {
 public:
 	CLogEvent();
-	CLogEvent(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt);
-	virtual ~CLogEvent();
+	virtual ~CLogEvent() throw();
 
 	int Info(uint8_t* buf, size_t event_len);
-
 
 	virtual Log_event_type get_type_code() const = 0;
 	virtual const char* get_type_code_str() const = 0;
 
 	virtual bool is_valid() const = 0;
 	virtual void dump(FILE *stream) {;}
+	
+	virtual int tune(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt);
 
 
 public:
@@ -500,13 +500,11 @@ public:
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  */
-
-
 class CFormatDescriptionLogEvent : public CLogEvent
 {
 public:
 	CFormatDescriptionLogEvent(uint8_t binlog_ver, const char* server_ver = NULL);
-	virtual ~CFormatDescriptionLogEvent();
+	virtual ~CFormatDescriptionLogEvent() throw();
 
 	virtual Log_event_type get_type_code() const {
 		return FORMAT_DESCRIPTION_EVENT;
@@ -549,13 +547,8 @@ public:
 class CUnknownLogEvent : public CLogEvent
 {
 public:
-	CUnknownLogEvent(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt) : CLogEvent(data, size, fmt)
-	{
-		_event_number = data[EVENT_TYPE_OFFSET];
-	}
-
 	virtual Log_event_type get_type_code() const {
-		return UNKNOWN_EVENT;
+		return (Log_event_type)_event_number;
 	}
 	virtual const char* get_type_code_str() const {
 		return "unknown event";
@@ -566,12 +559,18 @@ public:
 	}
 
 	virtual void dump(FILE *stream) {
-		fprintf(stream, "%u", (unsigned int)_event_number);
+		fprintf(stream, "%u\n", (unsigned int)_event_number);
+	}
+	
+	virtual int tune(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt) 
+	{
+		CLogEvent::tune(data, size, fmt);
+		_event_number = data[EVENT_TYPE_OFFSET];
+		return 0;
 	}
 
 public:
 	uint8_t	_event_number;
-	const char *_query;
 };
 
 
@@ -587,8 +586,6 @@ public:
 class CIntvarLogEvent : public CLogEvent
 {
 public:
-	CIntvarLogEvent(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt);
-
 	virtual Log_event_type get_type_code() const {
 		return INTVAR_EVENT;
 	}
@@ -608,6 +605,9 @@ public:
 	virtual void dump(FILE *stream) {
 		fprintf(stream, "%llu", (long long unsigned int)_val);
 	}
+	
+	virtual int tune(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt) ;
+	
 
 protected:
 	uint8_t		_type;
@@ -626,28 +626,26 @@ protected:
 class CQueryLogEvent : public CLogEvent
 {
 public:
-	CQueryLogEvent(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt, Log_event_type ev_type);
-
 	virtual Log_event_type get_type_code() const {
 		return QUERY_EVENT;
 	}
 	virtual const char* get_type_code_str() const {
 		return "query event";
 	}
-
 	virtual bool is_valid() const {
 		return 1;
 	}
 	virtual void dump(FILE *stream) {
-		fprintf(stream, "%d\t%s", (int)_error_code, _query);
+		fprintf(stream, "%d\t%s\n", (int)_error_code, _query);
 	}
+	
+	virtual int tune(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt);
+	
 public:
 	uint32_t _q_len;
 	uint32_t _db_len;
 	uint16_t _error_code;
-
 	uint16_t _status_vars_len;
-protected:
 	char _query[1024];
 
 
@@ -666,7 +664,7 @@ class CTableMapLogEvent : public CLogEvent
 {
 public:
 	CTableMapLogEvent(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt);
-	virtual ~CTableMapLogEvent();
+	virtual ~CTableMapLogEvent() throw();
 
 	virtual Log_event_type get_type_code() const {
 		return TABLE_MAP_EVENT;
@@ -686,7 +684,6 @@ public:
 
 public:
 	uint64_t _table_id;
-
 protected:
 	uint8_t *_data;
 	size_t _size;
@@ -702,11 +699,6 @@ protected:
 class CRowLogEvent : public CLogEvent
 {
 public:
-	CRowLogEvent() {
-	}
-	virtual ~CRowLogEvent() {
-	}
-
 	virtual Log_event_type get_type_code() const {
 		return (Log_event_type)_type;
 	}
@@ -724,30 +716,12 @@ public:
 	virtual bool is_valid() const {
 		return true;
 	}
-
-	int tune(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt) {
-		_when = uint4korr(data);
-		_server_id = uint4korr(data + SERVER_ID_OFFSET);
-		_data_written = uint4korr(data + EVENT_LEN_OFFSET);
-		_log_pos= uint4korr(data + LOG_POS_OFFSET);
-		_flags = uint2korr(data + FLAGS_OFFSET);
-
-		_type = data[EVENT_TYPE_OFFSET];
-
-//		uint8_t post_header_len= fmt->_post_header_len[_type-1];
-		const uint8_t *post_start = data + fmt->_common_header_len;
-		post_start += RW_MAPID_OFFSET;
-		_table_id= (uint64_t)uint6korr(post_start);
-		post_start += RW_FLAGS_OFFSET;
-		_row_flags= uint2korr(post_start);
-
-		return 0;
-	}
-
 	virtual int is_field_set(int column, const uint8_t **value, size_t *len) {
 		return 0;
 	}
 
+	virtual int tune(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt);
+	
 public:
 	uint32_t	_type;
 	uint16_t	_row_flags;

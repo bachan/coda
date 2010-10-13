@@ -33,7 +33,7 @@
 #include <map>
 namespace mysql {
 
-class CLogParser : public CItem
+class CLogParser : public CContainer
 {
 public:
 	typedef std::map<uint32_t, CTableMapLogEvent*> TTablesRepo;
@@ -50,7 +50,7 @@ public:
 	void stop_event_loop();
 
 public:
-	virtual CItem* watch(std::string name);
+	virtual IItem* watch(std::string name);
 protected:
 	virtual int on_insert(CTable &table, CTable::TRow &row)
 	{
@@ -76,6 +76,8 @@ protected:
 	int reconnect();
 	void disconnect();
 	CFormatDescriptionLogEvent* get_binlog_format();
+	int build_db_structure();
+	
 	int request_binlog_dump(const char *fname, uint32_t pos, uint32_t srv_id, uint16_t flags = 0);
 	void Dump(uint8_t *buf, size_t len);
 

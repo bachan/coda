@@ -12,11 +12,27 @@
 
 namespace mysql {
 	
+
+class IItem {
+public:
+	IItem() {
+	}
+	virtual ~IItem() throw() {
+	}
+	
+	virtual bool is_container() {
+		return false;
+	}
+	
+	virtual IItem* watch(std::string name) = 0;
+};
+
+
 /* 
  * ========================================= CValue
  * ========================================================
  */	
-class CValue 
+class CValue : public IItem
 {
 public:
 	enum EColumnType {
@@ -53,12 +69,12 @@ public:
 	
 public:
 	CValue();
-    CValue(const CValue& val);
-    virtual ~CValue() throw();
+	CValue(const CValue& val);
+	virtual ~CValue() throw();
 
-    CValue& operator=(const CValue &val);
-    bool operator==(const CValue &val) const;
-    bool operator!=(const CValue &val) const;
+	CValue& operator=(const CValue &val);
+	bool operator==(const CValue &val) const;
+	bool operator!=(const CValue &val) const;
 
 protected:
 	EColumnType _type;
@@ -73,24 +89,19 @@ protected:
  * ========================================= CItem
  * ========================================================
  */	
-
-class CItem
+class CContainer : public IItem
 {
 protected:
 	class _items_nocase_comparer {
 		public: bool operator() (const std::string &s1, const std::string &s2) const {
-			return (bool)strcasecmp(s1.c_str(), s2.c_str());	
+			return strcasecmp(s1.c_str(), s2.c_str()) > 0;	
 		}
 	};
-	typedef std::map<std::string, CItem*, CItem::_items_nocase_comparer> TItems;
+	typedef std::map<std::string, IItem*, CContainer::_items_nocase_comparer> TItems; //, CContainer::_items_nocase_comparer
 public:
-	CItem() {
+	CContainer() {
 	}
-	CItem(std::string &name) {
-		_name = name;
-	}
-	
-	virtual ~CItem() throw() {
+	virtual ~CContainer() throw() {
 		try 
 		{
 			for( TItems::iterator it = _items.begin(); it != _items.end(); ++it )
@@ -105,41 +116,58 @@ public:
 			;
 		}
 	}
-	
-	const std::string& name() const {
-		return _name;
+
+
+	IItem* find(std::string name) {
+		return this->find(&name);
 	}
-	void name(std::string &name) {
-		_name = name;
-	}
-	CItem* find(std::string &name) {
-		TItems::const_iterator it = _items.find(name);
-		return it != _items.end() ? it->second : NULL;
+
+	IItem* find(std::string *name) {
+		IItem *rc;
+		TItems::iterator it = _items.find(*name);
+		rc = it != _items.end() ? it->second : NULL;
+		return rc;
 	}
 	
-	
-	virtual CItem* watch(std::string name) = 0;
 protected:
-	std::string _name;
 	TItems _items;
 };
 
 
 
 /* 
+ * ========================================= CDatabase
+ * ========================================================
+ */	
+class CDatabase : public CContainer
+{
+public:
+    CDatabase() 
+		: _tables(_items)
+	{
+	}
+    virtual ~CDatabase() throw() 
+	{
+	}
+	
+	IItem* watch(std::string name);
+protected:
+	TItems &_tables;
+};
+
+
+/* 
  * ========================================= CTable
  * ========================================================
  */	
-
-class CDatabase;
-class CTable : public CItem
+class CTable : public CContainer
 {
 public:
 //	typedef std::map<std::string, CValue::EColumnType> TColumnsByName;
 	typedef std::vector<CValue*> TRow;
 public:
 	CTable();
-	CTable(CDatabase *db, std::string &name);
+	CTable(CDatabase *db);
 	virtual ~CTable() throw();
 	
 	uint64_t id() const {
@@ -156,43 +184,16 @@ public:
 		_db = db;
 	}
 	
-	virtual CItem* watch(std::string name);
+	//CValue& operator[]()
+	virtual IItem* watch(std::string name);
 
 protected:
 	TItems &_columns;
 	CDatabase *_db;
 	uint64_t _id;
-//	TRow _row;
 };	
 	
 
-/* 
- * ========================================= CDatabase
- * ========================================================
- */	
-class CDatabase : public CItem
-{
-public:
-	typedef std::map<uint64_t, CTable*> TTablesByID;
-public:
-    CDatabase() 
-		: _tables(_items)
-	{
-	}
-    CDatabase(std::string &name) 
-		: CItem(name)
-		, _tables(_items)
-	{
-	}
-    virtual ~CDatabase() throw() 
-	{
-	}
-	
-	CItem* watch(std::string name);
-protected:
-	TItems &_tables;
-	TTablesByID _tbl_by_id;
-};
 
 
 }

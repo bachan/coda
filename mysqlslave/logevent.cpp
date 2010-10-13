@@ -17,18 +17,21 @@ CLogEvent::CLogEvent()
 {
 }
 
-CLogEvent::CLogEvent(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt)
+CLogEvent::~CLogEvent() throw()
+{
+}
+
+int CLogEvent::tune(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt) 
 {
 	_when = uint4korr(data);
 	_server_id = uint4korr(data + SERVER_ID_OFFSET);
 	_data_written = uint4korr(data + EVENT_LEN_OFFSET);
 	_log_pos= uint4korr(data + LOG_POS_OFFSET);
 	_flags = uint2korr(data + FLAGS_OFFSET);
+	
+	return 0;
 }
 
-CLogEvent::~CLogEvent()
-{
-}
 
 int CLogEvent::Info(uint8_t* buf, size_t event_len)
 {
@@ -42,6 +45,8 @@ int CLogEvent::Info(uint8_t* buf, size_t event_len)
 
 	return 0;
 }
+
+
 
 
 /*
@@ -117,7 +122,7 @@ CFormatDescriptionLogEvent::CFormatDescriptionLogEvent(uint8_t binlog_ver, const
 
 }
 
-CFormatDescriptionLogEvent::~CFormatDescriptionLogEvent()
+CFormatDescriptionLogEvent::~CFormatDescriptionLogEvent() throw()
 {
 	if( _post_header_len )
 	{
@@ -150,15 +155,13 @@ void CFormatDescriptionLogEvent::calc_server_version_split()
 /*
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 */
-
-
-CIntvarLogEvent::CIntvarLogEvent(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt)
-	: CLogEvent(data, size, fmt)
-
+int CIntvarLogEvent::tune(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt) 
 {
+	CLogEvent::tune(data, size, fmt);
 	data += fmt->_common_header_len + fmt->_post_header_len[INTVAR_EVENT-1];
 	_type= data[I_TYPE_OFFSET];
 	_val= uint8korr(data+I_VAL_OFFSET);
+	return 0;
 }
 
 
@@ -167,8 +170,7 @@ CIntvarLogEvent::CIntvarLogEvent(uint8_t *data, size_t size, const CFormatDescri
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 */
 
-CQueryLogEvent::CQueryLogEvent(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt, Log_event_type ev_type)
-	: CLogEvent(data, size, fmt)
+int CQueryLogEvent::tune(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt)
 {
 	uint8_t common_header_len, post_header_len;
 	uint64_t data_len;
@@ -176,7 +178,7 @@ CQueryLogEvent::CQueryLogEvent(uint8_t *data, size_t size, const CFormatDescript
 	_query[0] = '\0';
 
 	common_header_len = fmt->_common_header_len;
-	post_header_len= fmt->_post_header_len[ev_type-1];
+	post_header_len= fmt->_post_header_len[QUERY_EVENT-1];
 
 	data_len = size - (common_header_len + post_header_len);
 	data += common_header_len;
@@ -190,12 +192,12 @@ CQueryLogEvent::CQueryLogEvent(uint8_t *data, size_t size, const CFormatDescript
 	{
 		_status_vars_len= uint2korr(data + Q_STATUS_VARS_LEN_OFFSET);
 	    if( _status_vars_len > data_len || _status_vars_len > MAX_SIZE_LOG_EVENT_STATUS )
-	    	return;
+	    	return -1;
 
 	    data_len -= _status_vars_len;
 	}
 	else
-		return;
+		return -1;
 
 	// смещаемся к query
 	data += post_header_len + _status_vars_len + _db_len + 1;
@@ -204,7 +206,6 @@ CQueryLogEvent::CQueryLogEvent(uint8_t *data, size_t size, const CFormatDescript
 
 	memcpy(_query, data, _q_len);
 	_query[_q_len] = '\0';
-
 }
 
 
@@ -219,7 +220,6 @@ uint64_t CTableMapLogEvent::get_table_id(uint8_t *data, size_t size, const CForm
 }
 
 CTableMapLogEvent::CTableMapLogEvent(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt)
-	: CLogEvent(data, size, fmt)
 {
 	_size = size;
 	_data = new uint8_t[_size];
@@ -227,7 +227,7 @@ CTableMapLogEvent::CTableMapLogEvent(uint8_t *data, size_t size, const CFormatDe
 	_table_id = get_table_id(data, size, fmt);
 }
 
-CTableMapLogEvent::~CTableMapLogEvent()
+CTableMapLogEvent::~CTableMapLogEvent() throw()
 {
 	if( _data )
 		delete [] _data;
@@ -244,6 +244,25 @@ const char * CTableMapLogEvent::get_table_name() const
 
 int CTableMapLogEvent::get_column_count() const
 {
+
+	return 0;
+}
+
+
+/*
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+*/
+int CRowLogEvent::tune(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt) 
+{
+	CLogEvent::tune(data, size, fmt);
+
+	_type = data[EVENT_TYPE_OFFSET];
+	//		uint8_t post_header_len= fmt->_post_header_len[_type-1];
+	const uint8_t *post_start = data + fmt->_common_header_len;
+	post_start += RW_MAPID_OFFSET;
+	_table_id= (uint64_t)uint6korr(post_start);
+	post_start += RW_FLAGS_OFFSET;
+	_row_flags= uint2korr(post_start);
 
 	return 0;
 }

@@ -146,7 +146,7 @@ void CLogParser::dispatch_events()
 {
 	CLogEvent *ev;
 	unsigned long len;
-
+	
 	while( connect() != 0 )
 	{
 		if( !_dispatch )
@@ -154,10 +154,14 @@ void CLogParser::dispatch_events()
 		sleep(1);
 	}
 		
+	if(	!build_db_structure() )
+		return;
 	// пока что так, потом будем позиционироваться автоматически
 	request_binlog_dump(_binlog_name.c_str(), _binlog_pos, _server_id, _binlog_flags);
 
-	CRowLogEvent rlev;
+	CRowLogEvent event_row;
+	CQueryLogEvent event_query;
+	CUnknownLogEvent event_unknown;
 	uint32_t event_type;
 	uint8_t *buf;
 	do
@@ -190,9 +194,16 @@ void CLogParser::dispatch_events()
 
 				switch( event_type )
 				{
+				case QUERY_EVENT:
+				{
+					event_query.tune(buf, len, _fmt);
+					event_query.dump(stdout);
+					break;
+				}		
 				case TABLE_MAP_EVENT:
 				{
 					uint64_t table_id = CTableMapLogEvent::get_table_id(buf, len, _fmt);
+					printf("table_id %d\n", (int)table_id);
 
 /*					it = _tables.find(table_id);
 					if( it == _tables.end() )
@@ -214,7 +225,9 @@ void CLogParser::dispatch_events()
 				case UPDATE_ROWS_EVENT:
 				case DELETE_ROWS_EVENT:
 				{
-/*					rlev.tune(buf, len, _fmt);
+//					event_row.tune(buf, len, _fmt);
+					event_row.dump(stdout);
+/*					rlev.
 					if( rlev.is_valid() )
 					{
 						it = _tables.find(rlev._table_id);
@@ -226,6 +239,11 @@ void CLogParser::dispatch_events()
 					}
 					else
 						on_error("invalid row log event", 0);*/
+				}
+				default:
+				{
+					event_unknown.tune(buf, len, _fmt);
+					event_unknown.dump(stdout);
 				}
 
 				}
@@ -283,15 +301,96 @@ void CLogParser::on_error(const char *err, MYSQL *mysql)
 }
 
 
-CItem* CLogParser::watch(std::string name)
+IItem* CLogParser::watch(std::string name)
 {
-	CItem *db = find(name);
+	IItem *db = find(&name);
 	if( !db )
 	{
-		db = new CDatabase(name);
+		db = new CDatabase();
 		_databases[name] = db;
 	}
 	return db;
+}
+
+
+int CLogParser::build_db_structure()
+{
+	int rc = 0;
+	int atom_found;
+	MYSQL_RES *res_db = NULL, *res_tbl = NULL, *res_column = NULL;
+	MYSQL_ROW row;
+	
+	if( _databases.empty() )
+	{
+		on_error("build_db_structure() failed: no databases filtered", NULL);	
+		return rc;
+	}
+	
+	if( mysql_query(&_mysql, "show databases") || 
+		!( res_db = mysql_store_result(&_mysql) ) 
+	)
+	{
+		on_error("build_db_structure() call to 'show databases' failed", &_mysql);
+		goto err;
+	}
+	
+	atom_found = 0;
+	CDatabase *db;
+	CTable *tbl;
+	char query[512];
+	
+	
+	// TODO: check for tables and columns
+	while( (row = mysql_fetch_row(res_db)) != NULL )
+	{
+		if( (db = (CDatabase*)this->find(row[0])) != NULL  )
+		{
+			if( mysql_select_db(&_mysql, row[0]) ||
+				mysql_query(&_mysql, "show tables") ||
+				!( res_tbl = mysql_store_result(&_mysql)))
+			{
+				on_error("build_db_structure() call to 'show tables' failed", &_mysql);
+				goto err;
+			}
+			
+			while( (row = mysql_fetch_row(res_tbl)) != NULL )
+			{
+				if( (tbl = (CTable*)db->find(row[0])) != NULL  )
+				{
+					sprintf(query, "desc %s", row[0]);
+					if( mysql_query(&_mysql, query) ||
+						!( res_column = mysql_store_result(&_mysql)))
+					{
+						on_error("build_db_structure() call to 'desc table' failed", &_mysql);
+						goto err;
+					}
+					
+					while( (row = mysql_fetch_row(res_column)) != NULL )
+					{
+						tbl->watch(row[0]);
+					}
+					
+					mysql_free_result(res_column);
+					res_column = NULL;
+				}
+			}
+			
+			mysql_free_result(res_tbl);
+			res_tbl = NULL;
+		}
+	}
+	
+	rc = 1;
+	
+err:
+	if( res_db )
+		mysql_free_result(res_db);
+	if( res_tbl )
+		mysql_free_result(res_tbl);
+	if( res_column )
+		mysql_free_result(res_tbl);
+	
+	return rc;
 }
 
 
