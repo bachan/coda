@@ -10,7 +10,7 @@
 namespace mysql {
 
 CLogParser::CLogParser()
-	: _databases(_items)
+	: _databases(_watched_items)
 	, _port(0)
 	, _fmt(0)
 	, _binlog_pos(0)
@@ -164,6 +164,9 @@ void CLogParser::dispatch_events()
 	CUnknownLogEvent event_unknown;
 	uint32_t event_type;
 	uint8_t *buf;
+	
+	CDatabase *db;
+	CTable *tbl;
 	do
 	{
 		len = cli_safe_read(&_mysql);
@@ -202,57 +205,57 @@ void CLogParser::dispatch_events()
 				}		
 				case TABLE_MAP_EVENT:
 				{
-					uint64_t table_id = CTableMapLogEvent::get_table_id(buf, len, _fmt);
-					printf("table_id %d\n", (int)table_id);
-
-/*					it = _tables.find(table_id);
-					if( it == _tables.end() )
-					{
-						fprintf(stdout, "new table_id %llu\n", (unsigned long long)table_id);
-						tmev = new CTableMapLogEvent(buf, len, _fmt);
-						_tables[table_id] = tmev;
-					}
-					else
-					{
-						fprintf(stdout, "found table_id %llu\n", (unsigned long long)table_id);
-						tmev = it->second;
-					}
-
-					ev = tmev;*/
+					printf("db: %s\ttable: %s\t table_id: %d\n",
+						CTableMapLogEvent::get_database_name(buf, len, _fmt),
+						CTableMapLogEvent::get_table_name(buf, len, _fmt),
+						(int)CTableMapLogEvent::get_table_id(buf, len, _fmt));
+					
+					db = static_cast<CDatabase*>(this->find(CTableMapLogEvent::get_database_name(buf, len, _fmt)));
+					if( db )
+						tbl = static_cast<CTable*>(db->find(CTableMapLogEvent::get_table_name(buf, len, _fmt)));
+					if( tbl && tbl->tune(buf, len, _fmt) != 0 )
+						tbl = NULL;
 					break;
 				}
 				case WRITE_ROWS_EVENT:
+				{
+					if( tbl )
+					{
+						event_row.tune(buf, len, _fmt);
+						event_row.dump(stdout);
+						tbl->change_values(event_row);
+						on_insert(*tbl);
+					}
+					break;
+				}
 				case UPDATE_ROWS_EVENT:
+				{
+					if( tbl )
+					{
+						event_row.tune(buf, len, _fmt);
+						event_row.dump(stdout);
+						tbl->change_values(event_row);
+						on_update(*tbl, 0);
+					}
+					break;
+				}
 				case DELETE_ROWS_EVENT:
 				{
-//					event_row.tune(buf, len, _fmt);
-					event_row.dump(stdout);
-/*					rlev.
-					if( rlev.is_valid() )
+					if( tbl )
 					{
-						it = _tables.find(rlev._table_id);
-						if( it != _tables.end() )
-						{
-							on_update_rows(&rlev);
-						}
-
+						event_row.tune(buf, len, _fmt);
+						event_row.dump(stdout);
+						tbl->change_values(event_row);
+						on_delete(*tbl);
 					}
-					else
-						on_error("invalid row log event", 0);*/
+					break;
 				}
 				default:
 				{
 					event_unknown.tune(buf, len, _fmt);
 					event_unknown.dump(stdout);
 				}
-
 				}
-
-
-//				ev = build_event(_mysql->net.read_pos + 1, len - 1, _fmt);
-//				fprintf(stdout,"%s\t", ev->get_type_code_str());
-//				ev->dump(stdout);
-//				fprintf(stdout, "\n");
 			}
 		}
 		else
@@ -357,6 +360,7 @@ int CLogParser::build_db_structure()
 			{
 				if( (tbl = (CTable*)db->find(row[0])) != NULL  )
 				{
+					tbl->get_values().clear();
 					sprintf(query, "desc %s", row[0]);
 					if( mysql_query(&_mysql, query) ||
 						!( res_column = mysql_store_result(&_mysql)))
@@ -365,10 +369,9 @@ int CLogParser::build_db_structure()
 						goto err;
 					}
 					
+					int pos=0;
 					while( (row = mysql_fetch_row(res_column)) != NULL )
-					{
-						tbl->watch(row[0]);
-					}
+						tbl->build_column(pos++, row[0]);
 					
 					mysql_free_result(res_column);
 					res_column = NULL;

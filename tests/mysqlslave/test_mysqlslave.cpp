@@ -5,6 +5,7 @@
 
 #include <mysqlslave/logparser.h>
 
+#include <tr1/unordered_map>
 
 class coda_binlog_reader : public mysql::CLogParser
 {
@@ -25,36 +26,24 @@ public:
 #endif
 };
 
-int main() {
-
+int main() 
+{
 	const int runtime = 600;
 	const char *host = "192.168.3.101";
 	const char *user = "testy";
 	const char *pwd	= "testy";
 	
-	mysql::IItem *db, *tbl;
+	mysql::CContainer *db, *tbl;
 	
 	coda_binlog_reader binlog_reader;
 	
-	db = binlog_reader.watch("test");
+	db = static_cast<mysql::CContainer*>(binlog_reader.watch("test"));
 	db->watch("t3");
 	db->watch("t2");
 	
 	binlog_reader.set_connection_params(host, user, pwd);
 	binlog_reader.set_binlog_position("mysql_binary_log.000002",106, 1);
-	// binlog_reader.connect();
-	// binlog_reader.dispatch_events();
-	
-	
-	
-/*	std::cout << "starting dispatcher for " << runtime << " seconds" << std::endl;
-	boost::thread dispatcher_thread( boost::bind( &coda_binlog_reader::dispatch_events, &binlog_reader) );
-	::sleep(runtime);*/
 	binlog_reader.dispatch_events();
-/*	binlog_reader.stop_event_loop();
-	std::cout << "wait for dispatcher... ";
-	dispatcher_thread.join();
-	std::cout << "done." << std::endl;*/
 	return 0;
 
 }

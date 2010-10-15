@@ -49,6 +49,7 @@ int CLogEvent::Info(uint8_t* buf, size_t event_len)
 
 
 
+
 /*
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 */
@@ -219,13 +220,35 @@ uint64_t CTableMapLogEvent::get_table_id(uint8_t *data, size_t size, const CForm
 			(uint64_t)uint4korr(post_start) : (uint64_t)uint6korr(post_start);
 }
 
-CTableMapLogEvent::CTableMapLogEvent(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt)
+const char* CTableMapLogEvent::get_database_name(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt)
 {
-	_size = size;
-	_data = new uint8_t[_size];
-	memcpy(_data, data, _size);
-	_table_id = get_table_id(data, size, fmt);
+	return (const char*)(data + fmt->_common_header_len + fmt->_post_header_len[TABLE_MAP_EVENT-1] + 1);
 }
+
+const char* CTableMapLogEvent::get_table_name(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt)
+{
+	uint8_t *p = data + fmt->_common_header_len + fmt->_post_header_len[TABLE_MAP_EVENT-1];
+	return (const char*)(p + *p + 3);
+}
+
+CTableMapLogEvent::CTableMapLogEvent()
+	: _table_id(0)
+	, _data(NULL)
+	, _size(0)
+	, _column_count(0)
+	, _metadata(NULL)
+{
+	_db_name[0] = '\0';
+	_table_name[0] = '\0';
+}
+
+// CTableMapLogEvent::CTableMapLogEvent(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt)
+// {
+// 	_size = size;
+// 	_data = new uint8_t[_size];
+// 	memcpy(_data, data, _size);
+// 	_table_id = get_table_id(data, size, fmt);
+// }
 
 CTableMapLogEvent::~CTableMapLogEvent() throw()
 {
@@ -248,6 +271,39 @@ int CTableMapLogEvent::get_column_count() const
 	return 0;
 }
 
+int CTableMapLogEvent::tune(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt)
+{
+	CLogEvent::tune(data, size, fmt);
+	if( _data )
+		delete [] _data;
+	_size = size;
+	_data = new uint8_t[_size];
+	memcpy(_data, data, _size);
+
+	_table_id = get_table_id(_data, size, fmt);
+	
+	uint8_t *p;
+	uint8_t len = 0;
+	
+	// db name
+	p = _data + fmt->_common_header_len + fmt->_post_header_len[TABLE_MAP_EVENT-1];
+	len = *p++;
+	strcpy(_db_name, (const char*)p);
+	p += len + 1;
+	
+	// table name
+	len = *p++;
+	strcpy(_table_name, (const char*)p);
+	p += len + 1;
+	
+	// column count
+	_column_count = net_field_length(&p);
+	
+	// metadata ptr
+	_metadata = p;
+	return 0;
+}
+
 
 /*
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -258,12 +314,18 @@ int CRowLogEvent::tune(uint8_t *data, size_t size, const CFormatDescriptionLogEv
 
 	_type = data[EVENT_TYPE_OFFSET];
 	//		uint8_t post_header_len= fmt->_post_header_len[_type-1];
-	const uint8_t *post_start = data + fmt->_common_header_len;
-	post_start += RW_MAPID_OFFSET;
-	_table_id= (uint64_t)uint6korr(post_start);
-	post_start += RW_FLAGS_OFFSET;
-	_row_flags= uint2korr(post_start);
-
+	uint8_t *p = data + fmt->_common_header_len;
+	p += RW_MAPID_OFFSET;
+	_table_id= (uint64_t)uint6korr(p);
+	p += RW_FLAGS_OFFSET;
+	_row_flags= uint2korr(p);
+	_ncolumns = net_field_length(&p);
+	
+	
+	
+	_data = p;
+	_len = p - _data;
+	
 	return 0;
 }
 

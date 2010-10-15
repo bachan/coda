@@ -3,12 +3,13 @@
 
 
 #include <stdint.h>
-#include <strings.h>
+#include <string.h>
 
 #include <string>
 #include <map>
-
 #include <vector>
+
+#include "logevent.h"
 
 namespace mysql {
 	
@@ -24,7 +25,6 @@ public:
 		return false;
 	}
 	
-	virtual IItem* watch(std::string name) = 0;
 };
 
 
@@ -62,7 +62,7 @@ public:
 		MYSQL_TYPE_BLOB=252,
 		MYSQL_TYPE_VAR_STRING=253,
 		MYSQL_TYPE_STRING=254,
-		MYSQL_TYPE_GEOMETRY=255		
+		MYSQL_TYPE_GEOMETRY=255
 	};
 	
 	static int calc_field_size(CValue::EColumnType ftype, uint8_t *pfield, uint32_t metadata);
@@ -75,9 +75,15 @@ public:
 	CValue& operator=(const CValue &val);
 	bool operator==(const CValue &val) const;
 	bool operator!=(const CValue &val) const;
-
-protected:
+	
+	void reset(EColumnType type);
+	bool is_valid() const;
+	
+public:
 	EColumnType _type;
+	int _position;
+	
+protected:
 	size_t _size;
 	const char *_storage;
 	uint32_t _metadata;
@@ -97,14 +103,14 @@ protected:
 			return strcasecmp(s1.c_str(), s2.c_str()) > 0;	
 		}
 	};
-	typedef std::map<std::string, IItem*, CContainer::_items_nocase_comparer> TItems; //, CContainer::_items_nocase_comparer
+	typedef std::map<std::string, IItem*, CContainer::_items_nocase_comparer> TItems;
 public:
 	CContainer() {
 	}
 	virtual ~CContainer() throw() {
 		try 
 		{
-			for( TItems::iterator it = _items.begin(); it != _items.end(); ++it )
+			for( TItems::iterator it = _watched_items.begin(); it != _watched_items.end(); ++it )
 				if( it->second )
 				{
 					delete it->second;
@@ -117,6 +123,7 @@ public:
 		}
 	}
 
+	virtual IItem* watch(std::string name) = 0;
 
 	IItem* find(std::string name) {
 		return this->find(&name);
@@ -124,13 +131,13 @@ public:
 
 	IItem* find(std::string *name) {
 		IItem *rc;
-		TItems::iterator it = _items.find(*name);
-		rc = it != _items.end() ? it->second : NULL;
+		TItems::iterator it = _watched_items.find(*name);
+		rc = it != _watched_items.end() ? it->second : NULL;
 		return rc;
 	}
 	
 protected:
-	TItems _items;
+	TItems _watched_items;
 };
 
 
@@ -142,17 +149,7 @@ protected:
 class CDatabase : public CContainer
 {
 public:
-    CDatabase() 
-		: _tables(_items)
-	{
-	}
-    virtual ~CDatabase() throw() 
-	{
-	}
-	
 	IItem* watch(std::string name);
-protected:
-	TItems &_tables;
 };
 
 
@@ -160,7 +157,7 @@ protected:
  * ========================================= CTable
  * ========================================================
  */	
-class CTable : public CContainer
+class CTable : public CContainer, public CTableMapLogEvent
 {
 public:
 //	typedef std::map<std::string, CValue::EColumnType> TColumnsByName;
@@ -170,13 +167,6 @@ public:
 	CTable(CDatabase *db);
 	virtual ~CTable() throw();
 	
-	uint64_t id() const {
-		return _id;
-	}
-	void id(uint64_t id) {
-		_id = id;
-	}
-	
 	CDatabase* db() const {
 		return _db;
 	}
@@ -184,13 +174,26 @@ public:
 		_db = db;
 	}
 	
-	//CValue& operator[]()
+	int change_values(CRowLogEvent &rlev);
 	virtual IItem* watch(std::string name);
-
+	virtual int tune(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt);
+	virtual bool is_valid() const;
+	
+	int build_column(int position, const char *name);
+	
+	TRow& get_values() {
+		return _values;
+	}
+	
+	CValue& operator[](int idx);
+	
+	
 protected:
-	TItems &_columns;
+	TItems _all_items;
 	CDatabase *_db;
-	uint64_t _id;
+	TRow _values;
+	bool _tuned;
+	CValue _null_value;
 };	
 	
 

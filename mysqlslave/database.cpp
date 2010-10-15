@@ -134,8 +134,10 @@ int CValue::calc_field_size(CValue::EColumnType ftype, uint8_t *pfield, uint32_t
 }
 	
 	
-CValue::CValue() 
-	: _size(0)
+CValue::CValue()
+	: _type(MYSQL_TYPE_NULL)
+	, _position(0)
+	, _size(0)
 	, _storage(NULL)
 	, _metadata(0)
 	, _is_null(false)
@@ -174,6 +176,19 @@ bool CValue::operator!=(const CValue &val) const
 	return !operator==(val);
 }
 	
+void CValue::reset(EColumnType type) 
+{
+	_type = type;
+	_size = 0;
+	_storage = NULL;
+	_metadata = 0;
+	_is_null = false;
+}
+
+bool CValue::is_valid() const 
+{
+	return _size && _storage;
+}
 
 /* 
  * ========================================= CTable
@@ -181,31 +196,111 @@ bool CValue::operator!=(const CValue &val) const
  */	
 	
 CTable::CTable()
-	: _columns(_items)
-	, _db(NULL)
-	, _id(0)
+	: _db(NULL)
+	, _tuned(false)
 {
 }
 
 CTable::CTable(CDatabase *db) 
-	: _columns(_items)
-	, _db(db)
-	, _id(0)
+	: _db(db)
+	, _tuned(false)
 {
 }
 
 CTable::~CTable() throw()
 {
+	// free at inherited destructor
+	TItems::iterator ita;
+	for(TItems::iterator ita = _all_items.begin(); ita != _all_items.end(); ++ita)
+		_watched_items.insert(std::pair<std::string, IItem*>(ita->first, ita->second));
 }
 
 IItem* CTable::watch(std::string name)
 {
-//	std::pair<TItems::iterator, int> rc = 
-	_columns.insert(std::pair<std::string, IItem*>(name, NULL));
-	return NULL;
+	IItem *value = find(&name);
+	if( !value )
+	{
+		value = new CValue();
+		_watched_items[name] = value;
+	}
+	return value;
 }
 
+int CTable::tune(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt)
+{
+	if( _tuned )
+		return 0;
 
+	_values.clear();
+	int rc = CTableMapLogEvent::tune(data, size, fmt);
+	if( rc || !_column_count || !_metadata )
+	{
+		uint8_t *type = _metadata;
+		try
+		{
+			for( int i=0; i<_column_count; ++i )
+				_values.at(i)->_type = (CValue::EColumnType)*type++;
+			_tuned = true;
+		}
+		catch( ... )
+		{
+			rc = -1;
+		}
+			
+	}
+	else
+		_tuned = false;
+	
+	return rc;
+}
+
+int CTable::change_values(CRowLogEvent &rlev)
+{
+	if( _table_id != rlev._table_id )
+		return -1;
+	
+	// _all_items;
+	
+		
+	
+	
+	return 0;
+}
+
+CValue& CTable::operator[](int idx)
+{
+	try
+	{
+		return *_values.at(idx);
+	}
+	catch(...)
+	{
+		;
+	}
+	return _null_value;
+}
+
+bool CTable::is_valid() const
+{
+	return CTableMapLogEvent::is_valid() && _column_count >= _watched_items.size();
+}
+
+int CTable::build_column(int position, const char *name)
+{
+	if( !name )
+		return -1;
+	
+	CValue *value = static_cast<CValue*>(find(name));
+	if( !value )
+		value = new CValue();
+	value->_position = position;
+	_all_items.insert(std::pair<std::string, IItem*>(name, value));
+	
+	if( _values.size() < (position+1) )
+		_values.resize(position+1);
+
+	_values[position] = value;
+}
 
 /* 
  * ========================================= CDatabase
@@ -218,7 +313,7 @@ IItem* CDatabase::watch(std::string name)
 	if( !table )
 	{
 		table = new CTable(this);
-		_tables[name] = table;
+		_watched_items[name] = table;
 	}
 	return table;//tbl;
 }

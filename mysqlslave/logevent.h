@@ -443,7 +443,7 @@ public:
 	
 	virtual int tune(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt);
 
-
+	
 public:
 	/*
 	The offset in the log where this event originally appeared (it is
@@ -663,9 +663,14 @@ public:
 class CTableMapLogEvent : public CLogEvent
 {
 public:
-	CTableMapLogEvent(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt);
+    CTableMapLogEvent();
+//	CTableMapLogEvent(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt);
 	virtual ~CTableMapLogEvent() throw();
 
+	static const char* get_database_name(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt);
+	static const char* get_table_name(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt);
+	static uint64_t	get_table_id(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt);
+	
 	virtual Log_event_type get_type_code() const {
 		return TABLE_MAP_EVENT;
 	}
@@ -675,9 +680,10 @@ public:
 	virtual bool is_valid() const {
 		return true;
 	}
-
-	static uint64_t	get_table_id(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt);
-
+	
+	
+	virtual int tune(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt);
+	
 	const char * get_database_name() const;
 	const char * get_table_name() const;
 	int get_column_count() const;
@@ -687,6 +693,10 @@ public:
 protected:
 	uint8_t *_data;
 	size_t _size;
+	char _db_name[255];
+	char _table_name[255];
+	uint64_t _column_count;
+	uint8_t *_metadata;
 };
 
 
@@ -723,9 +733,13 @@ public:
 	virtual int tune(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt);
 	
 public:
-	uint32_t	_type;
-	uint16_t	_row_flags;
-	uint64_t	_table_id;
+	uint32_t _type;
+	uint16_t _row_flags;
+	uint64_t _table_id;
+	uint64_t _ncolumns;
+	uint64_t _used_columns_mask;
+	uint64_t _used_columns_afterimage_mask; // for UPDATE_ROWS_EVENT only
+	const uint8_t *_rows;
 protected:
 	const uint8_t *_data;
 	size_t _len;
