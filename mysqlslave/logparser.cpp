@@ -216,38 +216,31 @@ void CLogParser::dispatch_events()
 					if( tbl && tbl->tune(buf, len, _fmt) != 0 )
 						tbl = NULL;
 					break;
+					
+					
 				}
 				case WRITE_ROWS_EVENT:
-				{
-					if( tbl )
-					{
-						event_row.tune(buf, len, _fmt);
-						event_row.dump(stdout);
-						tbl->change_values(event_row);
-						on_insert(*tbl);
-					}
-					break;
-				}
 				case UPDATE_ROWS_EVENT:
-				{
-					if( tbl )
-					{
-						event_row.tune(buf, len, _fmt);
-						event_row.dump(stdout);
-						tbl->change_values(event_row);
-						on_update(*tbl, 0);
-					}
-					break;
-				}
 				case DELETE_ROWS_EVENT:
 				{
+					fprintf(stdout, "table %p ", tbl);
 					if( tbl )
 					{
-						event_row.tune(buf, len, _fmt);
-						event_row.dump(stdout);
-						tbl->change_values(event_row);
-						on_delete(*tbl);
+						if( event_row.tune(buf, len, _fmt) == 0 )
+						{
+							event_row.dump(stdout);
+							tbl->change_values(event_row);
+							if( event_type == WRITE_ROWS_EVENT )
+								on_insert(*tbl, tbl->get_new_rows());
+							else if( event_type == UPDATE_ROWS_EVENT )
+								on_update(*tbl, tbl->get_new_rows(), tbl->get_old_rows());
+							else 
+								on_delete(*tbl, tbl->get_new_rows());
+						}
+						else
+							on_error("event_row tuning failed", NULL);
 					}
+					fprintf(stdout, "\n");
 					break;
 				}
 				default:
@@ -360,7 +353,7 @@ int CLogParser::build_db_structure()
 			{
 				if( (tbl = (CTable*)db->find(row[0])) != NULL  )
 				{
-					tbl->get_values().clear();
+					printf("clear() values for table %p\n", tbl);
 					sprintf(query, "desc %s", row[0]);
 					if( mysql_query(&_mysql, query) ||
 						!( res_column = mysql_store_result(&_mysql)))

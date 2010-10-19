@@ -7,8 +7,31 @@ namespace mysql {
  * ========================================= CValue
  * ========================================================
  */	
+int CValue::calc_metadata_size(CValue::EColumnType ftype)
+{
+	int rc;
+	switch( ftype ) 
+	{
+	case MYSQL_TYPE_FLOAT:
+	case MYSQL_TYPE_DOUBLE:
+	case MYSQL_TYPE_BLOB:
+	case MYSQL_TYPE_GEOMETRY:
+		rc = 1;
+		break;
+	case MYSQL_TYPE_VARCHAR:
+	case MYSQL_TYPE_BIT:
+	case MYSQL_TYPE_NEWDECIMAL:
+	case MYSQL_TYPE_VAR_STRING:
+	case MYSQL_TYPE_STRING:
+		rc = 2;
+		break;
+	default:
+		rc = 0;
+	}
+	return rc;
+}
 	
-int CValue::calc_field_size(CValue::EColumnType ftype, uint8_t *pfield, uint32_t metadata)
+int CValue::calc_field_size(CValue::EColumnType ftype, const uint8_t *pfield, uint32_t metadata)
 {
 	uint32_t length;
 
@@ -209,10 +232,13 @@ CTable::CTable(CDatabase *db)
 
 CTable::~CTable() throw()
 {
-	// free at inherited destructor
+	// добавим некоторые уникальные элементы в унаследованный контейнер
 	TItems::iterator ita;
 	for(TItems::iterator ita = _all_items.begin(); ita != _all_items.end(); ++ita)
 		_watched_items.insert(std::pair<std::string, IItem*>(ita->first, ita->second));
+	
+	for(TRow::iterator it = _new_values.begin(); it != _new_values.end(); ++it)
+		delete *it;
 }
 
 IItem* CTable::watch(std::string name)
@@ -231,21 +257,31 @@ int CTable::tune(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *f
 	if( _tuned )
 		return 0;
 
-	_values.clear();
 	int rc = CTableMapLogEvent::tune(data, size, fmt);
-	if( rc || !_column_count || !_metadata )
+	if( !rc && _column_count && _metadata )
 	{
+		if( _column_count > _values.size() )
+			return -1;
 		uint8_t *type = _metadata;
 		try
 		{
+			CValue *newvalue;
+			_new_values.clear();
+			_new_values.resize(_values.size(), NULL);
 			for( int i=0; i<_column_count; ++i )
-				_values.at(i)->_type = (CValue::EColumnType)*type++;
+			{
+				_values[i]->_type = (CValue::EColumnType)*type++;
+				newvalue = new CValue(*_values[i]);
+				_new_values[i] = newvalue;
+			}
 			_tuned = true;
 		}
-		catch( ... )
+		catch( std::exception &e )
 		{
+			printf("%s\n", e.what());
 			rc = -1;
 		}
+		
 			
 	}
 	else
@@ -256,16 +292,99 @@ int CTable::tune(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *f
 
 int CTable::change_values(CRowLogEvent &rlev)
 {
-	if( _table_id != rlev._table_id )
+	const uint8_t *pfields;
+	size_t len;
+	uint64_t nullfields_mask;
+	
+	if( !rlev.is_valid() || _table_id != rlev._table_id)
 		return -1;
 	
-	// _all_items;
+	pfields = rlev.rows_data();
+	len = rlev.rows_len();
 	
+	while( len > 0 )
+	{
+		nullfields_mask = ~rlev.build_column_mask(&pfields, &len, rlev.get_used_columns_1bit_count());
+		update_row(_values, &pfields, &len, 
+				   rlev._ncolumns, rlev.get_used_columns_mask(), nullfields_mask);
+		printf("len %d, ucm %X nullf %X\n", 
+			   (int)len, (int)rlev.get_used_columns_mask(), (int)nullfields_mask);
+		if( rlev.get_type_code() == UPDATE_ROWS_EVENT )
+		{
+			nullfields_mask = ~rlev.build_column_mask(&pfields, &len, rlev.get_used_columns_afterimage_1bit_count());
+			update_row(_new_values, &pfields, &len, 
+					   rlev._ncolumns, rlev.get_used_columns_afterimage_mask(), nullfields_mask);
+			printf("len %d, ucm %X nullf %X\n", 
+				   (int)len, (int)rlev.get_used_columns_afterimage_mask(), (int)nullfields_mask);
+		}
+	}
 		
-	
-	
-	return 0;
+	return len == 0 ? 0 : -1;
 }
+
+int CTable::update_row(TRow &row, const uint8_t **pdata, size_t *len, 
+				uint64_t ncolumns, uint64_t usedcolumns_mask, uint64_t nullfields_mask)
+{
+	CValue::EColumnType type;
+	uint32_t metadata;
+	uint32_t length;
+	uint8_t *pmetadata;
+	uint64_t bit;
+	
+	bit = 0x01;
+	pmetadata = _metadata;
+	for(uint64_t i = 0; i<ncolumns && *len > 0; ++i)
+	{
+		type = (CValue::EColumnType)*(_column_types+i);
+		switch( CValue::calc_metadata_size(type) )
+		{
+			case 0:
+			{
+				metadata = 0;
+				break;
+			}
+			case 1:
+			{
+				metadata = *pmetadata;
+				pmetadata++;
+				break;
+			}
+			case 2:
+			{
+				metadata = *(uint16_t*)pmetadata;
+				pmetadata += 2;
+				break;
+			}
+			default:
+				// хз, ненадежно, конечно, но метаданные по протоколу типа не должны быть длиннее 2 байт
+				metadata = 0; 
+		}
+		
+		if( usedcolumns_mask & bit )
+		{
+			row[i]->updated(true);
+			if( nullfields_mask & bit )
+			{
+				row[i]->zero(false);
+				length = CValue::calc_field_size(type, *pdata, metadata);
+				row[i]->tune(type, *pdata, metadata, length);
+				(*pdata) += length;
+				*len -= length;
+//				printf("type %d, length %d, len %d\n",(int)type, (int)length, (int)*len);
+			}
+			else
+				row[i]->zero(true);
+		}
+		else
+			row[i]->updated(false);
+			
+		bit << 1;
+	}
+	
+	return *len >= 0 ? 0 : -1;
+}
+
+
 
 CValue& CTable::operator[](int idx)
 {
@@ -273,7 +392,7 @@ CValue& CTable::operator[](int idx)
 	{
 		return *_values.at(idx);
 	}
-	catch(...)
+	catch( ... )
 	{
 		;
 	}
@@ -295,10 +414,8 @@ int CTable::build_column(int position, const char *name)
 		value = new CValue();
 	value->_position = position;
 	_all_items.insert(std::pair<std::string, IItem*>(name, value));
-	
 	if( _values.size() < (position+1) )
 		_values.resize(position+1);
-
 	_values[position] = value;
 }
 

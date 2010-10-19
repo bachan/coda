@@ -298,8 +298,11 @@ int CTableMapLogEvent::tune(uint8_t *data, size_t size, const CFormatDescription
 	
 	// column count
 	_column_count = net_field_length(&p);
+	_column_types = p;
+	p += _column_count;
 	
 	// metadata ptr
+	_metadata_length = net_field_length(&p);
 	_metadata = p;
 	return 0;
 }
@@ -310,24 +313,109 @@ int CTableMapLogEvent::tune(uint8_t *data, size_t size, const CFormatDescription
 */
 int CRowLogEvent::tune(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt) 
 {
+	const uint8_t *p;
+	
 	CLogEvent::tune(data, size, fmt);
-
+	_valid = 0;
 	_type = data[EVENT_TYPE_OFFSET];
-	//		uint8_t post_header_len= fmt->_post_header_len[_type-1];
-	uint8_t *p = data + fmt->_common_header_len;
+	data += fmt->_common_header_len;
+	size -= fmt->_common_header_len;
+	p = data;
+	
 	p += RW_MAPID_OFFSET;
 	_table_id= (uint64_t)uint6korr(p);
+	
 	p += RW_FLAGS_OFFSET;
 	_row_flags= uint2korr(p);
-	_ncolumns = net_field_length(&p);
 	
+	p+=2;
+	_ncolumns = net_field_length((u_char**)&p);
 	
+	_used_columns_mask = build_column_mask(&p, NULL, _ncolumns);
+	if( _used_columns_mask == (uint64_t) -1 )
+		return -1;
+	update_n1bits(&_used_columns_mask);
 	
+	if( _type == UPDATE_ROWS_EVENT )
+	{
+		_used_columns_afterimage_mask = build_column_mask(&p, NULL, _ncolumns);
+		if( _used_columns_afterimage_mask == (uint64_t) -1 )
+			return -1;
+		update_n1bits(&_used_columns_afterimage_mask);
+	}
+	
+	_len = size - (p - data);
 	_data = p;
-	_len = p - _data;
-	
+	_valid = 1;
+
 	return 0;
 }
 
+void CRowLogEvent::update_n1bits(uint64_t *mask)
+{
+	uint64_t m = *mask;
+	uint8_t nbits = 0;
+	do
+	{
+		if( m & 0x01 )
+			nbits++;
+	}
+	while( m>>=1 );
+	
+	*mask = (*mask & 0x00FFFFFFFFFFFFFF) | ((uint64_t)nbits << (64-8));
+}
+
+uint64_t CRowLogEvent::build_column_mask(const uint8_t **ptr, size_t *len, uint64_t n)
+{
+	uint64_t column_mask;
+	uint8_t l = uint8_t((n+7)/8);
+	
+	switch( l )
+	{
+	case 1: // [1..8] columns
+	{
+		column_mask = 0xFFFFFFFFFFFFFFFF & (uint64_t)*(*ptr);
+		break;
+	}
+	case 2: // [9..16] columns
+	{
+		column_mask = 0xFFFFFFFFFFFFFFFF & (uint64_t)uint2korr(*ptr);
+		break;
+	}
+	case 3: // [17..24] columns
+	{
+		column_mask = 0xFFFFFFFFFFFFFFFF & (uint64_t)uint3korr(*ptr);
+		break;
+	}
+	case 4: // [25..32] columns
+	{
+		column_mask = 0xFFFFFFFFFFFFFFFF & (uint64_t)uint4korr(*ptr);
+		break;
+	}
+	case 5: // [33..40] columns
+	{
+		column_mask = 0xFFFFFFFFFFFFFFFF & (uint64_t)uint5korr(*ptr);
+		break;
+	}
+	case 6: // [41..48] columns
+	{
+		column_mask = 0xFFFFFFFFFFFFFFFF & (uint64_t)uint6korr(*ptr);
+		break;
+	}
+	default:
+	{
+		// wrong column number
+		return (uint64_t)-1;
+	}
+	}
+	
+	if( ptr && *ptr )
+		(*ptr) += l; 
+	
+	if( len )
+		*len -= l;
+	
+	return column_mask;
+}
 
 }

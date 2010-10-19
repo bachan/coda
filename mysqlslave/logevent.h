@@ -696,7 +696,11 @@ protected:
 	char _db_name[255];
 	char _table_name[255];
 	uint64_t _column_count;
+	uint8_t *_column_types;
+	uint64_t _metadata_length;
 	uint8_t *_metadata;
+	uint64_t _bit_null_fields;
+	
 };
 
 
@@ -709,6 +713,16 @@ protected:
 class CRowLogEvent : public CLogEvent
 {
 public:
+	CRowLogEvent() : _valid(0) {
+	}
+	
+	const uint8_t* rows_data() const {
+		return _data;
+	}
+	const size_t rows_len() const {
+		return _len;
+	}
+	
 	virtual Log_event_type get_type_code() const {
 		return (Log_event_type)_type;
 	}
@@ -722,27 +736,65 @@ public:
 		else
 			return "unknown rows event";
 	}
-
 	virtual bool is_valid() const {
-		return true;
+		return _valid;
 	}
 	virtual int is_field_set(int column, const uint8_t **value, size_t *len) {
 		return 0;
 	}
-
+	virtual void dump(FILE *stream) {
+		fprintf(stream, 
+				"%s\tvalid: %d, rowslen %d, rowflags %d, table_id %d, ncolumns %d, ucm %X (%d bits)",
+				get_type_code_str(), 
+				_valid, 
+				(int)_len,
+				(int)_row_flags,
+				(int)_table_id, 
+				(int)_ncolumns, 
+				(int)get_used_columns_mask(),
+				(int)get_used_columns_1bit_count());
+		if( _type == UPDATE_ROWS_EVENT )
+			fprintf(stream, ", ucam %X (%d bits)", 
+				(int)get_used_columns_afterimage_mask(),
+				(int)get_used_columns_afterimage_1bit_count());
+		fprintf(stream, "\n");
+	}
+	
+	
 	virtual int tune(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt);
+	
+	uint64_t get_used_columns_mask() const {
+		return _used_columns_mask & 0x00FFFFFFFFFFFFFFFF;
+	}
+	uint64_t get_used_columns_1bit_count() const {
+		return _used_columns_mask >> (64-8);
+	}
+	
+	uint64_t get_used_columns_afterimage_mask() const {
+		return _used_columns_afterimage_mask & 0x00FFFFFFFFFFFFFFFF;
+	}
+	uint64_t get_used_columns_afterimage_1bit_count() const {
+		return _used_columns_afterimage_mask >> (64-8);
+	}
+	
+	uint64_t build_column_mask(const uint8_t **ptr, size_t *len, uint64_t n);
+	void update_n1bits(uint64_t *mask);
 	
 public:
 	uint32_t _type;
 	uint16_t _row_flags;
 	uint64_t _table_id;
 	uint64_t _ncolumns;
-	uint64_t _used_columns_mask;
-	uint64_t _used_columns_afterimage_mask; // for UPDATE_ROWS_EVENT only
+	
 	const uint8_t *_rows;
 protected:
+	// в самый старший байт пишем число установленных бит
+	uint64_t _used_columns_mask;
+	// в самый старший байт пишем число установленных бит
+	uint64_t _used_columns_afterimage_mask; // for UPDATE_ROWS_EVENT only
 	const uint8_t *_data;
 	size_t _len;
+	int _valid;
 
 };
 

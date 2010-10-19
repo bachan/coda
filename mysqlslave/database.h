@@ -39,7 +39,7 @@ public:
 		MYSQL_TYPE_DECIMAL, 
 		MYSQL_TYPE_TINY,
 		MYSQL_TYPE_SHORT,  
-		MYSQL_TYPE_LONG,
+		MYSQL_TYPE_LONG = 3,
 		MYSQL_TYPE_FLOAT,  
 		MYSQL_TYPE_DOUBLE,
 		MYSQL_TYPE_NULL,
@@ -51,7 +51,7 @@ public:
 		MYSQL_TYPE_DATETIME, 
 		MYSQL_TYPE_YEAR,
 		MYSQL_TYPE_NEWDATE,
-		MYSQL_TYPE_VARCHAR,
+		MYSQL_TYPE_VARCHAR = 15,
 		MYSQL_TYPE_BIT,
 		MYSQL_TYPE_NEWDECIMAL=246,
 		MYSQL_TYPE_ENUM=247,
@@ -65,7 +65,8 @@ public:
 		MYSQL_TYPE_GEOMETRY=255
 	};
 	
-	static int calc_field_size(CValue::EColumnType ftype, uint8_t *pfield, uint32_t metadata);
+	static int calc_metadata_size(CValue::EColumnType ftype);
+	static int calc_field_size(CValue::EColumnType ftype, const uint8_t *pfield, uint32_t metadata);
 	
 public:
 	CValue();
@@ -79,15 +80,45 @@ public:
 	void reset(EColumnType type);
 	bool is_valid() const;
 	
+	bool updated() const {
+		return _is_updated;
+	}
+	void updated(bool upd)  {
+		_is_updated = upd;
+	}
+	bool zero() const {
+		return _is_null;
+	}
+	void zero(bool z) {
+		_is_null = z;
+	}
+	
+	
+	uint64_t as_int64() const 
+	{
+		return *((uint32_t*)_storage);
+	}
+	int tune(CValue::EColumnType ftype, const uint8_t *pfield, uint32_t metadata, size_t length)
+	{
+		_type = ftype;
+		_storage = pfield;
+		_metadata = metadata;
+		_size = length;
+		printf("field type: %d, length: %d, metadata: %d, uint32_t cast: %d\n", 
+			   (int)_type, (int)length, (int)metadata, (int)*(uint32_t*)pfield);
+		return 0;
+	}
+	
 public:
 	EColumnType _type;
 	int _position;
 	
 protected:
 	size_t _size;
-	const char *_storage;
+	const uint8_t *_storage;
 	uint32_t _metadata;
 	bool _is_null;
+	bool _is_updated;
 };
 
 
@@ -162,6 +193,7 @@ class CTable : public CContainer, public CTableMapLogEvent
 public:
 //	typedef std::map<std::string, CValue::EColumnType> TColumnsByName;
 	typedef std::vector<CValue*> TRow;
+	typedef std::vector<TRow> TRows;
 public:
 	CTable();
 	CTable(CDatabase *db);
@@ -181,17 +213,26 @@ public:
 	
 	int build_column(int position, const char *name);
 	
-	TRow& get_values() {
-		return _values;
+	TRows& get_new_rows() {
+		return _new_rows;
+	}
+	TRows& get_old_rows() {
+		return _old_rows;
 	}
 	
-	CValue& operator[](int idx);
 	
+	CValue& operator[](int idx);
+protected:
+	int update_row(TRow &row, const uint8_t **pdata, size_t *len, 
+				   uint64_t ncolumns, uint64_t usedcolumns_mask, uint64_t nullfields_mask);
 	
 protected:
 	TItems _all_items;
 	CDatabase *_db;
 	TRow _values;
+	TRow _new_values;
+	TRows _new_rows;
+	TRows _old_rows;
 	bool _tuned;
 	CValue _null_value;
 };	

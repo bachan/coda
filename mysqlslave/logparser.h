@@ -52,15 +52,15 @@ public:
 public:
 	virtual IItem* watch(std::string name);
 protected:
-	virtual int on_insert(CTable &table)
+	virtual int on_insert(CTable &table, CTable::TRows &newrows)
 	{
 		return 0;
 	}
-	virtual int on_update(CTable &table, uint64_t update_mask)
+	virtual int on_update(CTable &table, CTable::TRows &newrows, CTable::TRows &oldrows)
 	{
 		return 0;
 	}
-	virtual int on_delete(CTable &table)
+	virtual int on_delete(CTable &table, CTable::TRows &newrows)
 	{
 		return 0;
 	}

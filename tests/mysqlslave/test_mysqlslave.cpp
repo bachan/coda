@@ -9,21 +9,19 @@
 
 class coda_binlog_reader : public mysql::CLogParser
 {
-#if 0
 public:
-	virtual int on_insert(CTable &table, CTable::TRow &row)
+	virtual int on_insert(mysql::CTable &table, mysql::CTable::TRows &newrows)
 	{
 		return 0;
 	}
-	virtual int on_update(CTable &table, CTable::TRow &row, uint64_t update_mask)
+	virtual int on_update(mysql::CTable &table, mysql::CTable::TRows &newrows, mysql::CTable::TRows &oldrows)
 	{
 		return 0;
 	}
-	virtual int on_delete(CTable &table, CTable::TRow &row)
+	virtual int on_delete(mysql::CTable &table, mysql::CTable::TRows &newrows)
 	{
 		return 0;
 	}
-#endif
 };
 
 int main() 
