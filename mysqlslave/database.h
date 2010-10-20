@@ -6,181 +6,73 @@
 #include <string.h>
 
 #include <string>
-#include <map>
 #include <vector>
+#include <list>
 
 #include "logevent.h"
+#include "value.h"
 
 namespace mysql {
-	
-
-class IItem {
-public:
-	IItem() {
-	}
-	virtual ~IItem() throw() {
-	}
-	
-	virtual bool is_container() {
-		return false;
-	}
-	
-};
 
 
-/* 
- * ========================================= CValue
- * ========================================================
- */	
-class CValue : public IItem
+class CRow : public std::vector<CValue>
 {
+typedef std::vector<CValue> inherited;
 public:
-	enum EColumnType {
-		MYSQL_TYPE_DECIMAL, 
-		MYSQL_TYPE_TINY,
-		MYSQL_TYPE_SHORT,  
-		MYSQL_TYPE_LONG = 3,
-		MYSQL_TYPE_FLOAT,  
-		MYSQL_TYPE_DOUBLE,
-		MYSQL_TYPE_NULL,
-		MYSQL_TYPE_TIMESTAMP,
-		MYSQL_TYPE_LONGLONG,
-		MYSQL_TYPE_INT24,
-		MYSQL_TYPE_DATE,
-		MYSQL_TYPE_TIME,
-		MYSQL_TYPE_DATETIME, 
-		MYSQL_TYPE_YEAR,
-		MYSQL_TYPE_NEWDATE,
-		MYSQL_TYPE_VARCHAR = 15,
-		MYSQL_TYPE_BIT,
-		MYSQL_TYPE_NEWDECIMAL=246,
-		MYSQL_TYPE_ENUM=247,
-		MYSQL_TYPE_SET=248,
-		MYSQL_TYPE_TINY_BLOB=249,
-		MYSQL_TYPE_MEDIUM_BLOB=250,
-		MYSQL_TYPE_LONG_BLOB=251,
-		MYSQL_TYPE_BLOB=252,
-		MYSQL_TYPE_VAR_STRING=253,
-		MYSQL_TYPE_STRING=254,
-		MYSQL_TYPE_GEOMETRY=255
-	};
-	
-	static int calc_metadata_size(CValue::EColumnType ftype);
-	static int calc_field_size(CValue::EColumnType ftype, const uint8_t *pfield, uint32_t metadata);
-	
-public:
-	CValue();
-	CValue(const CValue& val);
-	virtual ~CValue() throw();
-
-	CValue& operator=(const CValue &val);
-	bool operator==(const CValue &val) const;
-	bool operator!=(const CValue &val) const;
-	
-	void reset(EColumnType type);
-	bool is_valid() const;
-	
-	bool updated() const {
-		return _is_updated;
-	}
-	void updated(bool upd)  {
-		_is_updated = upd;
-	}
-	bool zero() const {
-		return _is_null;
-	}
-	void zero(bool z) {
-		_is_null = z;
-	}
-	
-	
-	uint64_t as_int64() const 
+    CRow() : inherited(), _indexer(NULL) 
 	{
-		return *((uint32_t*)_storage);
 	}
-	int tune(CValue::EColumnType ftype, const uint8_t *pfield, uint32_t metadata, size_t length)
+	CRow(CContainer *indexer) : inherited() , _indexer(indexer)
 	{
-		_type = ftype;
-		_storage = pfield;
-		_metadata = metadata;
-		_size = length;
-		printf("field type: %d, length: %d, metadata: %d, uint32_t cast: %d\n", 
-			   (int)_type, (int)length, (int)metadata, (int)*(uint32_t*)pfield);
-		return 0;
 	}
-	
-public:
-	EColumnType _type;
-	int _position;
-	
-protected:
-	size_t _size;
-	const uint8_t *_storage;
-	uint32_t _metadata;
-	bool _is_null;
-	bool _is_updated;
-};
 
-
-/* 
- * ========================================= CItem
- * ========================================================
- */	
-class CContainer : public IItem
-{
-protected:
-	class _items_nocase_comparer {
-		public: bool operator() (const std::string &s1, const std::string &s2) const {
-			return strcasecmp(s1.c_str(), s2.c_str()) > 0;	
-		}
-	};
-	typedef std::map<std::string, IItem*, CContainer::_items_nocase_comparer> TItems;
-public:
-	CContainer() {
+	const CValue& operator[](int idx) const { 
+		return inherited::operator[](idx);
 	}
-	virtual ~CContainer() throw() {
-		try 
+	CValue& operator[](int idx) {
+		return inherited::operator[](idx);
+	}
+	CValue& operator[](std::string name) {
+		if( _indexer )
 		{
-			for( TItems::iterator it = _watched_items.begin(); it != _watched_items.end(); ++it )
-				if( it->second )
-				{
-					delete it->second;
-					it->second = NULL;
+			IItem *item = _indexer->find(name);
+			if( item ) {
+				try {
+					return inherited::at(item->id());
 				}
+				catch( ... ) {
+					;
+				}
+			}
 		}
-		catch(...)
+		return _null_value;
+	}
+	const CValue& operator[](std::string name) const {
+		if( _indexer )
 		{
-			;
+			IItem *item = _indexer->find(name);
+			if( item ) {
+				try {
+					return inherited::at(item->id());
+				}
+				catch( ... ) {
+					;
+				}
+			}
 		}
+		return _null_value;
 	}
-
-	virtual IItem* watch(std::string name) = 0;
-
-	IItem* find(std::string name) {
-		return this->find(&name);
+	
+	void indexer(CContainer *indexer) {
+		_indexer = indexer;
 	}
-
-	IItem* find(std::string *name) {
-		IItem *rc;
-		TItems::iterator it = _watched_items.find(*name);
-		rc = it != _watched_items.end() ? it->second : NULL;
-		return rc;
+	CContainer* indexer() {
+		return _indexer;
 	}
 	
 protected:
-	TItems _watched_items;
-};
-
-
-
-/* 
- * ========================================= CDatabase
- * ========================================================
- */	
-class CDatabase : public CContainer
-{
-public:
-	IItem* watch(std::string name);
+	CContainer *_indexer;
+	CValue _null_value;
 };
 
 
@@ -188,16 +80,20 @@ public:
  * ========================================= CTable
  * ========================================================
  */	
+class CDatabase;
 class CTable : public CContainer, public CTableMapLogEvent
 {
 public:
-//	typedef std::map<std::string, CValue::EColumnType> TColumnsByName;
-	typedef std::vector<CValue*> TRow;
-	typedef std::vector<TRow> TRows;
+	typedef std::list<CRow> TRows;
 public:
 	CTable();
 	CTable(CDatabase *db);
 	virtual ~CTable() throw();
+	
+	virtual int tune(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt);
+	virtual bool is_valid() const {
+		return _tuned;
+	}
 	
 	CDatabase* db() const {
 		return _db;
@@ -205,39 +101,31 @@ public:
 	void db(CDatabase *db) {
 		_db = db;
 	}
-	
-	int change_values(CRowLogEvent &rlev);
-	virtual IItem* watch(std::string name);
-	virtual int tune(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt);
-	virtual bool is_valid() const;
-	
-	int build_column(int position, const char *name);
-	
-	TRows& get_new_rows() {
+	const TRows& get_rows() const {
+		return _rows;
+	}
+	const TRows& get_new_rows() const {
 		return _new_rows;
 	}
-	TRows& get_old_rows() {
-		return _old_rows;
-	}
 	
-	
-	CValue& operator[](int idx);
+	int update(CRowLogEvent &rlev);
 protected:
-	int update_row(TRow &row, const uint8_t **pdata, size_t *len, 
+	int update_row(CRow &row, const uint8_t **pdata, size_t *len, 
 				   uint64_t ncolumns, uint64_t usedcolumns_mask, uint64_t nullfields_mask);
 	
 protected:
-	TItems _all_items;
 	CDatabase *_db;
-	TRow _values;
-	TRow _new_values;
+	CRow _row;
+	TRows _rows;
 	TRows _new_rows;
-	TRows _old_rows;
 	bool _tuned;
-	CValue _null_value;
 };	
-	
 
+class CDatabase : public CContainer
+{
+public:
+	IItem* watch(std::string name, uint64_t id);
+};
 
 
 }

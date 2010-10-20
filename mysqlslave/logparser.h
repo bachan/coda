@@ -13,20 +13,6 @@
 #include <stddef.h>
 #include <string>
 
-// #include <my_config.h>
-// #include <my_global.h>
-// #include <mysql.h>
-// #include <m_ctype.h>
-// #include <my_sys.h>
-// #include <my_dir.h>
-// #include <sql_common.h>
-// #include <m_string.h>
-// #include <mysqld_error.h>
-// #include <my_attribute.h>
-// #include <my_dbug.h>
-
-
-
 #include "logevent.h"
 #include "database.h"
 
@@ -41,29 +27,17 @@ public:
 	CLogParser();
 	virtual ~CLogParser() throw();
 
-	
 	void set_connection_params(const char *host, const char *user, const char *passwd, int port = 0);
 	void set_binlog_position(const char *fname, uint32_t pos, uint32_t srv_id, uint16_t flags = 0);
-
-
 	void dispatch_events();
 	void stop_event_loop();
 
 public:
 	virtual IItem* watch(std::string name);
 protected:
-	virtual int on_insert(CTable &table, CTable::TRows &newrows)
-	{
-		return 0;
-	}
-	virtual int on_update(CTable &table, CTable::TRows &newrows, CTable::TRows &oldrows)
-	{
-		return 0;
-	}
-	virtual int on_delete(CTable &table, CTable::TRows &newrows)
-	{
-		return 0;
-	}
+	virtual int on_insert(const CTable &table, const CTable::TRows &newrows) = 0;
+	virtual int on_update(const CTable &table, const CTable::TRows &newrows, const CTable::TRows &oldrows) = 0;
+	virtual int on_delete(const CTable &table, const CTable::TRows &newrows) = 0;
 		
 	
 protected:

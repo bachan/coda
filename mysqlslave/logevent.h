@@ -678,7 +678,13 @@ public:
 		return "table map event";
 	}
 	virtual bool is_valid() const {
-		return true;
+		return 
+		_db_name[0] && 
+		_table_name[0] && 
+		_column_count && 
+		_column_types &&
+		_metadata_length &&
+		_metadata;
 	}
 	
 	

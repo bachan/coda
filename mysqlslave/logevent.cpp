@@ -257,18 +257,17 @@ CTableMapLogEvent::~CTableMapLogEvent() throw()
 }
 const char * CTableMapLogEvent::get_database_name() const
 {
-	return NULL;
+	return _db_name;
 }
 
 const char * CTableMapLogEvent::get_table_name() const
 {
-	return NULL;
+	return _table_name;
 }
 
 int CTableMapLogEvent::get_column_count() const
 {
-
-	return 0;
+	return _column_count;
 }
 
 int CTableMapLogEvent::tune(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt)

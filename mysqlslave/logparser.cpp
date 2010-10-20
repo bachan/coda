@@ -200,16 +200,15 @@ void CLogParser::dispatch_events()
 				case QUERY_EVENT:
 				{
 					event_query.tune(buf, len, _fmt);
-					event_query.dump(stdout);
+					//event_query.dump(stdout);
 					break;
 				}		
 				case TABLE_MAP_EVENT:
 				{
-					printf("db: %s\ttable: %s\t table_id: %d\n",
+/*					printf("db: %s\ttable: %s\t table_id: %d\n",
 						CTableMapLogEvent::get_database_name(buf, len, _fmt),
 						CTableMapLogEvent::get_table_name(buf, len, _fmt),
-						(int)CTableMapLogEvent::get_table_id(buf, len, _fmt));
-					
+						(int)CTableMapLogEvent::get_table_id(buf, len, _fmt));*/
 					db = static_cast<CDatabase*>(this->find(CTableMapLogEvent::get_database_name(buf, len, _fmt)));
 					if( db )
 						tbl = static_cast<CTable*>(db->find(CTableMapLogEvent::get_table_name(buf, len, _fmt)));
@@ -223,30 +222,29 @@ void CLogParser::dispatch_events()
 				case UPDATE_ROWS_EVENT:
 				case DELETE_ROWS_EVENT:
 				{
-					fprintf(stdout, "table %p ", tbl);
 					if( tbl )
 					{
 						if( event_row.tune(buf, len, _fmt) == 0 )
 						{
-							event_row.dump(stdout);
-							tbl->change_values(event_row);
+//							event_row.dump(stdout);
+							tbl->update(event_row);
 							if( event_type == WRITE_ROWS_EVENT )
-								on_insert(*tbl, tbl->get_new_rows());
-							else if( event_type == UPDATE_ROWS_EVENT )
-								on_update(*tbl, tbl->get_new_rows(), tbl->get_old_rows());
+								on_insert(*tbl, tbl->get_rows());
+							else if( event_type == UPDATE_ROWS_EVENT ) 
+								on_update(*tbl, tbl->get_new_rows(), tbl->get_rows());
 							else 
-								on_delete(*tbl, tbl->get_new_rows());
+								on_delete(*tbl, tbl->get_rows());
 						}
 						else
 							on_error("event_row tuning failed", NULL);
 					}
-					fprintf(stdout, "\n");
 					break;
 				}
 				default:
 				{
-					event_unknown.tune(buf, len, _fmt);
-					event_unknown.dump(stdout);
+					;
+/*					event_unknown.tune(buf, len, _fmt);
+					event_unknown.dump(stdout);*/
 				}
 				}
 			}
@@ -353,7 +351,6 @@ int CLogParser::build_db_structure()
 			{
 				if( (tbl = (CTable*)db->find(row[0])) != NULL  )
 				{
-					printf("clear() values for table %p\n", tbl);
 					sprintf(query, "desc %s", row[0]);
 					if( mysql_query(&_mysql, query) ||
 						!( res_column = mysql_store_result(&_mysql)))
@@ -364,7 +361,7 @@ int CLogParser::build_db_structure()
 					
 					int pos=0;
 					while( (row = mysql_fetch_row(res_column)) != NULL )
-						tbl->build_column(pos++, row[0]);
+						tbl->watch(row[0], pos++);
 					
 					mysql_free_result(res_column);
 					res_column = NULL;
