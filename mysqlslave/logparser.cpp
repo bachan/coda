@@ -144,9 +144,8 @@ int	CLogParser::request_binlog_dump(const char *fname, uint32_t pos, uint32_t sr
 
 void CLogParser::dispatch_events()
 {
-	CLogEvent *ev;
 	unsigned long len;
-	
+
 	while( connect() != 0 )
 	{
 		if( !_dispatch )
@@ -192,7 +191,6 @@ void CLogParser::dispatch_events()
 					break;
 				}
 
-				CTableMapLogEvent *tmev;
 				TTablesRepo::iterator it;
 
 				switch( event_type )

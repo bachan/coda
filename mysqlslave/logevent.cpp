@@ -189,16 +189,17 @@ int CQueryLogEvent::tune(uint8_t *data, size_t size, const CFormatDescriptionLog
 	_db_len = (uint32_t)data[Q_DB_LEN_OFFSET];
 	_error_code = uint2korr(data + Q_ERR_CODE_OFFSET);
 
-	if( post_header_len - QUERY_HEADER_MINIMAL_LEN )
+	if (post_header_len - QUERY_HEADER_MINIMAL_LEN)
 	{
 		_status_vars_len= uint2korr(data + Q_STATUS_VARS_LEN_OFFSET);
-	    if( _status_vars_len > data_len || _status_vars_len > MAX_SIZE_LOG_EVENT_STATUS )
-	    	return -1;
+		if (_status_vars_len > data_len || _status_vars_len > MAX_SIZE_LOG_EVENT_STATUS) return -1;
 
-	    data_len -= _status_vars_len;
+		data_len -= _status_vars_len;
 	}
 	else
+	{
 		return -1;
+	}
 
 	// смещаемся к query
 	data += post_header_len + _status_vars_len + _db_len + 1;
@@ -207,6 +208,8 @@ int CQueryLogEvent::tune(uint8_t *data, size_t size, const CFormatDescriptionLog
 
 	memcpy(_query, data, _q_len);
 	_query[_q_len] = '\0';
+
+	return 0;
 }
 
 

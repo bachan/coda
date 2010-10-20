@@ -12,8 +12,7 @@ class sample_binlog_reader : public mysql::CLogParser
 public:
 	virtual int on_insert(const mysql::CTable &table, const mysql::CTable::TRows &newrows)
 	{
-		std::cout << "inserted " << newrows.size() << " rows into " 
-		<< table.get_database_name() << "." << table.get_table_name() << std::endl;
+		std::cout << "inserted " << newrows.size() << " rows into " << table.get_database_name() << "." << table.get_table_name() << std::endl;
 		
 		if( !strcasecmp(table.get_table_name(), "t2") ) dump_t2_rows(newrows);
 		if( !strcasecmp(table.get_table_name(), "t3") ) dump_t3_rows(newrows);
@@ -23,8 +22,7 @@ public:
 	}
 	virtual int on_update(const mysql::CTable &table, const mysql::CTable::TRows &newrows, const mysql::CTable::TRows &oldrows)
 	{
-		std::cout << "updated " << newrows.size() << " rows in " 
-		<< table.get_database_name() << "." << table.get_table_name() << std::endl;
+		std::cout << "updated " << newrows.size() << " rows in " << table.get_database_name() << "." << table.get_table_name() << std::endl;
 		
 		if( !strcasecmp(table.get_table_name(), "t2") )
 		{

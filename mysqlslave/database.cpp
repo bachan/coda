@@ -25,18 +25,17 @@ CTable::~CTable() throw()
 }
 
 
-int CTable::tune(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt)
+int CTable::tune(uint8_t* data, size_t size, const CFormatDescriptionLogEvent* fmt)
 {
-	if( _tuned )
-		return 0;
+	if (_tuned) return 0;
 
 	int rc = CTableMapLogEvent::tune(data, size, fmt);
-	if( rc == 0 && CTableMapLogEvent::is_valid() )
+	if (rc == 0 && CTableMapLogEvent::is_valid())
 	{
 		_row.indexer(this);
 		_row.resize(_column_count);
 		uint8_t *type = _metadata;
-		for( int i=0; i<_column_count; ++i )
+		for (unsigned int i = 0; i < _column_count; ++i)
 		{
 			_row[i].id(i);
 			_row[i]._type = (CValue::EColumnType)*type++;
@@ -64,14 +63,12 @@ int CTable::update(CRowLogEvent &rlev)
 	while( len > 0 )
 	{
 		nullfields_mask = ~rlev.build_column_mask(&pfields, &len, rlev.get_used_columns_1bit_count());
-		update_row(_row, &pfields, &len, 
-				   rlev._ncolumns, rlev.get_used_columns_mask(), nullfields_mask);
+		update_row(_row, &pfields, &len, rlev._ncolumns, rlev.get_used_columns_mask(), nullfields_mask);
 		_rows.push_back(_row);
 		if( rlev.get_type_code() == UPDATE_ROWS_EVENT )
 		{
 			nullfields_mask = ~rlev.build_column_mask(&pfields, &len, rlev.get_used_columns_afterimage_1bit_count());
-			update_row(_row, &pfields, &len, 
-					   rlev._ncolumns, rlev.get_used_columns_afterimage_mask(), nullfields_mask);
+			update_row(_row, &pfields, &len, rlev._ncolumns, rlev.get_used_columns_afterimage_mask(), nullfields_mask);
 			_new_rows.push_back(_row);
 		}
 	}
@@ -79,21 +76,20 @@ int CTable::update(CRowLogEvent &rlev)
 	return len == 0 ? 0 : -1;
 }
 
-int CTable::update_row(CRow &row, const uint8_t **pdata, size_t *len, 
-				uint64_t ncolumns, uint64_t usedcolumns_mask, uint64_t nullfields_mask)
+int CTable::update_row(CRow &row, const uint8_t **pdata, size_t *len, uint64_t ncolumns, uint64_t usedcolumns_mask, uint64_t nullfields_mask)
 {
 	CValue::EColumnType type;
 	uint32_t metadata;
 	uint32_t length;
-	uint8_t *pmetadata;
+	uint8_t* pmetadata;
 	uint64_t bit;
 	
 	bit = 0x01;
 	pmetadata = _metadata;
-	for(uint64_t i = 0; i<ncolumns && *len > 0; ++i)
+	for (uint64_t i = 0; i < ncolumns && *len > 0; ++i)
 	{
-		type = (CValue::EColumnType)*(_column_types+i);
-		switch( CValue::calc_metadata_size(type) )
+		type = (CValue::EColumnType)*(_column_types + i);
+		switch (CValue::calc_metadata_size(type))
 		{
 			case 0:
 			{
@@ -118,7 +114,7 @@ int CTable::update_row(CRow &row, const uint8_t **pdata, size_t *len,
 		}
 		
 		row[i].reset();
-		if( usedcolumns_mask & nullfields_mask & bit)
+		if (usedcolumns_mask & nullfields_mask & bit)
 		{
 			length = CValue::calc_field_size(type, *pdata, metadata);
 			row[i].tune(type, *pdata, metadata, length);
@@ -126,16 +122,11 @@ int CTable::update_row(CRow &row, const uint8_t **pdata, size_t *len,
 			*len -= length;
 		}
 			
-		bit << 1;
+		bit <<= 1;
 	}
 	
 	return *len >= 0 ? 0 : -1;
 }
-
-/* 
- * ========================================= CDatabase
- * ========================================================
- */	
 
 IItem* CDatabase::watch(std::string name, uint64_t id)
 {
@@ -145,9 +136,10 @@ IItem* CDatabase::watch(std::string name, uint64_t id)
 		table = new CTable(this);
 		_watched_items[name] = table;
 	}
-	return table;//tbl;
+	return table;
 }
 
 
 
 }
+
