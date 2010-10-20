@@ -91,7 +91,6 @@ public:
 	}
 };
 
-
 #define MYSQL_HOST "192.168.3.101"
 #define MYSQL_USER "testy"
 #define MYSQL_PWD "testy"
@@ -110,7 +109,6 @@ int main()
 	binlog_reader.set_connection_params(MYSQL_HOST, MYSQL_USER, MYSQL_PWD);
 	binlog_reader.set_binlog_position(MYSQL_BINLOG_NAME,MYSQL_BINLOG_POS, 1);
 	binlog_reader.dispatch_events();
-	
 	return 0;
 
 }
