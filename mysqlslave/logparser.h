@@ -19,21 +19,19 @@
 #include <map>
 namespace mysql {
 
-class CLogParser : public CContainer
+class CLogParser : private CContainer
 {
-public:
-	typedef std::map<uint32_t, CTableMapLogEvent*> TTablesRepo;
 public:
 	CLogParser();
 	virtual ~CLogParser() throw();
 
-	void set_connection_params(const char *host, const char *user, const char *passwd, int port = 0);
+	void set_connection_params(const char *host, uint32_t slave_id, const char *user, const char *passwd, int port = 0);
 	void set_binlog_position(const char *fname, uint32_t pos, uint32_t srv_id, uint16_t flags = 0);
 	void dispatch_events();
 	void stop_event_loop();
 
 public:
-	virtual IItem* watch(std::string name);
+	int watch(const char* db_name, const char* table_name);
 protected:
 	virtual int on_insert(const CTable &table, const CTable::TRows &newrows) = 0;
 	virtual int on_update(const CTable &table, const CTable::TRows &newrows, const CTable::TRows &oldrows) = 0;
@@ -51,14 +49,16 @@ protected:
 	void disconnect();
 	CFormatDescriptionLogEvent* get_binlog_format();
 	int build_db_structure();
+	int get_last_binlog_position();
 	
-	int request_binlog_dump(const char *fname, uint32_t pos, uint32_t srv_id, uint16_t flags = 0);
+	int request_binlog_dump();
 	void Dump(uint8_t *buf, size_t len);
 
 protected:
 	TItems &_databases;
 	MYSQL _mysql;
 	std::string _host;
+	uint32_t _slave_id;
 	int _port;
 	std::string _user;
 	std::string _passwd;
@@ -66,7 +66,6 @@ protected:
 	std::string _binlog_name;
 	uint32_t _binlog_pos;
 	uint32_t _binlog_flags;
-	uint32_t _server_id;
 private:
 	const char* _err;
 	volatile int _dispatch;

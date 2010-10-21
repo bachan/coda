@@ -11,11 +11,11 @@ namespace mysql {
 
 CLogParser::CLogParser()
 	: _databases(_watched_items)
+	, _slave_id(0)
 	, _port(0)
 	, _fmt(0)
 	, _binlog_pos(0)
 	, _binlog_flags(0)
-	, _server_id(0)
 	, _err(0)
 	, _dispatch(1)
 {
@@ -42,9 +42,7 @@ int CLogParser::connect()
 		return -1;
 	}
 	
-	if( _fmt )
-		delete _fmt;
-	
+	if( _fmt ) delete _fmt;
 	_fmt = get_binlog_format();
 	
 	return _fmt ? 0 : 1;
@@ -52,7 +50,8 @@ int CLogParser::connect()
 
 int CLogParser::reconnect()
 {
-	return connect();
+	int rc = connect();
+	return rc == 0 ? request_binlog_dump() : rc;
 }
 
 void CLogParser::disconnect()
@@ -61,19 +60,19 @@ void CLogParser::disconnect()
 }
 
 
-void CLogParser::set_connection_params(const char *host, const char *user, const char *passwd, int port)
+void CLogParser::set_connection_params(const char *host, uint32_t slave_id, const char *user, const char *passwd, int port)
 {
 	_host	= host;
 	_user	= user;
 	_passwd	= passwd;
 	_port	= port;
+	_slave_id = slave_id;
 }
 
 void CLogParser::set_binlog_position(const char *fname, uint32_t pos, uint32_t srv_id, uint16_t flags)
 {
 	_binlog_name = fname;
 	_binlog_pos	= pos;
-	_server_id = srv_id;
 	_binlog_flags = flags;
 }
 
@@ -113,31 +112,24 @@ err:
 }
 
 
-
-
-int	CLogParser::request_binlog_dump(const char *fname, uint32_t pos, uint32_t srv_id, uint16_t flags)
+int	CLogParser::request_binlog_dump()
 {
-	int len;
 	unsigned char buf[1024];
 
-	if( !fname )
+	if( _binlog_name.empty() || !_binlog_pos )
 		return -1;
+	
+	int4store(buf, _binlog_pos);
+	int2store(buf + 4, 0); // flags
+	int4store(buf + 6, _slave_id); 
+	memcpy(buf + 10, _binlog_name.c_str(), _binlog_name.length());
 
-	len = strlen(fname);
-	if( !len )
-		return -1;
-
-	int4store(buf, pos);
-	int2store(buf + 4, flags);
-	int4store(buf + 6, srv_id);
-	memcpy(buf + 10, fname, len);
-
-	if( simple_command(&_mysql, COM_BINLOG_DUMP, (const unsigned char*)buf, len + 10, 1) )
+	if( simple_command(&_mysql, COM_BINLOG_DUMP, (const unsigned char*)buf, _binlog_name.length() + 10, 1) )
 	{
-		on_error("COM_BINLOG_DUMP", &_mysql);
+		on_error("COM_BINLOG_DUMP failed", &_mysql);
 		return -1;
 	}
-
+	
 	return 0;
 }
 
@@ -146,21 +138,22 @@ void CLogParser::dispatch_events()
 {
 	unsigned long len;
 
-	while( connect() != 0 )
+	while (connect() != 0)
 	{
-		if( !_dispatch )
-			return;
+		if( !_dispatch ) return;
 		sleep(1);
 	}
 		
-	if(	!build_db_structure() )
+	if (build_db_structure() != 0 || request_binlog_dump() != 0)
+	{
+		disconnect();
 		return;
-	// пока что так, потом будем позиционироваться автоматически
-	request_binlog_dump(_binlog_name.c_str(), _binlog_pos, _server_id, _binlog_flags);
-
+	}
+	printf("preved!\n");
+	
+	CUnknownLogEvent event_unknown;
 	CRowLogEvent event_row;
 	CQueryLogEvent event_query;
-	CUnknownLogEvent event_unknown;
 	uint32_t event_type;
 	uint8_t *buf;
 	
@@ -191,14 +184,12 @@ void CLogParser::dispatch_events()
 					break;
 				}
 
-				TTablesRepo::iterator it;
-
 				switch( event_type )
 				{
 				case QUERY_EVENT:
 				{
 					event_query.tune(buf, len, _fmt);
-					//event_query.dump(stdout);
+					event_query.dump(stdout);
 					break;
 				}		
 				case TABLE_MAP_EVENT:
@@ -207,19 +198,17 @@ void CLogParser::dispatch_events()
 						CTableMapLogEvent::get_database_name(buf, len, _fmt),
 						CTableMapLogEvent::get_table_name(buf, len, _fmt),
 						(int)CTableMapLogEvent::get_table_id(buf, len, _fmt));*/
-					db = static_cast<CDatabase*>(this->find(CTableMapLogEvent::get_database_name(buf, len, _fmt)));
-					if( db )
-						tbl = static_cast<CTable*>(db->find(CTableMapLogEvent::get_table_name(buf, len, _fmt)));
-					if( tbl && tbl->tune(buf, len, _fmt) != 0 )
-						tbl = NULL;
+					
+					db = (CDatabase*)find(CTableMapLogEvent::get_database_name(buf, len, _fmt));
+					if (db != NULL) tbl = (CTable*)db->find(CTableMapLogEvent::get_table_name(buf, len, _fmt));
+					if (tbl != NULL && tbl->tune(buf, len, _fmt) != 0 ) tbl = NULL;
 					break;
-					
-					
 				}
 				case WRITE_ROWS_EVENT:
 				case UPDATE_ROWS_EVENT:
 				case DELETE_ROWS_EVENT:
 				{
+					// получаем таблицу 
 					if( tbl )
 					{
 						if( event_row.tune(buf, len, _fmt) == 0 )
@@ -293,21 +282,29 @@ void CLogParser::on_error(const char *err, MYSQL *mysql)
 }
 
 
-IItem* CLogParser::watch(std::string name)
+int CLogParser::watch(const char* db_name, const char* table_name)
 {
-	IItem *db = find(&name);
-	if( !db )
+	if( !db_name && !table_name )
+		return -1;
+	
+	std::string dbname(db_name);
+	std::string tblname(table_name);
+	
+	CDatabase *db = (CDatabase*)find(&dbname);
+	if (!db)
 	{
 		db = new CDatabase();
-		_databases[name] = db;
+		_databases[dbname] = db;
 	}
-	return db;
+	db->watch(tblname);
+	
+	return 0;
 }
 
 
 int CLogParser::build_db_structure()
 {
-	int rc = 0;
+	int rc = -1;
 	int atom_found;
 	MYSQL_RES *res_db = NULL, *res_tbl = NULL, *res_column = NULL;
 	MYSQL_ROW row;
@@ -371,15 +368,54 @@ int CLogParser::build_db_structure()
 		}
 	}
 	
-	rc = 1;
+	if( _binlog_name.empty() || !_binlog_pos )
+		rc = get_last_binlog_position();
+	
+	rc = 0;
 	
 err:
-	if( res_db )
+	if (res_db)
 		mysql_free_result(res_db);
-	if( res_tbl )
+	if (res_tbl)
 		mysql_free_result(res_tbl);
-	if( res_column )
+	if (res_column)
 		mysql_free_result(res_tbl);
+	
+	
+	return rc;
+}
+
+int CLogParser::get_last_binlog_position()
+{
+	int rc = -1;
+	MYSQL_RES* res;
+	MYSQL_ROW row;
+	
+	if (mysql_query(&_mysql, "SHOW MASTER STATUS") || (res = mysql_store_result(&_mysql)) == NULL)
+	{
+		on_error("build_db_structure() failed while 'show master status'", &_mysql);
+		goto err;
+	}
+	
+	if ((row = mysql_fetch_row(res)) == NULL)
+	{
+		on_error("build_db_structure() failed: 'show master status' returns 0 rows", &_mysql);
+		goto err;
+	}
+	
+	if ( row[0] && row[0][0] && row[1] )
+	{
+		_binlog_name = row[0];
+		_binlog_pos = (uint32_t)atoll(row[1]);
+		printf("change binlog position to '%s:%d'\n", _binlog_name.c_str(), _binlog_pos);
+	}
+	else
+		on_error("build_db_structure() failed: 'show master status' returns invalid row", &_mysql);
+	
+	rc = 0;
+err:
+	if (res)
+		mysql_free_result(res);
 	
 	return rc;
 }

@@ -94,19 +94,22 @@ public:
 #define MYSQL_PWD "testy"
 #define MYSQL_BINLOG_NAME "mysql_binary_log.000002"
 #define MYSQL_BINLOG_POS 106
+#define LOCAL_BINLOG_READER_ID 1
+
+
 
 int main() 
 {
 	sample_binlog_reader binlog_reader;
+	binlog_reader.set_connection_params(MYSQL_HOST, LOCAL_BINLOG_READER_ID, MYSQL_USER, MYSQL_PWD);
+	// будет позиционироваться при старте к последнему логу, если позиция не указана явно
+	//binlog_reader.set_binlog_position(MYSQL_BINLOG_NAME,MYSQL_BINLOG_POS, 1);
+	binlog_reader.watch("test", "t2");
+	binlog_reader.watch("test", "t3");
 	
-	mysql::CContainer *db;
-	db = static_cast<mysql::CContainer*>(binlog_reader.watch("test"));
-	db->watch("t2");
-	db->watch("t3");
-	
-	binlog_reader.set_connection_params(MYSQL_HOST, MYSQL_USER, MYSQL_PWD);
-	binlog_reader.set_binlog_position(MYSQL_BINLOG_NAME,MYSQL_BINLOG_POS, 1);
 	binlog_reader.dispatch_events();
 	return 0;
 
 }
+
+// TODO: не сбивать позиции при реконнекте

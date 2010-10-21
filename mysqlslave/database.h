@@ -124,7 +124,7 @@ protected:
 class CDatabase : public CContainer
 {
 public:
-	IItem* watch(std::string name, uint64_t id);
+	virtual IItem* watch(std::string name, uint64_t id = 0);
 };
 
 

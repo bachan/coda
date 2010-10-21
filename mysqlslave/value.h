@@ -6,7 +6,6 @@
 #include <strings.h>
 #include <string>
 #include <map>
-#include <stdexcept>
 
 #include "logevent.h"
 
