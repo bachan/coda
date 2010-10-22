@@ -131,7 +131,7 @@ public:
 		MYSQL_TYPE_GEOMETRY=255
 	};
 	static int calc_metadata_size(CValue::EColumnType ftype);
-	static int calc_field_size(CValue::EColumnType ftype, const uint8_t *pfield, uint32_t metadata);
+	static int calc_field_size(CValue::EColumnType ftype, const uint8_t* pfield, uint32_t metadata);
 
 public:
 	CValue();
@@ -147,12 +147,12 @@ public:
 	int64_t as_int() const;
 	uint64_t as_uint() const;
 	time_t as_time() const;
-	const char* const as_c_str(size_t *length) const;
+	const char* const as_c_str(size_t* length) const;
 	std::string as_std_str() const;
 	
 	
 	void reset();
-	int tune(CValue::EColumnType ftype, const uint8_t *pfield, uint32_t metadata, size_t length);
+	int tune(CValue::EColumnType ftype, const uint8_t* pfield, uint32_t metadata, size_t length);
 	bool is_valid() const;
 	inline bool is_null() const { 
 		return _is_null; 
@@ -161,7 +161,7 @@ public:
 public:
 	EColumnType _type;
 protected:
-	const uint8_t *_storage;
+	const uint8_t* _storage;
 	size_t _size;
 	uint32_t _metadata;
 	bool _is_null;
