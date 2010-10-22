@@ -51,7 +51,12 @@ int CLogParser::connect()
 int CLogParser::reconnect()
 {
 	int rc = connect();
-	return rc == 0 ? request_binlog_dump() : rc;
+	if ( rc == 0 )
+	{
+		rc = request_binlog_dump();
+		if ( rc == 0 ) on_reconnect(&_mysql);
+	}
+	return rc;
 }
 
 void CLogParser::disconnect()
@@ -149,11 +154,11 @@ void CLogParser::dispatch_events()
 		disconnect();
 		return;
 	}
-	printf("preved!\n");
-	
-	CUnknownLogEvent event_unknown;
-	CRowLogEvent event_row;
+
+	CRotateLogEvent event_rotate;
 	CQueryLogEvent event_query;
+	CRowLogEvent event_row;
+	CUnhandledLogEvent event_unhandled;
 	uint32_t event_type;
 	uint8_t *buf;
 	
@@ -162,84 +167,106 @@ void CLogParser::dispatch_events()
 	do
 	{
 		len = cli_safe_read(&_mysql);
-		if( len != packet_error )
+		if ( len != packet_error && len > 8 && (buf = _mysql.net.read_pos) != NULL && buf[0] != 254 )
 		{
-			buf = _mysql.net.read_pos;
-			if( (_dispatch = !(len < 8 && buf[0] == 254)) != 0 )
+			buf++; len--;
+
+			if (len < EVENT_LEN_OFFSET || buf[EVENT_TYPE_OFFSET] >= ENUM_END_EVENT || (uint32_t) len != uint4korr(buf+EVENT_LEN_OFFSET))
 			{
-				buf++; len--;
+				on_error("event sanity check failed", 0);
+				break;
+			}
 
-				if( len < EVENT_LEN_OFFSET ||
-						buf[EVENT_TYPE_OFFSET] >= ENUM_END_EVENT ||
-							(uint32_t) len != uint4korr(buf+EVENT_LEN_OFFSET))
+			event_type = buf[EVENT_TYPE_OFFSET];
+			if( event_type > _fmt->_number_of_event_types && event_type != FORMAT_DESCRIPTION_EVENT )
+			{
+				on_error("event not supported", 0);
+				break;
+			}
+			
+			switch( event_type )
+			{
+			case ROTATE_EVENT:
+			{
+				if (event_rotate.tune(buf, len, _fmt) == 0)
 				{
-					on_error("event sanity check failed", 0);
-					break;
+					_binlog_name.assign((const char*)event_rotate.get_log_name(), event_rotate.get_log_name_len());
+					_binlog_pos = event_rotate.get_log_pos();
+					event_rotate.dump(stdout);
 				}
-
-				event_type = buf[EVENT_TYPE_OFFSET];
-				if( event_type > _fmt->_number_of_event_types && event_type != FORMAT_DESCRIPTION_EVENT )
-				{
-					on_error("event not supported", 0);
-					break;
-				}
-
-				switch( event_type )
-				{
-				case QUERY_EVENT:
-				{
-					event_query.tune(buf, len, _fmt);
-					event_query.dump(stdout);
-					break;
-				}		
-				case TABLE_MAP_EVENT:
-				{
-/*					printf("db: %s\ttable: %s\t table_id: %d\n",
-						CTableMapLogEvent::get_database_name(buf, len, _fmt),
-						CTableMapLogEvent::get_table_name(buf, len, _fmt),
-						(int)CTableMapLogEvent::get_table_id(buf, len, _fmt));*/
+				else
+					on_error("rotate event tuning failed", NULL);
+				break;
+			}
+			case FORMAT_DESCRIPTION_EVENT:
+			{
+				// ничего не делаем, главное, не выставить позицию
+				break;
+			}
 					
-					db = (CDatabase*)find(CTableMapLogEvent::get_database_name(buf, len, _fmt));
-					if (db != NULL) tbl = (CTable*)db->find(CTableMapLogEvent::get_table_name(buf, len, _fmt));
-					if (tbl != NULL && tbl->tune(buf, len, _fmt) != 0 ) tbl = NULL;
-					break;
-				}
-				case WRITE_ROWS_EVENT:
-				case UPDATE_ROWS_EVENT:
-				case DELETE_ROWS_EVENT:
+			case QUERY_EVENT:
+			{
+				if (event_query.tune(buf, len, _fmt) == 0)
 				{
-					// получаем таблицу 
-					if( tbl )
+					event_query.dump(stdout);
+					_binlog_pos = event_query._log_pos;
+				}
+				break;
+			}		
+			case TABLE_MAP_EVENT:
+			{
+				db = (CDatabase*)find(CTableMapLogEvent::get_database_name(buf, len, _fmt));
+				if (db != NULL) tbl = (CTable*)db->find(CTableMapLogEvent::get_table_name(buf, len, _fmt));
+				if (tbl != NULL)
+				{
+					if( tbl->tune(buf, len, _fmt) != 0 )
 					{
-						if( event_row.tune(buf, len, _fmt) == 0 )
-						{
-//							event_row.dump(stdout);
-							tbl->update(event_row);
-							if( event_type == WRITE_ROWS_EVENT )
-								on_insert(*tbl, tbl->get_rows());
-							else if( event_type == UPDATE_ROWS_EVENT ) 
-								on_update(*tbl, tbl->get_new_rows(), tbl->get_rows());
-							else 
-								on_delete(*tbl, tbl->get_rows());
-						}
-						else
-							on_error("event_row tuning failed", NULL);
+						on_error("tablemap event tuning failed", NULL);
+						tbl = NULL;
 					}
-					break;
+					else
+						tbl->dump(stdout);
 				}
-				default:
+				break;
+			}
+			case WRITE_ROWS_EVENT:
+			case UPDATE_ROWS_EVENT:
+			case DELETE_ROWS_EVENT:
+			{
+				// получаем таблицу 
+				if( tbl )
 				{
-					;
-/*					event_unknown.tune(buf, len, _fmt);
-					event_unknown.dump(stdout);*/
+					if( event_row.tune(buf, len, _fmt) == 0 )
+					{
+						event_row.dump(stdout);
+						tbl->update(event_row);
+						if( event_type == WRITE_ROWS_EVENT )
+							on_insert(*tbl, tbl->get_rows());
+						else if( event_type == UPDATE_ROWS_EVENT ) 
+							on_update(*tbl, tbl->get_new_rows(), tbl->get_rows());
+						else 
+							on_delete(*tbl, tbl->get_rows());
+					}
+					else
+						on_error("rows event tuning failed", NULL);
 				}
+				break;
+			}
+			default:
+			{
+				if (event_unhandled.tune(buf, len, _fmt) == 0)
+				{
+					_binlog_pos = event_unhandled._log_pos;
+					event_unhandled.dump(stdout);
 				}
+				else
+					on_error("unhandled event tuning failed", NULL);
+			}
 			}
 		}
 		else
 		{
 			on_error("cli_safe_read error", &_mysql);
-			on_reconnect(&_mysql);
 			
 			while( _dispatch && reconnect() != 0 )
 				sleep(1);

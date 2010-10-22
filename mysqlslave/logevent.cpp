@@ -155,14 +155,40 @@ void CFormatDescriptionLogEvent::calc_server_version_split()
 
 /*
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * CRotateLogEvent
+ *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ */
+int CRotateLogEvent::tune(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt)
+{
+	int rc = CLogEvent::tune(data, size, fmt);
+	if (rc == 0)
+	{
+		data += fmt->_common_header_len;
+		size -= fmt->_common_header_len;
+		
+		_position = uint8korr(data);
+		_new_log = data+8;
+		_len = size-8;
+	}
+	
+	return rc;
+}
+
+
+/*
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 */
 int CIntvarLogEvent::tune(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt) 
 {
-	CLogEvent::tune(data, size, fmt);
+	int rc = CLogEvent::tune(data, size, fmt);
+	if (rc == 0)
+	{
 	data += fmt->_common_header_len + fmt->_post_header_len[INTVAR_EVENT-1];
 	_type= data[I_TYPE_OFFSET];
 	_val= uint8korr(data+I_VAL_OFFSET);
-	return 0;
+	}
+	return rc;
 }
 
 
@@ -175,41 +201,45 @@ int CQueryLogEvent::tune(uint8_t *data, size_t size, const CFormatDescriptionLog
 {
 	uint8_t common_header_len, post_header_len;
 	uint64_t data_len;
-
 	_query[0] = '\0';
+	
+	int rc = CLogEvent::tune(data,size,fmt);
 
-	common_header_len = fmt->_common_header_len;
-	post_header_len= fmt->_post_header_len[QUERY_EVENT-1];
-
-	data_len = size - (common_header_len + post_header_len);
-	data += common_header_len;
-
-	_exec_time = uint4korr(data + Q_EXEC_TIME_OFFSET);
-
-	_db_len = (uint32_t)data[Q_DB_LEN_OFFSET];
-	_error_code = uint2korr(data + Q_ERR_CODE_OFFSET);
-
-	if (post_header_len - QUERY_HEADER_MINIMAL_LEN)
+	if (rc == 0)
 	{
-		_status_vars_len= uint2korr(data + Q_STATUS_VARS_LEN_OFFSET);
-		if (_status_vars_len > data_len || _status_vars_len > MAX_SIZE_LOG_EVENT_STATUS) return -1;
+		common_header_len = fmt->_common_header_len;
+		post_header_len= fmt->_post_header_len[QUERY_EVENT-1];
 
-		data_len -= _status_vars_len;
+		data_len = size - (common_header_len + post_header_len);
+		data += common_header_len;
+
+		_q_exec_time = uint4korr(data + Q_EXEC_TIME_OFFSET);
+
+		_db_len = (uint32_t)data[Q_DB_LEN_OFFSET];
+		_error_code = uint2korr(data + Q_ERR_CODE_OFFSET);
+
+		if (post_header_len - QUERY_HEADER_MINIMAL_LEN)
+		{
+			_status_vars_len= uint2korr(data + Q_STATUS_VARS_LEN_OFFSET);
+			if (_status_vars_len > data_len || _status_vars_len > MAX_SIZE_LOG_EVENT_STATUS) return -1;
+
+			data_len -= _status_vars_len;
+		}
+		else
+		{
+			return -1;
+		}
+
+		// смещаемся к query
+		data += post_header_len + _status_vars_len + _db_len + 1;
+		data_len -= (_db_len + 1);
+		_q_len = data_len;
+
+		memcpy(_query, data, _q_len);
+		_query[_q_len] = '\0';
 	}
-	else
-	{
-		return -1;
-	}
 
-	// смещаемся к query
-	data += post_header_len + _status_vars_len + _db_len + 1;
-	data_len -= (_db_len + 1);
-	_q_len = data_len;
-
-	memcpy(_query, data, _q_len);
-	_query[_q_len] = '\0';
-
-	return 0;
+	return rc;
 }
 
 

@@ -439,7 +439,14 @@ public:
 	virtual const char* get_type_code_str() const = 0;
 
 	virtual bool is_valid() const = 0;
-	virtual void dump(FILE *stream) {;}
+	virtual void dump(FILE *stream) const {
+		char buf[64];
+		char *when = ctime_r(&_when, buf);
+		when[strlen(buf)-1] = '\0';
+		//char *ctime_r(const time_t *timep, char *buf);
+		fprintf(stream, "#%d %s: %s, log pos %llu\n", 
+				get_type_code(), get_type_code_str(), when, (unsigned long long)_log_pos);
+	}
 	
 	virtual int tune(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt);
 
@@ -465,8 +472,6 @@ public:
 	could have a query and its event with different timestamps).
 	*/
 	time_t _when;
-	/* The number of seconds the query took to run on the master. */
-	unsigned long _exec_time;
 
 	/* Number of bytes written by write() function */
 	uint32_t _data_written;
@@ -535,33 +540,68 @@ public:
 
 };
 
+/*
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * CRotateLogEvent
+ *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ */
+class CRotateLogEvent : public CLogEvent
+{
+public:
+	CRotateLogEvent() : _position(0), _new_log(NULL) 
+	{
+	}
+	virtual Log_event_type get_type_code() const { return ROTATE_EVENT; };
+	virtual const char* get_type_code_str() const { return "rotate event"; };
+	virtual bool is_valid() const {return true;}
+	
+	virtual int tune(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt);
+	
+	const uint8_t* get_log_name(size_t *len) const { if (len) *len=_len; return _new_log; }
+	const uint8_t* get_log_name() const { return _new_log; }
+	size_t get_log_name_len() const { return _len; }
+	uint64_t get_log_pos() const { return _position; }
+	
+	
+	virtual void dump(FILE *stream) const {
+		CLogEvent::dump(stream);
+		char buf[256];
+		memcpy(buf, _new_log, _len);
+		buf[_len] = '\0';
+		fprintf(stream, "%s:%llu\n", buf, (unsigned long long)_position);
+	}
+	
+	
+protected:
+	uint64_t _position;
+	uint8_t* _new_log;
+	size_t _len;
+	
+};
 
 
 /*
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * CUnknownLogEvent
+ * CUnhandledLogEvent
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  */
 
-class CUnknownLogEvent : public CLogEvent
+class CUnhandledLogEvent : public CLogEvent
 {
 public:
 	virtual Log_event_type get_type_code() const {
 		return (Log_event_type)_event_number;
 	}
 	virtual const char* get_type_code_str() const {
-		return "unknown event";
+		return "unhandled event";
 	}
 
 	virtual bool is_valid() const {
 		return 1;
 	}
 
-	virtual void dump(FILE *stream) {
-		fprintf(stream, "%u\n", (unsigned int)_event_number);
-	}
-	
 	virtual int tune(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt) 
 	{
 		CLogEvent::tune(data, size, fmt);
@@ -569,10 +609,9 @@ public:
 		return 0;
 	}
 
-public:
+protected:
 	uint8_t	_event_number;
 };
-
 
 
 
@@ -602,10 +641,6 @@ public:
 		return 1;
 	}
 
-	virtual void dump(FILE *stream) {
-		fprintf(stream, "%llu", (long long unsigned int)_val);
-	}
-	
 	virtual int tune(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt) ;
 	
 
@@ -635,13 +670,15 @@ public:
 	virtual bool is_valid() const {
 		return 1;
 	}
-	virtual void dump(FILE *stream) {
-		fprintf(stream, "%d\t%s\n", (int)_error_code, _query);
+	virtual void dump(FILE *stream) const {
+		CLogEvent::dump(stream);
+		fprintf(stream, "query '%s' with error_code %d, exec time: %ds\n", _query, (int)_error_code, (int)_q_exec_time);
 	}
 	
 	virtual int tune(uint8_t *data, size_t size, const CFormatDescriptionLogEvent *fmt);
 	
 public:
+	uint32_t _q_exec_time;
 	uint32_t _q_len;
 	uint32_t _db_len;
 	uint16_t _error_code;
@@ -748,10 +785,10 @@ public:
 	virtual int is_field_set(int column, const uint8_t **value, size_t *len) {
 		return 0;
 	}
-	virtual void dump(FILE *stream) {
+	virtual void dump(FILE *stream) const {
+		CLogEvent::dump(stream);
 		fprintf(stream, 
-				"%s\tvalid: %d, rowslen %d, rowflags %d, table_id %d, ncolumns %d, ucm %X (%d bits)",
-				get_type_code_str(), 
+				"valid: %d, rowslen %d, rowflags %d, table_id %d, ncolumns %d, ucm %X (%d bits)",
 				_valid, 
 				(int)_len,
 				(int)_row_flags,
