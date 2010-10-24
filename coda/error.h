@@ -1,7 +1,6 @@
 #ifndef __CODA_ERROR_H__
 #define __CODA_ERROR_H__
 
-#include <alloca.h>
 #include <string.h>
 
 #ifdef __cplusplus
@@ -26,7 +25,8 @@ const char* coda_strerror_r(int err, char* data, size_t size)
 
 	return data;
 #else
-	return strerror_r(err, data, size);
+	strerror_r(err, data, size);
+	return data;
 #endif
 }
 
