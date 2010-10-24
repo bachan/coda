@@ -107,61 +107,65 @@ int coda_mkpidf(const char* path)
 static inline
 int coda_mmap(strp area, int prot_flags, int mmap_flags, const char* filename)
 {
-    int fd;
-    int open_flags;
+	int fd;
+	int open_flags;
 
-    if (NULL == filename) /* MAP_ANONYMOUS */
-    {
-        area->data = mmap(NULL, area->size, prot_flags,
-            mmap_flags|MAP_ANONYMOUS, -1, 0);
+	if (NULL == filename) /* MAP_ANONYMOUS */
+	{
+#if defined(ARCH_LINUX)
+		area->data = mmap(NULL, area->size, prot_flags, mmap_flags|MAP_ANONYMOUS, -1, 0);
+#elif defined(ARCH_FREEBSD)
+		area->data = mmap(NULL, area->size, prot_flags, mmap_flags|MAP_ANON, -1, 0);
+#else
+#error "Unknown model!"
+#endif
 
-        if (MAP_FAILED == area->data) return -1;
+		if (MAP_FAILED == area->data) return -1;
 
-        return 0;
-    }
+		return 0;
+	}
 
-    open_flags = (prot_flags & PROT_WRITE)
-        ? O_RDWR : O_RDONLY;
+	open_flags = (prot_flags & PROT_WRITE) ? O_RDWR : O_RDONLY;
 
-    fd = open(filename, open_flags);
-    if (0 > fd) return -1;
+	fd = open(filename, open_flags);
+	if (0 > fd) return -1;
 
-    if (0 != area->size)
-    {
-        if (0 > ftruncate(fd, area->size))
-        {
-            close(fd);
-            return -1;
-        }
-    }
-    else
-    {
-        struct stat st;
+	if (0 != area->size)
+	{
+		if (0 > ftruncate(fd, area->size))
+		{
+			close(fd);
+			return -1;
+		}
+	}
+	else
+	{
+		struct stat st;
 
-        if (0 > fstat(fd, &st))
-        {
-            close(fd);
-            return -1;
-        }
+		if (0 > fstat(fd, &st))
+		{
+			close(fd);
+			return -1;
+		}
 
-        area->size = st.st_size;
-    }
+		area->size = st.st_size;
+	}
 
-    area->data = mmap(NULL, area->size, prot_flags,
-        mmap_flags, fd, 0);
+	area->data = mmap(NULL, area->size, prot_flags,
+		mmap_flags, fd, 0);
 
-    if (MAP_FAILED == area->data)
-    {
-        close(fd);
-        return -1;
-    }
+	if (MAP_FAILED == area->data)
+	{
+		close(fd);
+		return -1;
+	}
 
-    if (0 > close(fd))
-    {
-        return -1;
-    }
+	if (0 > close(fd))
+	{
+		return -1;
+	}
 
-    return 0;
+	return 0;
 }
 
 #endif /* __CODA_SYSTEM_H__ */
