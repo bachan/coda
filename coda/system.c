@@ -54,22 +54,11 @@ int coda_mkpath(char* path)
 
 int coda_mkpidf(const char* path)
 {
-	int fd;
+	FILE* f = fopen(path, "w");
+	if (!f) return -1;
 
-	fd = open(path, O_CREAT|O_WRONLY|O_TRUNC, 0644);
-	if (0 > fd) return -1;
-
-	if (0 > dprintf(fd, "%d\n", (int) getpid()))
-	{
-		close(fd);
-		return -1;
-	}
-
-	if (0 > close(fd))
-	{
-		return -1;
-	}
-
+	fprintf(f, "%d\n", (int)getpid());
+	fclose(f);
 	return 0;
 }
 

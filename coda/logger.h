@@ -23,15 +23,15 @@ extern "C" {
 #define LOG_info    7  /* NFO: informational message             */
 #define LOG_debug   8  /* DBG: debug message                     */
 
-#define log_msg(lev,fmt,...) log_fmt(STDERR_FILENO,LOG_##lev,#lev,fmt,##__VA_ARGS__)
+#define log_msg(lev,fmt,...) log_fmt(stderr,LOG_##lev,#lev,fmt,##__VA_ARGS__)
 #define log_err(err,fmt,...) log_msg(error,fmt " (%d: %s)\n", ##__VA_ARGS__, err, coda_strerror(err))
 #define log_ret(err,fmt,...) log_msg(error,fmt " (%d: %s)\n", ##__VA_ARGS__, err, coda_strerror(err)), err
 #define log_die(err,fmt,...) log_msg(emerg,fmt " (%d: %s)\n", ##__VA_ARGS__, err, coda_strerror(err)); exit(EXIT_FAILURE)
 
-#define msg(fmt,...)     dprintf(STDERR_FILENO, fmt          "\n", ##__VA_ARGS__)
-#define err(err,fmt,...) dprintf(STDERR_FILENO, fmt " (%d: %s)\n", ##__VA_ARGS__, err, coda_strerror(err))
-#define ret(err,fmt,...) dprintf(STDERR_FILENO, fmt " (%d: %s)\n", ##__VA_ARGS__, err, coda_strerror(err)), err
-#define die(err,fmt,...) dprintf(STDERR_FILENO, fmt " (%d: %s)\n", ##__VA_ARGS__, err, coda_strerror(err)); exit(EXIT_FAILURE)
+#define msg(fmt,...)     fprintf(stderr, fmt          "\n", ##__VA_ARGS__)
+#define err(err,fmt,...) fprintf(stderr, fmt " (%d: %s)\n", ##__VA_ARGS__, err, coda_strerror(err))
+#define ret(err,fmt,...) fprintf(stderr, fmt " (%d: %s)\n", ##__VA_ARGS__, err, coda_strerror(err)), err
+#define die(err,fmt,...) fprintf(stderr, fmt " (%d: %s)\n", ##__VA_ARGS__, err, coda_strerror(err)); exit(EXIT_FAILURE)
 
 #define log_access( fmt,...) log_msg(access,fmt,##__VA_ARGS__)
 #define log_emerg(  fmt,...) log_msg(emerg, fmt,##__VA_ARGS__)
@@ -51,7 +51,7 @@ extern "C" {
 #define LOG_VALUES(tmgmt,tname,...) tmgmt.tm_year, tmgmt.tm_mon, tmgmt.tm_mday, \
     tmgmt.tm_hour, tmgmt.tm_min, tmgmt.tm_sec, tname, ##__VA_ARGS__
 
-#define log_fmt(fd,level,lvstr,fmt,...) do {								\
+#define log_fmt(f,level,lvstr,fmt,...) do {								\
                                                                             \
     if (level <= log_level)                                                 \
     {                                                                       \
@@ -62,13 +62,13 @@ extern "C" {
                                                                             \
         if (NULL != (tname = log_thread_name_get()))                        \
         {                                                                   \
-            dprintf(fd, LOG_FORMAT(lvstr,"%s",fmt),                         \
-                        LOG_VALUES(tmgmt,tname,##__VA_ARGS__));             \
+            fprintf(f, LOG_FORMAT(lvstr,"%s",fmt),                          \
+                       LOG_VALUES(tmgmt,tname,##__VA_ARGS__));              \
         }                                                                   \
         else                                                                \
         {                                                                   \
-            dprintf(fd, LOG_FORMAT(lvstr,"%lu",fmt),                        \
-                        LOG_VALUES(tmgmt,pthread_self(),##__VA_ARGS__));    \
+            fprintf(f, LOG_FORMAT(lvstr,"%lu",fmt),                         \
+                       LOG_VALUES(tmgmt,(unsigned long)pthread_self(),##__VA_ARGS__));     \
         }                                                                   \
     }                                                                       \
                                                                             \
