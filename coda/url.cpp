@@ -156,3 +156,135 @@ size_t coda_urldec(u_char* dst, const u_char* src, size_t sz_src)
 	return dst - bdst;
 }
 
+void coda_url_escape(const char *s, char *dest, size_t sz)
+{
+	memset(dest, 0, sz);
+	size_t ptr = 0;
+	sz -= 3;
+	while (*s && (ptr < sz))
+	{
+		//if (*s & 0x80 != 0)
+		if (table_urlenc[*s >> 5] & (1 << (*s & 0x1f)))
+		{
+			ptr += snprintf(dest + ptr, sz - ptr, "%%%02X", *s);
+		}
+		else
+		{
+			dest[ptr++] = *s;
+		}
+
+		s++;
+	}
+}
+
+void coda_url_unescape(const char *s, char *dest, size_t sz)
+{
+	memset(dest, 0, sz);
+	size_t ptr = 0;
+	while (*s && (ptr < sz - 2))
+	{
+		if (*s == '+')
+		{
+			dest[ptr++] = ' ';
+			s++;
+		}
+		else if ((*s == '%') && isxdigit(s[1]) && isxdigit(s[2]))
+		{
+			char xnum[3];
+			xnum[0] = s[1];
+			xnum[1] = s[2];
+			xnum[2] = 0;
+			uint8_t c = strtol(xnum, 0, 16);
+			dest[ptr] = (char)c;
+			ptr++;
+			s += 3;
+		}
+		else if ((*s == '%') && (s[1] == 'u') && isxdigit(s[2]))
+		{
+			char *ns;
+			uint32_t c = strtol(s + 2, &ns, 16);
+			s = ns;
+			/* doing only russian letters */
+			if ((c < 0x0800) && (c > 0x7F))
+			{
+				dest[ptr++] = ((c >> 6) | 0xc0);
+				dest[ptr++] = ((c & 0x3f) | 0x80);
+			}
+			else if (c < 0x7F)
+			{
+				dest[ptr++] = c;
+			}
+		}
+		else if ((*s == '\\') && (s[1] == 'x') && isxdigit(s[2]) && isxdigit(s[3]))
+		{
+			char xnum[3];
+			xnum[0] = s[2];
+			xnum[1] = s[3];
+			xnum[2] = 0;
+			uint8_t c = strtol(xnum, 0, 16);
+			dest[ptr] = (char)c;
+			ptr++;
+			s += 4;
+		}
+		else
+		{
+			dest[ptr] = *s;
+			ptr++;
+			s++;
+		}
+	}
+	dest[ptr] = 0;
+}
+
+void coda_url_preunescape(const char* s, char* dest, size_t sz)
+{
+	size_t ptr = 0;
+	while (*s && (ptr < sz + 5))
+	{
+		if ((*s == '%') && isxdigit(s[1]) && isxdigit(s[2]))
+		{
+			char xnum[3];
+			xnum[0] = s[1];
+			xnum[1] = s[2];
+			xnum[2] = 0;
+			uint8_t c = strtol(xnum, 0, 16);
+			if (c & 0x80)
+			{
+				dest[ptr] = (char)c;
+				ptr++;
+			}
+			else
+			{
+				if (ptr + 4 < sz) memcpy(dest + ptr, s, 3);
+				ptr += 3;
+			}
+			s += 3;
+		}
+		else if ((*s == '\\') && (s[1] == 'x') && isxdigit(s[2]) && isxdigit(s[3]))
+		{
+			char xnum[3];
+			xnum[0] = s[2];
+			xnum[1] = s[3];
+			xnum[2] = 0;
+			uint8_t c = strtol(xnum, 0, 16);
+			if (c & 0x80)
+			{
+				dest[ptr] = (char)c;
+				ptr++;
+			}
+			else
+			{
+				if (ptr + 3 < sz) memcpy(dest + ptr, s, 4);
+			}
+			s += 4;
+		}
+		else
+		{
+			dest[ptr] = *s;
+			ptr++;
+			s++;
+		}
+	}
+	dest[ptr] = 0;
+}
+
