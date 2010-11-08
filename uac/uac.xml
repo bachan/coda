@@ -1,0 +1,270 @@
+<uac>
+	<det type="1" id="32" title="Windows" />
+
+	<!-- 32 ... 63 - windows of very old versions -->
+	<det type="1" id="33" title="Windows 9x and other old versions">
+		<catch_string>win95</catch_string>
+		<catch_string>win98</catch_string>
+		<catch_string>win 9x</catch_string>
+		<catch_string>windows 95</catch_string>
+		<catch_string>windows 98</catch_string>
+		<catch_string>windows me</catch_string>
+		<catch_string>Windows NT 4.0</catch_string>
+		<catch_string>WinNT4.0</catch_string>
+	</det>
+
+	<det type="1" id="34" title="Windows 2000 (NT 5.0)">
+		<catch_string>Windows NT 5.0</catch_string>
+		<catch_string>Windows 2000</catch_string>
+	</det>
+
+	<det type="1" id="35" title="Windows XP">
+		<catch_string>Windows NT 5.1</catch_string>
+		<catch_string>Windows XP</catch_string>
+		<catch_string>xpsp2</catch_string>
+	</det>
+
+	<det type="1" id="37" title="Windows 2003 Server (NT 5.2)">
+		<catch_string>Windows NT 5.2</catch_string>
+	</det>
+
+	<det type="1" id="36" title="Windows Vista (NT 6.0)">
+		<catch_string>Windows NT 6.0</catch_string>
+		<catch_string>Windows 6.0</catch_string>
+	</det>
+
+	<det type="1" id="37" title="Windows 7 (NT 6.1)">
+		<catch_string>Windows NT 6.1</catch_string>
+	</det>
+
+	<!-- 64 ... 79 - mac -->
+	<det type="1" id="64" title="Mac">
+		<catch_string>macintosh</catch_string>
+	</det>
+
+	<det type="1" id="65" title="Mac OS X (Intel)">
+		<catch_string>Intel Mac OS X</catch_string>
+	</det>
+
+	<det type="1" id="66" title="Mac OS X (PPC)">
+		<catch_string>PPC Mac OS X</catch_string>
+		<catch_string>Mac_PowerPC</catch_string>
+	</det>
+
+	<!-- 80 ... 111 - Linux -->
+	<det type="1" id="80" title="Linux" />
+
+	<det type="1" id="81" title="Ubuntu 7.10 (and older)">
+		<catch_string>Ubuntu/7.10</catch_string>
+	</det>
+
+	<det type="1" id="82" title="Ubuntu 8.04">
+		<catch_string>Ubuntu/8.04</catch_string>
+	</det>
+
+	<det type="1" id="83" title="Ubuntu 8.10">
+		<catch_string>Ubuntu 8.10</catch_string>
+	</det>
+
+	<det type="1" id="84" title="Ubuntu 9.04">
+		<catch_string>Ubuntu 9.04</catch_string>
+	</det>
+
+	<det type="1" id="85" title="Ubuntu 9.10">
+		<catch_string>Ubuntu 9.10</catch_string>
+	</det>
+
+	<det type="1" id="99" title="Red Hat 3">
+		<catch_string>Red Hat/3</catch_string>
+	</det>
+
+	<det type="1" id="100" title="Fedora 3">
+		<catch_string>Fedora/3</catch_string>
+	</det>
+
+	<det type="1" id="101" title="SUSE 3">
+		<catch_string>SUSE/3</catch_string>
+	</det>
+
+	<det type="1" id="102" title="Debian">
+		<catch_string>Debian</catch_string>
+	</det>
+
+	<det type="1" id="103" title="Mandriva 1.x">
+		<catch_string>Mandriva/1.</catch_string>
+	</det>
+
+	<det type="1" id="103" title="Mandriva 2.0">
+		<catch_string>Mandriva/2.0</catch_string>
+	</det>
+
+	<det type="1" id="104" title="SUSE 2">
+		<catch_string>SUSE/2</catch_string>
+	</det>
+
+	<det type="1" id="110" title="Gentoo">
+		<catch_string>gentoo</catch_string>
+	</det>
+
+	<det type="1" id="113" title="FreeBSD">
+		<catch_string>FreeBSD</catch_string>
+	</det>
+
+	<det type="1" id="120" title="SunOS">
+		<catch_string>SunOS</catch_string>
+	</det>
+
+	<!-- mobiles... -->
+	<!-- 128 ... 196 - Windows CE based -->
+	<det type="1" id="128" title="Windows CE" />
+	<det type="1" id="129" title="Windows CE (240x320)">
+		<catch_string>Windows CE; PPC; 240x320</catch_string>
+		<catch_string>Windows CE; PPC; 320x240</catch_string>
+		<catch_string>Windows CE; 240x320</catch_string>
+		<catch_string>Windows CE; PPC; 240x320</catch_string>
+	</det>
+
+	<det type="1" id="130" title="Windows CE (176x220)">
+		<catch_string>MSIE 4.01; Windows CE; Smartphone; 176x220</catch_string>
+	</det>
+
+	<!-- J2ME/MIDP -->
+	<det type="1" id="197" title="J2ME/MIDP">
+		<catch_string>J2ME/MIDP</catch_string>
+	</det>
+
+	<det type="1" id="198" title="Symbian">
+		<catch_string>Symbian OS</catch_string>
+	</det>
+
+	<!-- 16 ... 63 - IE -->
+	<det type="2" id="16" title="IE unknown version" />
+	<det type="2" id="17" title="IE 5 (or less)">
+		<catch_string>MSIE 5.0</catch_string>
+		<catch_string>MSIE 4</catch_string>
+		<catch_string>MSIE 3</catch_string>
+		<catch_string>MSIE 2</catch_string>
+	</det>
+
+	<det type="2" id="18" title="IE 5.5">
+		<catch_string>MSIE 5.5</catch_string>
+	</det>
+
+	<det type="2" id="19" title="IE 6.0">
+		<catch_string>MSIE 6.0</catch_string>
+		<catch_string>MSIE6.0</catch_string>
+	</det>
+
+	<det type="2" id="20" title="IE 7.0">
+		<catch_string>MSIE 7.0</catch_string>
+	</det>
+
+	<det type="2" id="21" title="IE 8.0">
+		<catch_string>MSIE 8.0</catch_string>
+	</det>
+
+	<!-- 64 ... 127 - Mozilla based -->
+	<det type="2" id="64" title="Mozilla-based" />
+
+	<det type="2" id="65" title="Firefox 0.x">
+		<catch_string>Firefox/0.</catch_string>
+	</det>
+	<det type="2" id="66" title="Firefox 1">
+		<catch_string>Firefox 1</catch_string>
+	</det>
+	<det type="2" id="67" title="Firefox 2">
+		<catch_string>Firefox 2</catch_string>
+	</det>
+	<det type="2" id="68" title="Firefox 3">
+		<catch_string>Firefox 3</catch_string>
+	</det>
+	<det type="2" id="69" title="Firefox 4">
+		<catch_string>Firefox 4</catch_string>
+	</det>
+
+	<!-- 128 .. 159 - Opera -->
+	<det type="2" id="128" title="Opera" />
+	<det type="2" id="129" title="Opera 7.x (or older)">
+		<catch_string>Opera 3</catch_string>
+		<catch_string>Opera 4</catch_string>
+		<catch_string>Opera 5</catch_string>
+		<catch_string>Opera 6</catch_string>
+		<catch_string>Opera/7</catch_string>
+	</det>
+
+	<det type="2" id="130" title="Opera 8.x">
+		<catch_string>Opera/8.</catch_string>
+	</det>
+
+	<det type="2" id="131" title="Opera 9.x">
+		<catch_string>Opera/9</catch_string>
+	</det>
+
+	<det type="2" id="132" title="Opera 10.x">
+		<catch_string>Opera/10.</catch_string>
+	</det>
+
+	<!-- 160 ... 196 - KHTML-based -->
+	<det type="2" id="161" title="Safari">
+		<catch_string>Safari</catch_string>
+	</det>
+
+	<det type="2" id="162" title="Konqueror">
+		<catch_string>Konqueror</catch_string>
+	</det>
+
+	<det type="2" id="163" title="Chrome">
+		<catch_string>Chrome</catch_string>
+	</det>
+
+	<det type="3" id="1" title="Sputnik@mail.ru">
+		<catch_string>MRSPUTNIK</catch_string>
+	</det>
+
+	<det type="3" id="2" title="Agent@mail.ru">
+		<catch_string>; MRA </catch_string>
+	</det>
+
+	<det type="3" id="4" title="Alexa Toolbar">
+		<catch_string>Alexa Toolbar</catch_string>
+	</det>
+
+	<det type="3" id="8" title="Google Toolbar">
+		<catch_string>GoogleToolbar</catch_string>
+	</det>
+
+	<!-- hacks -->
+	
+	<det type="5" id="128" title="">
+		<catch_string>Chrome</catch_string>
+	</det>
+
+	<det type="5" id="64" title="">
+		<catch_string>Opera</catch_string>
+	</det>
+
+	<det type="5" id="32" title="">
+		<catch_string>Mozilla</catch_string>
+	</det>
+
+	<det type="5" id="16" title="">
+		<catch_string>compatible</catch_string>
+	</det>
+
+	<det type="5" id="8" title="">
+		<catch_string>windows</catch_string>
+	</det>
+
+	<det type="5" id="4" title="">
+		<catch_string>msie</catch_string>
+	</det>
+
+	<det type="5" id="2">
+		<catch_string>Windows CE</catch_string>
+	</det>
+
+	<det type="5" id="1">
+		<catch_string>Linux</catch_string>
+	</det>
+</uac>
+
