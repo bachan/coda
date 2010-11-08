@@ -16,6 +16,7 @@
 #include <set>
 #include <vector>
 #include <map>
+#include <string.h>
 
 #include "mafsa_internal.h"
 #include "pool.hpp"

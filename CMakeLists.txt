@@ -31,11 +31,11 @@ ADD_LIBRARY(uac STATIC uac/sla.c uac/uac.cpp uac/uac-base.c)
 ADD_LIBRARY(uacbase STATIC uac/sla.c uac/uac-base.c)
 
 ADD_EXECUTABLE(uac_compiler uac/uac_compiler.cpp)
-TARGET_LINK_LIBRARIES(uac_compiler coda uac ${LIBRARY_EXPAT})
+TARGET_LINK_LIBRARIES(uac_compiler uac coda ${LIB_EXPAT})
 ADD_CUSTOM_COMMAND(TARGET uac_compiler POST_BUILD COMMAND ./uac_compiler ${coda_SOURCE_DIR}/uac/uac.xml uac.automaton)
 
 ADD_EXECUTABLE(uac_detect uac/uac_detect.cpp)
-TARGET_LINK_LIBRARIES(uac_detect uac coda MAFSA)
+TARGET_LINK_LIBRARIES(uac_detect uac coda MAFSA ${LIB_EXPAT})
 
 INSTALL(FILES uac/uac.h DESTINATION include/uac)
 INSTALL(TARGETS uac DESTINATION ${LIBDIR})
