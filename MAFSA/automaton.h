@@ -70,19 +70,6 @@ extern void MAFSA_automaton_search_enumerate(MAFSA_automaton mautomaton,
 					MAFSA_letter delim,
 					MAFSA_automaton_string_handler fetcher);
 
-/* raw automaton workshop, advanced usage */
-MAFSA_letter link_get_label(const u_int32_t data);
-MAFSA_letter link_set_label(const u_int32_t data, const MAFSA_letter v);
-u_int32_t link_get_link(const u_int32_t data);
-u_int32_t link_set_link(const u_int32_t data, const u_int32_t l);
-int link_is_terminating(const u_int32_t data);
-u_int32_t link_set_terminating();
-int node_is_final(const u_int32_t data);
-u_int32_t node_get_children_start(const u_int32_t data);
-u_int32_t node_set_children_start(const u_int32_t data, u_int32_t v);
-u_int32_t node_set_final(const u_int32_t data, int v);
-u_int32_t delta(const u_int32_t * links, u_int32_t state, MAFSA_letter label);
-
 #ifdef __cplusplus
 }
 #endif

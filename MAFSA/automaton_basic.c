@@ -12,57 +12,57 @@
 #include <errno.h>
 #include <string.h>
 
-MAFSA_letter link_get_label(const u_int32_t data)
+static MAFSA_letter link_get_label(const u_int32_t data)
 {
 	return data >> 24;
 }
 
-MAFSA_letter link_set_label(const u_int32_t data, const MAFSA_letter v)
+static MAFSA_letter link_set_label(const u_int32_t data, const MAFSA_letter v)
 {
 	return (0x00FFFFFF & data) | (v << 24);
 }
 
-u_int32_t link_get_link(const u_int32_t data)
+static u_int32_t link_get_link(const u_int32_t data)
 {
 	return data & 0x00FFFFFF;
 }
 
-u_int32_t link_set_link(const u_int32_t data, const u_int32_t l)
+static u_int32_t link_set_link(const u_int32_t data, const u_int32_t l)
 {
 	return (0xFF000000 & data) | l;
 }
 
-int link_is_terminating(const u_int32_t data)
+static int link_is_terminating(const u_int32_t data)
 {
 	return data == 0xFF000000;
 }
 
-u_int32_t link_set_terminating()
+static u_int32_t link_set_terminating()
 {
 	return 0xFF000000;
 }
 
-int node_is_final(const u_int32_t data)
+static int node_is_final(const u_int32_t data)
 {
 	return (data & 0x80000000);
 }
 
-u_int32_t node_get_children_start(const u_int32_t data)
+static u_int32_t node_get_children_start(const u_int32_t data)
 {
 	return data & 0x7FFFFFFF;
 }
 
-u_int32_t node_set_children_start(const u_int32_t data, u_int32_t v)
+static u_int32_t node_set_children_start(const u_int32_t data, u_int32_t v)
 {
 	return (data & 0x80000000) | v;
 }
 
-u_int32_t node_set_final(const u_int32_t data, int v)
+static u_int32_t node_set_final(const u_int32_t data, int v)
 {
 	return v ? (data | 0x80000000) : (data & 0x7FFFFFFF);
 }
 
-u_int32_t delta(const u_int32_t * links, u_int32_t state, MAFSA_letter label)
+static u_int32_t delta(const u_int32_t* links, u_int32_t state, MAFSA_letter label)
 {
 	u_int32_t links_begin = node_get_children_start(state);
 
