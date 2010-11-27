@@ -58,11 +58,9 @@ void log_thread_name_key()
 
 int log_thread_name_set(const char* name)
 {
-	pthread_once(&log_thread_name_once,
-		log_thread_name_key);
+	pthread_once(&log_thread_name_once, log_thread_name_key);
 
-	return pthread_setspecific(log_thread_name,
-		(const void*) name);
+	return pthread_setspecific(log_thread_name, (const void*)name);
 }
 
 const char* log_thread_name_get()

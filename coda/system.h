@@ -14,10 +14,18 @@
 #include <unistd.h>
 #include "coda.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int coda_fdmove(int fd, int nd);
 int coda_fdopen(int fd, const char* path, int flags);
 int coda_mkpath(char* path);
 int coda_mkpidf(const char* path);
 int coda_mmap(strp area, int prot_flags, int mmap_flags, const char* filename);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __CODA_SYSTEM_H__ */
