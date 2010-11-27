@@ -144,7 +144,7 @@ template <typename _Type, int _OBJECTS_NUM, int _HASH_SIZE>
 bool hash_map<_Type, _OBJECTS_NUM, _HASH_SIZE>::read(uint64_t key, _Type& out)
 {
 	lock_read_rw();
-	bool res = unprotected_insert(key, out);
+	bool res = unprotected_read(key, out);
 	unlock_read_rw();
 	return res;
 }
