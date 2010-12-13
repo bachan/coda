@@ -1,6 +1,3 @@
-#include <string.h>
-#include <errno.h>
-
 namespace shm_queue {
 
 	enum T

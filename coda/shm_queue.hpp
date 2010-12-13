@@ -7,6 +7,8 @@
 #include <sys/sem.h>
 #include <stdexcept>
 #include <errno.h>
+#include <string.h>
+#include <stdio.h>
 
 namespace shm_queue {
 
