@@ -34,6 +34,13 @@ public:
 		pthread_mutex_unlock(&m);
 	}
 
+	void sig()
+	{
+		pthread_mutex_lock(&m);
+		pthread_cond_signal(&c);
+		pthread_mutex_unlock(&m);
+	}
+
 	int get(_T& e, int canwait)
 	{
 		pthread_mutex_lock(&m);
