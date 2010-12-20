@@ -34,7 +34,7 @@ public:
 		pthread_mutex_unlock(&m);
 	}
 
-	void sig()
+	void signal()
 	{
 		pthread_mutex_lock(&m);
 		pthread_cond_signal(&c);
