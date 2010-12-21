@@ -37,6 +37,8 @@ ADD_CUSTOM_COMMAND(TARGET uac_compiler POST_BUILD COMMAND ./uac_compiler ${coda_
 ADD_EXECUTABLE(uac_detect uac/uac_detect.cpp)
 TARGET_LINK_LIBRARIES(uac_detect uac coda MAFSA ${LIB_EXPAT})
 
+ADD_EXECUTABLE(test_tjson tests/tjson/main.cpp)
+
 INSTALL(FILES uac/uac.h DESTINATION include/uac)
 INSTALL(TARGETS uac DESTINATION ${LIBDIR})
 INSTALL(TARGETS uacbase DESTINATION ${LIBDIR})
