@@ -74,6 +74,22 @@
 		<catch_string>Ubuntu 9.10</catch_string>
 	</det>
 
+	<det type="1" id="86" title="Ubuntu 10.04">
+		<catch_string>Ubuntu 10.04</catch_string>
+	</det>
+
+	<det type="1" id="87" title="Ubuntu 10.10">
+		<catch_string>Ubuntu 10.10</catch_string>
+	</det>
+
+	<det type="1" id="88" title="Ubuntu 11.04">
+		<catch_string>Ubuntu 11.04</catch_string>
+	</det>
+
+	<det type="1" id="89" title="Ubuntu 11.10">
+		<catch_string>Ubuntu 11.10</catch_string>
+	</det>
+
 	<det type="1" id="99" title="Red Hat 3">
 		<catch_string>Red Hat/3</catch_string>
 	</det>
@@ -163,6 +179,10 @@
 		<catch_string>MSIE 8.0</catch_string>
 	</det>
 
+	<det type="2" id="22" title="IE 9.0">
+		<catch_string>MSIE 9.0</catch_string>
+	</det>
+
 	<!-- 64 ... 127 - Mozilla based -->
 	<det type="2" id="64" title="Mozilla-based" />
 
@@ -204,7 +224,7 @@
 		<catch_string>Opera/10.</catch_string>
 	</det>
 
-	<!-- 160 ... 196 - KHTML-based -->
+	<!-- 160 ... 179 - KHTML-based -->
 	<det type="2" id="161" title="Safari">
 		<catch_string>Safari</catch_string>
 	</det>
@@ -213,8 +233,25 @@
 		<catch_string>Konqueror</catch_string>
 	</det>
 
-	<det type="2" id="163" title="Chrome">
-		<catch_string>Chrome</catch_string>
+	<!-- 180 ... 196 Google chrome -->
+	<det type="2" id="181" title="Google Chrome 10.x">
+		<catch_string>Chrome/10</catch_string>
+	</det>
+	<det type="2" id="182" title="Google Chrome 9.x">
+		<catch_string>Chrome/9</catch_string>
+	</det>
+	<det type="2" id="183" title="Google Chrome 8.x">
+		<catch_string>Chrome/8</catch_string>
+	</det>
+	<det type="2" id="184" title="Google Chrome &lt;= 7.x">
+		<catch_string>Chrome/7</catch_string>
+		<catch_string>Chrome/6</catch_string>
+		<catch_string>Chrome/5</catch_string>
+		<catch_string>Chrome/4</catch_string>
+		<catch_string>Chrome/3</catch_string>
+		<catch_string>Chrome/2</catch_string>
+		<catch_string>Chrome/1.</catch_string>
+		<catch_string>Chrome/0</catch_string>
 	</det>
 
 	<det type="3" id="1" title="Sputnik@mail.ru">
@@ -234,10 +271,6 @@
 	</det>
 
 	<!-- hacks -->
-	
-	<det type="5" id="128" title="">
-		<catch_string>Chrome</catch_string>
-	</det>
 
 	<det type="5" id="64" title="">
 		<catch_string>Opera</catch_string>
