@@ -1,5 +1,5 @@
-#ifndef __CODA_HELPER_TIME_H__
-#define __CODA_HELPER_TIME_H__
+#ifndef __CODA_GMTIME_H__
+#define __CODA_GMTIME_H__
 
 #include <stdint.h>
 #include <time.h>
@@ -105,4 +105,4 @@ void coda_gmtime(time_t t, struct tm *tp)
 	tp->tm_wday = (int) wday;
 }
 
-#endif /* __CODA_HELPER_TIME_H__ */
+#endif /* __CODA_GMTIME_H__ */
