@@ -22,31 +22,31 @@ int coda_strappend(std::string& out, const char* fmt, ...)
 	return bytes;
 }
 
-int coda_strnappend(std::string& out, size_t n, const char* fmt, ...)
+int coda_strnappend(std::string& out, size_t num, const char* fmt, ...)
 {
 	va_list ap;
 	va_start(ap, fmt);
 
 	int bytes;
 
-	if (n < BUFSZ)
+	if (num < BUFSZ)
 	{
 		char BUF [BUFSZ];
 
-		if ((int) n < (bytes = vsnprintf(BUF, n + 1, fmt, ap)))
+		if ((int) num < (bytes = vsnprintf(BUF, num + 1, fmt, ap)))
 		{
-			bytes = n;
+			bytes = num;
 		}
 
 		out.append(BUF, bytes);
 	}
 	else
 	{
-		char* BUF = new char [n + 1];
+		char* BUF = new char [num + 1];
 
-		if ((int) n < (bytes = vsnprintf(BUF, n + 1, fmt, ap)))
+		if ((int) num < (bytes = vsnprintf(BUF, num + 1, fmt, ap)))
 		{
-			bytes = n;
+			bytes = num;
 		}
 
 		out.append(BUF, bytes);
@@ -57,7 +57,7 @@ int coda_strnappend(std::string& out, size_t n, const char* fmt, ...)
 	return bytes;
 }
 
-int coda_strnprintf(std::string& out, size_t pos, size_t n, const char* fmt, ...)
+int coda_strnprintf(std::string& out, size_t pos, size_t num, const char* fmt, ...)
 {
 	if (out.size() < pos) return -1;
 
@@ -66,24 +66,24 @@ int coda_strnprintf(std::string& out, size_t pos, size_t n, const char* fmt, ...
 
 	int bytes;
 
-	if (n < BUFSZ)
+	if (num < BUFSZ)
 	{
 		char BUF[BUFSZ];
 
-		if ((int) n < (bytes = vsnprintf(BUF, n + 1, fmt, ap)))
+		if ((int) num < (bytes = vsnprintf(BUF, num + 1, fmt, ap)))
 		{
-			bytes = n;
+			bytes = num;
 		}
 
 		out.insert(pos, BUF, bytes);
 	}
 	else
 	{
-		char* BUF = new char [n + 1];
+		char* BUF = new char [num + 1];
 
-		if ((int) n < (bytes = vsnprintf(BUF, n + 1, fmt, ap)))
+		if ((int) num < (bytes = vsnprintf(BUF, num + 1, fmt, ap)))
 		{
-			bytes = n;
+			bytes = num;
 		}
 
 		out.insert(pos, BUF, bytes);
