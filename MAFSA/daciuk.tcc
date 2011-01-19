@@ -550,7 +550,11 @@ bool daciuk<max_letter>::save_to_file(char const * fn)
 	
 	FILE * fp = fopen(fn, "wb");
 	
-	fwrite(&index[0], sizeof(u_int32_t), index.size(), fp);
+	if (index.size() != fwrite(&index[0], sizeof(u_int32_t), index.size(), fp))
+	{
+		fclose(fp);
+		return false;
+	}
 	
 	fclose(fp);
 	
