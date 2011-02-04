@@ -3,7 +3,7 @@ namespace shm_queue {
 	enum T
 	{
 		BOX_SIZE = 8192,
-		MAX_BOXES_IN_QUEUE = 200, // 8192,
+		MAX_BOXES_IN_QUEUE = 1000, // 8192,
 
   		SEM_ID_0 = 0,
 		SEM_ID_QUEUE_COUNT = 1
