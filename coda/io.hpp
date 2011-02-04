@@ -13,10 +13,9 @@
 #include <google/sparse_hash_set>
 #include "log_array.hpp"
 
-// WARNING!!! XXX
-//
+// XXX WARNING!!!
 // THIS CODE IS DEPRECATED! DO NOT USE IT IN NEW CODE
-// TAK PISHUT PIDORASI (C) PIANIST
+// RATED AS "TAK PISHUT PIDORASI" BY PIANIST
 
 namespace io {
 
