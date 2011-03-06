@@ -100,7 +100,7 @@ ENDMACRO (USE_INCLUDE)
 # variable named LIB_[lib].
 
 MACRO (USE_LIBRARY lib)
-  FIND_LIBRARY (LIB_${lib} ${lib})
+  FIND_LIBRARY (LIB_${lib} ${lib} ${ARGN})
   IF (LIB_${lib})
     MESSAGE (STATUS "FOUND ${LIB_${lib}}")  # SHOULD BE BOLD GREEN
   ELSE ()
@@ -113,7 +113,7 @@ ENDMACRO (USE_LIBRARY)
 # Find package using USE_LIBRARY and USE_INCLUDE macros.
 
 MACRO (USE_PACKAGE lib inc)
-  USE_LIBRARY (${lib})
+  USE_LIBRARY (${lib} ${ARGN})
   USE_INCLUDE (${inc} ${ARGN})
 # IF (${ARGN})
 #   USE_INCLUDE (INC_${lib} ${ARGN})
