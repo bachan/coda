@@ -72,9 +72,6 @@ int coda_mkpidf(const char* path)
  * See, mmap(2).
  */
 
-#define coda_umap(area) munmap((area)->data, (area)->size)
-#define coda_read_file(area,path) coda_mmap(coda_clrptr(area), PROT_READ, MAP_PRIVATE, path) /* TODO coda_clrptr */
-
 int coda_mmap(strp area, int prot_flags, int mmap_flags, const char* filename)
 {
 	int fd;
@@ -82,14 +79,7 @@ int coda_mmap(strp area, int prot_flags, int mmap_flags, const char* filename)
 
 	if (NULL == filename) /* MAP_ANONYMOUS */
 	{
-#if defined(ARCH_LINUX)
-		area->data = mmap(NULL, area->size, prot_flags, mmap_flags|MAP_ANONYMOUS, -1, 0);
-#elif defined(ARCH_FREEBSD)
 		area->data = mmap(NULL, area->size, prot_flags, mmap_flags|MAP_ANON, -1, 0);
-#else
-#error "Unknown model!"
-#endif
-
 		if (MAP_FAILED == area->data) return -1;
 
 		return 0;
