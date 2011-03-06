@@ -8,6 +8,8 @@
 extern "C" {
 #endif
 
+char *coda_strnchr(const char *s, char c, size_t len);         /* search for [c] in first [len] bytes of [s] */
+
 char *coda_stristr(const char *s, const char *n);              /* search for [n] in [s] ignoring case */
 char *coda_strnstr(const char *s, const char *n, size_t len);  /* search for [n] in first [len] bytes of [s] */
 char *coda_strxstr(const char *s, const char *n, size_t len);  /* search for [n] in first [len] bytes of [s] ignoring case */
