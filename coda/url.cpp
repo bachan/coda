@@ -1,7 +1,9 @@
+#include <limits.h>
+#include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <coda/arrays.h>
-#include <stdio.h>
+#include "string.h"
 #include "url.hpp"
 
 int coda_get_params_buf(coda_params_t& params, const char* s, size_t len)
