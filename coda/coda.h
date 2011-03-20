@@ -42,8 +42,12 @@
 #endif
 
 #if 1 /* TODO discuss this one particular typedef, and more simple iovec analog with you know who */
-/* typedef unsigned char ucht, *uchp; */
-typedef struct { size_t size; void* data; } strt, *strp;
+typedef struct
+{
+	size_t size;
+	void* data;
+} strt, *strp;
+
 /* #define coda_string(str) { sizeof(str) - 1, (uchp) str } */
 /* #define coda_null_string { 0, NULL } */
 #include <string.h>
