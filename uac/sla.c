@@ -63,7 +63,7 @@ size_t conv_l2s_sla(const MAFSA_letter *l, size_t sz_l, char *s, size_t sz_s)
 		{
 			s[pos_w++] = l[pos_r] - 12 + 'A';
 		}
-		else if (pos_w && (s[pos_w-1] != '_') && (s[pos_w-1] != '-'))
+		else if (pos_w)
 		{
 			switch (l[pos_r])
 			{
