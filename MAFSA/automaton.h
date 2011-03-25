@@ -70,6 +70,21 @@ extern void MAFSA_automaton_search_enumerate(MAFSA_automaton mautomaton,
 					MAFSA_letter delim,
 					MAFSA_automaton_string_handler fetcher);
 
+typedef unsigned (MAFSACALL *MAFSA_automaton_fuzzy_callback) (void *user_data, const MAFSA_letter* s, size_t ls, const MAFSA_letter* t, size_t lt);
+
+extern void MAFSA_automaton_fuzzy_enumerate(
+	MAFSA_automaton mautomaton,
+	const MAFSA_letter* l,
+	size_t sz,
+	MAFSA_letter* tmp,
+	size_t sz_tmp,
+	void *user_data,
+	MAFSA_automaton_fuzzy_callback sdist,
+	unsigned max_dist,
+	MAFSA_automaton_fuzzy_callback fetcher
+);
+
+
 #ifdef __cplusplus
 }
 #endif
