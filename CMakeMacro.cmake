@@ -3,7 +3,7 @@ SET (FLAGS_DEFAULT  "-fPIC -pipe")
 SET (FLAGS_WARNING  "-Wall -Werror -Wno-long-long -Wno-variadic-macros -Wno-strict-aliasing")# -Wextra -pedantic")
 SET (FLAGS_CXX_LANG "-Wno-deprecated")
 SET (FLAGS_RELEASE  "-O3 -fomit-frame-pointer -funroll-loops -DNDEBUG")
-SET (FLAGS_DEBUG    "-ggdb")
+SET (FLAGS_DEBUG    "-ggdb -pg")
 
 # TODO
 # -pedantic: stupid gcc-4.4 warning about empty macro arguments
@@ -94,7 +94,7 @@ MACRO (USE_INCLUDE inc)
   ENDIF ()
 ENDMACRO (USE_INCLUDE)
 
-# USE_LIBRARY (lib)
+# USE_LIBRARY (lib [FIND_LIBRARY_ARGS ...])
 # -----------------------------------------------------------------------------
 # Find library [lib] using standard FIND_LIBRARY command and save its path into
 # variable named LIB_[lib].
