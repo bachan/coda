@@ -44,3 +44,8 @@ INSTALL(DIRECTORY coda/ DESTINATION include/coda FILES_MATCHING PATTERN "*.hpp")
 INSTALL(DIRECTORY coda/ DESTINATION include/coda FILES_MATCHING PATTERN "*.tcc")
 SET_TARGET_PROPERTIES(coda PROPERTIES VERSION 0.1 SOVERSION 1)
 
+ADD_EXECUTABLE (dic_compiler tests/MAFSA/dic_compiler.cpp tests/MAFSA/dic_adapter.c)
+TARGET_LINK_LIBRARIES (dic_compiler MAFSA)
+ADD_EXECUTABLE (dic_finder tests/MAFSA/dic_finder.c tests/MAFSA/dic_adapter.c)
+TARGET_LINK_LIBRARIES (dic_finder MAFSA)
+
