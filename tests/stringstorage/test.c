@@ -1,5 +1,6 @@
-#include <coda/stringstorage.h>
 #include <stdio.h>
+#include <stdint.h>
+#include <coda/stringstorage.h>
 
 static void mycb(void *user_data, const char *key, void *value)
 {
