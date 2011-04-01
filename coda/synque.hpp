@@ -69,6 +69,14 @@ public:
 
 		return 0;
 	}
+
+	size_t size()
+	{
+		pthread_mutex_lock(&m);
+		size_t sz = d.size();
+		pthread_mutex_unlock(&m);
+		return sz;
+	}
 };
 
 } /* namespace coda */
