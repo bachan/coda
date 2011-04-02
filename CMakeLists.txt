@@ -26,6 +26,9 @@ ADD_CUSTOM_COMMAND(TARGET uac_compiler POST_BUILD COMMAND ./uac_compiler ${coda_
 ADD_EXECUTABLE(uac_detect uac/uac_detect.cpp)
 TARGET_LINK_LIBRARIES(uac_detect uac coda MAFSA ${LIB_EXPAT})
 
+ADD_EXECUTABLE(test_stringstorage tests/stringstorage/test.c)
+TARGET_LINK_LIBRARIES(test_stringstorage coda)
+
 INSTALL(FILES uac/uac.h DESTINATION include/uac)
 INSTALL(TARGETS uac DESTINATION ${LIBDIR})
 INSTALL(TARGETS uacbase DESTINATION ${LIBDIR})
@@ -40,4 +43,9 @@ INSTALL(DIRECTORY coda/ DESTINATION include/coda FILES_MATCHING PATTERN "*.h")
 INSTALL(DIRECTORY coda/ DESTINATION include/coda FILES_MATCHING PATTERN "*.hpp")
 INSTALL(DIRECTORY coda/ DESTINATION include/coda FILES_MATCHING PATTERN "*.tcc")
 SET_TARGET_PROPERTIES(coda PROPERTIES VERSION 0.1 SOVERSION 1)
+
+ADD_EXECUTABLE (dic_compiler tests/MAFSA/dic_compiler.cpp tests/MAFSA/dic_adapter.c)
+TARGET_LINK_LIBRARIES (dic_compiler MAFSA)
+ADD_EXECUTABLE (dic_finder tests/MAFSA/dic_finder.c tests/MAFSA/dic_adapter.c)
+TARGET_LINK_LIBRARIES (dic_finder MAFSA)
 
