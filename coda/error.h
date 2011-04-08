@@ -14,8 +14,12 @@ extern "C" {
 static inline
 const char* coda_strerror_r(int err, char* data, size_t size)
 {
-	strerror_r(err, data, size);
-	return data;
+#if (_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && ! _GNU_SOURCE
+    if (0 != strerror_r(err, data, size)) return "XSI strerror_r returned error";
+    return data;  /* will be read from stack */
+#else
+    return strerror_r(err, data, size);
+#endif /* _POSIX_C_SOURCE >= ... */
 }
 
 #ifdef __cplusplus
