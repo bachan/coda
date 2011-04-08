@@ -16,7 +16,7 @@ const char* coda_strerror_r(int err, char* data, size_t size)
 {
 #ifndef __USE_GNU
     if (0 != strerror_r(err, data, size)) return "XSI strerror_r returned error";
-    return data;  /* will be read from stack */
+    return data;
 #else
     return strerror_r(err, data, size);
 #endif /* __USE_GNU */
