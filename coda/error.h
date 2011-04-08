@@ -19,7 +19,7 @@ const char* coda_strerror_r(int err, char* data, size_t size)
     return data;  /* will be read from stack */
 #else
     return strerror_r(err, data, size);
-#endif /* _POSIX_C_SOURCE >= ... */
+#endif /* __USE_GNU */
 }
 
 #ifdef __cplusplus
