@@ -22,6 +22,17 @@ int coda_set_sckopt(int s, int level, int key, int value)
 }
 
 static inline
+int coda_set_socket_timeout(int s, long timeout)
+{
+	struct timeval tv;
+
+	tv.tv_sec = 0;
+	tv.tv_usec = timeout;
+
+	return setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *) &tv, sizeof(tv));
+}
+
+static inline
 int coda_unix_send(int fd, void *data, size_t size)
 {
 	return send(fd, data, size, MSG_NOSIGNAL);
