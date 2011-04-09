@@ -29,7 +29,7 @@ int coda_set_socket_timeout(int s, long timeout)
 	tv.tv_sec = 0;
 	tv.tv_usec = timeout;
 
-	return setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *) &tv, sizeof(tv));
+	return setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *) &tv, sizeof(tv));
 }
 
 static inline
