@@ -14,7 +14,7 @@ extern "C" {
 static inline
 const char* coda_strerror_r(int err, char* data, size_t size)
 {
-#if defined __USE_XOPEN2K && !defined __USE_GNU
+#ifndef __USE_GNU
     if (0 != strerror_r(err, data, size)) return "XSI strerror_r returned error";
     return data;
 #else
