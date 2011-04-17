@@ -94,3 +94,30 @@ int coda_strnprintf(std::string& out, size_t pos, size_t num, const char* fmt, .
 	return bytes;
 }
 
+void coda_get_stringset(const char* str, std::set<std::string>& result)
+{
+	if (!str || !*str)
+	{
+		return;
+	}
+
+	const char* begin = str;
+	const char* i = str;
+	while (i)
+	{
+		i = strchr(i, ',');
+		if (i)
+		{
+			std::string temp(begin, i - begin);
+			result.insert(temp);
+			++i;
+		}
+		else
+		{
+			std::string temp(begin);
+			result.insert(temp);
+		}
+		begin = i;
+	}
+}
+
