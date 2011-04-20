@@ -10,5 +10,6 @@ int coda_strnappend(std::string& out, size_t num, const char* fmt, ...) CODA_FOR
 int coda_strnprintf(std::string& out, size_t pos, size_t num, const char* fmt, ...) CODA_FORMAT(printf, 4, 5);
 
 void coda_get_stringset(const char* str, std::set<std::string>& result);
+void coda_get_uint32set(const char* str, std::set<unsigned int>& result);
 
 #endif /* __CODA_STRING_HPP__ */

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdarg.h>
+#include <stdlib.h>
 #include "string.hpp"
 
 #define BUFSZ 32768
@@ -121,3 +122,17 @@ void coda_get_stringset(const char* str, std::set<std::string>& result)
 	}
 }
 
+void coda_get_uint32set(const char* str, std::set<unsigned int>& result)
+{
+	const char* i = str;
+	while (i)
+	{
+		unsigned int temp = strtoul(i, 0, 10);
+		result.insert(temp);
+		i = strchr(i, ',');
+		if (i)
+		{
+			++i;
+		}
+	}
+}
