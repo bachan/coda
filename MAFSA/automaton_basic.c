@@ -224,14 +224,10 @@ int MAFSA_automaton_find(MAFSA_automaton mautomaton, const MAFSA_letter *l, size
 			current = mautomaton->ptr_nodes[where];
 		} else break;
 	}
-	if (i == sz && node_is_final(current))
-	{
-		return 1;
-	}
-	else
-	{
-		return 0;
-	}
+	if (i < sz) return 0;
+	if (!where) return 0;
+	if (!node_is_final(current)) return 0;
+	return 1;
 }
 
 ssize_t MAFSA_automaton_search(MAFSA_automaton mautomaton, const MAFSA_letter *l, size_t sz, MAFSA_letter *out, size_t max_out_sz, size_t *out_sz)
