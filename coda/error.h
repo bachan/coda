@@ -14,8 +14,12 @@ extern "C" {
 static inline
 const char* coda_strerror_r(int err, char* data, size_t size)
 {
-	strerror_r(err, data, size);
-	return data;
+#if !defined(__USE_GNU) || defined(__FreeBSD__)
+    if (0 != strerror_r(err, data, size)) return "XSI strerror_r returned error";
+    return data;
+#else
+    return strerror_r(err, data, size);
+#endif /* __USE_GNU */
 }
 
 #ifdef __cplusplus
