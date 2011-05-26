@@ -104,60 +104,58 @@ static uint32_t table_urlenc [] =
 	0xffffffff  /* 1111 1111 1111 1111  1111 1111 1111 1111 */
 };
 
-size_t coda_urlenc(u_char* dst, const u_char* src, size_t sz_src)
+size_t coda_urlenc(char* dst, const char* src, size_t sz_src)
 {
-	if (dst == 0) return 0;
-
-	u_char* bdst = dst;
+	unsigned char* pdst = (unsigned char *) dst;
+	unsigned char* psrc = (unsigned char *) src;
 
 	for (size_t i = 0; i < sz_src; ++i)
 	{
-		if (table_urlenc[*src >> 5] & (1 << (*src & 0x1f)))
+		if (table_urlenc[*psrc >> 5] & (1 << (*psrc & 0x1f)))
 		{
-			*dst++ = '%';
-			*dst++ = table_hexval[*src >> 4];
-			*dst++ = table_hexval[*src & 0xf];
-			++src;
+			*pdst++ = '%';
+			*pdst++ = table_hexval[*psrc >> 4];
+			*pdst++ = table_hexval[*psrc & 0xf];
+			++psrc;
 		}
 		else
 		{
-			*dst++ = *src++;
+			*pdst++ = *psrc++;
 		}
 	}
 
-	*dst = 0;
+	*pdst = 0;
 
-	return dst - bdst;
+	return pdst - (unsigned char *) dst;
 }
 
-size_t coda_urldec(u_char* dst, const u_char* src, size_t sz_src)
+size_t coda_urldec(char* dst, const char* src, size_t sz_src)
 {
-	if (dst == 0) return 0;
+	unsigned char* pdst = (unsigned char *) dst;
+	const unsigned char* psrc = (const unsigned char *) src;
+	const unsigned char* esrc = (const unsigned char *) src + sz_src;
 
-	u_char* bdst = dst;        /* save begin state */
-	const u_char* bsrc = src;  /* save begin state */
-
-	while (src < bsrc + sz_src)
+	while (psrc < esrc)
 	{
-		if (*src == '%' && src < bsrc + sz_src - 2)
+		if (*psrc == '%' && psrc < esrc - 2)
 		{
-			*dst++ = table_urldec[*(src+1)] * 0x10 + table_urldec[*(src+2)] * 0x01;
-			src += 3;
+			*pdst++ = table_urldec[*(psrc+1)] * 0x10 + table_urldec[*(psrc+2)] * 0x01;
+			psrc += 3;
 		}
-		else if (*src == '+')
+		else if (*psrc == '+')
 		{
-			*dst++ = ' ';
-			++src;
+			*pdst++ = ' ';
+			++psrc;
 		}
 		else
 		{
-			*dst++ = *src++;
+			*pdst++ = *psrc++;
 		}
 	}
 
-	*dst = 0;
+	*pdst = 0;
 
-	return dst - bdst;
+	return pdst - (unsigned char *) dst;
 }
 
 void coda_url_escape(const char *s, char *dest, size_t sz)

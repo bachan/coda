@@ -103,8 +103,8 @@ int urlq_getopt_parse(int argc, char **argv, urlq_getopt_t *opts)
 
 int urlq_decode(const char *url, size_t sz, const urlq_getopt_t *opts CODA_UNUSED)
 {
-    u_char out [URLBUF];
-    coda_urldec(out, (u_char *) url, sz);
+    char out [URLBUF];
+    coda_urldec(out, url, sz);
 
     printf("%s\n", out);
     return 0;
@@ -112,8 +112,8 @@ int urlq_decode(const char *url, size_t sz, const urlq_getopt_t *opts CODA_UNUSE
 
 int urlq_encode(const char *url, size_t sz, const urlq_getopt_t *opts CODA_UNUSED)
 {
-    u_char out [ENCBUF];
-    coda_urlenc(out, (u_char *) url, sz);
+    char out [ENCBUF];
+    coda_urlenc(out, url, sz);
 
     printf("%s\n", out);
     return 0;
