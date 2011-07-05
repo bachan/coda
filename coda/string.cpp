@@ -95,6 +95,20 @@ int coda_strnprintf(std::string& out, size_t pos, size_t num, const char* fmt, .
 	return bytes;
 }
 
+bool coda_string_replace(std::string& str, const char* pattern, const char* replacement)
+{
+	size_t pos = str.find(pattern);
+
+	if (std::string::npos == pos)
+	{
+		return false;
+	}
+
+	str.replace(pos, strlen(pattern), replacement);
+
+	return true;
+}
+
 void coda_get_stringset(const char* str, std::set<std::string>& result)
 {
 	if (!str || !*str)
