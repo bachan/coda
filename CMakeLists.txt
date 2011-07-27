@@ -9,12 +9,7 @@ ADD_DEFINITIONS(-DARCH_FREEBSD)
 ENDIF(CMAKE_SYSTEM_NAME STREQUAL Linux)
 
 USE_PACKAGE (expat expat.h)
-
-ADD_LIBRARY(MAFSA STATIC MAFSA/automaton_basic.c)
-INSTALL(TARGETS MAFSA DESTINATION ${LIBDIR})
-INSTALL(DIRECTORY MAFSA/ DESTINATION include/MAFSA FILES_MATCHING PATTERN "*.h")
-INSTALL(DIRECTORY MAFSA/ DESTINATION include/MAFSA FILES_MATCHING PATTERN "*.hpp")
-INSTALL(DIRECTORY MAFSA/ DESTINATION include/MAFSA FILES_MATCHING PATTERN "*.tcc")
+USE_PACKAGE (MAFSA MAFSA/automaton.h)
 
 ADD_LIBRARY(uac STATIC uac/sla.c uac/uac.cpp uac/uac-base.c)
 ADD_LIBRARY(uacbase STATIC uac/sla.c uac/uac-base.c)
@@ -24,7 +19,7 @@ TARGET_LINK_LIBRARIES(uac_compiler uac coda ${LIB_EXPAT})
 ADD_CUSTOM_COMMAND(TARGET uac_compiler POST_BUILD COMMAND ./uac_compiler ${coda_SOURCE_DIR}/uac/uac.xml uac.automaton)
 
 ADD_EXECUTABLE(uac_detect uac/uac_detect.cpp)
-TARGET_LINK_LIBRARIES(uac_detect uac coda MAFSA ${LIB_EXPAT})
+TARGET_LINK_LIBRARIES(uac_detect uac coda ${LIB_MAFSA} ${LIB_EXPAT})
 
 ADD_EXECUTABLE(test_stringstorage tests/stringstorage/test.c)
 TARGET_LINK_LIBRARIES(test_stringstorage coda)
@@ -44,8 +39,8 @@ INSTALL(DIRECTORY coda/ DESTINATION include/coda FILES_MATCHING PATTERN "*.hpp")
 INSTALL(DIRECTORY coda/ DESTINATION include/coda FILES_MATCHING PATTERN "*.tcc")
 SET_TARGET_PROPERTIES(coda PROPERTIES VERSION 0.1 SOVERSION 1)
 
-ADD_EXECUTABLE (dic_compiler tests/MAFSA/dic_compiler.cpp tests/MAFSA/dic_adapter.c)
-TARGET_LINK_LIBRARIES (dic_compiler MAFSA)
-ADD_EXECUTABLE (dic_finder tests/MAFSA/dic_finder.c tests/MAFSA/dic_adapter.c)
-TARGET_LINK_LIBRARIES (dic_finder MAFSA)
+#ADD_EXECUTABLE (dic_compiler tests/MAFSA/dic_compiler.cpp tests/MAFSA/dic_adapter.c)
+#TARGET_LINK_LIBRARIES (dic_compiler MAFSA)
+#ADD_EXECUTABLE (dic_finder tests/MAFSA/dic_finder.c tests/MAFSA/dic_adapter.c)
+#TARGET_LINK_LIBRARIES (dic_finder MAFSA)
 

@@ -7,7 +7,7 @@
 #ifndef __EGRTGERTGERTV_SIMPLE_LATIN_ADAPTER_H__
 #define __EGRTGERTGERTV_SIMPLE_LATIN_ADAPTER_H__
 
-#include <MAFSA/charset_adapter.h>
+#include <MAFSA/adapter.h>
 
 /*
 

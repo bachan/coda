@@ -7,7 +7,7 @@
 #ifndef __NTYBNTBRGVRF_WORLDLANGUAGE_UTF8_CHARSET_ADAPTER_H__
 #define __NTYBNTBRGVRF_WORLDLANGUAGE_UTF8_CHARSET_ADAPTER_H__
 
-#include <MAFSA/charset_adapter.h>
+#include <MAFSA/adapter.h>
 
 /*
 
