@@ -1,7 +1,7 @@
 #ifndef __DIC_H__
 #define __DIC_H__
 
-#include <MAFSA/charset_adapter.h>
+#include <MAFSA/adapter.h>
 
 #define SIMPLE_LETTER_A            0
 #define SIMPLE_LETTER_Z           25

@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <MAFSA/automaton.h>
-#include <MAFSA/automaton_int.h>
 #include "dic.h"
 
 MAFSA_automaton a;

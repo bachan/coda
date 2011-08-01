@@ -134,7 +134,6 @@ int coda_daemon_stop(coda_getopt_t* opt)
  * SIGCHLD equivalent, so it was removed too.
  */
 
-#if defined(ARCH_LINUX)
 #define CODA_SIG_LIST(_,...) \
 /*  _(KILL   , evanescen, ##__VA_ARGS__) */ \
 /*  _(STOP   , evanescen, ##__VA_ARGS__) */ \
@@ -157,7 +156,7 @@ int coda_daemon_stop(coda_getopt_t* opt)
     _(TSTP   , ignoremsg, ##__VA_ARGS__)    \
     _(TTIN   , ignoremsg, ##__VA_ARGS__)    \
     _(TTOU   , ignoremsg, ##__VA_ARGS__)    \
-    _(POLL   , ignoremsg, ##__VA_ARGS__)    \
+/*  _(POLL   , ignoremsg, ##__VA_ARGS__) */ \
     _(PROF   , ignoremsg, ##__VA_ARGS__)    \
     _(SYS    , ignoremsg, ##__VA_ARGS__)    \
     _(TRAP   , ignoremsg, ##__VA_ARGS__)    \
@@ -165,52 +164,13 @@ int coda_daemon_stop(coda_getopt_t* opt)
     _(VTALRM , ignoremsg, ##__VA_ARGS__)    \
     _(XCPU   , ignoremsg, ##__VA_ARGS__)    \
     _(XFSZ   , ignoremsg, ##__VA_ARGS__)    \
-    _(STKFLT , ignoremsg, ##__VA_ARGS__)    \
+/*  _(STKFLT , ignoremsg, ##__VA_ARGS__) */ \
 /*  _(IO     , ignoremsg, ##__VA_ARGS__) */ \
 /*  _(CLD    , ignoremsg, ##__VA_ARGS__) */ \
-    _(PWR    , ignoremsg, ##__VA_ARGS__)    \
+/*  _(PWR    , ignoremsg, ##__VA_ARGS__) */ \
     _(WINCH  , ignoremsg, ##__VA_ARGS__)    \
 /*  _(UNUSED , ignoremsg, ##__VA_ARGS__) */ \
 /*  _(EMT    , ignoremsg, ##__VA_ARGS__) */
-#elif defined(ARCH_FREEBSD)
-#define CODA_SIG_LIST(_,...) \
-/*  _(KILL   , evanescen, ##__VA_ARGS__) */ \
-/*  _(STOP   , evanescen, ##__VA_ARGS__) */ \
-/*  _(ILL    , dangerous, ##__VA_ARGS__) */ \
-/*  _(ABRT   , dangerous, ##__VA_ARGS__) */ \
-/*  _(FPE    , dangerous, ##__VA_ARGS__) */ \
-/*  _(SEGV   , dangerous, ##__VA_ARGS__) */ \
-/*  _(BUS    , dangerous, ##__VA_ARGS__) */ \
-/*  _(IOT    , dangerous, ##__VA_ARGS__) */ \
-    _(HUP    , changecfg, ##__VA_ARGS__)    \
-    _(INT    , terminate, ##__VA_ARGS__)    \
-    _(TERM   , terminate, ##__VA_ARGS__)    \
-    _(USR1   , rotatelog, ##__VA_ARGS__)    \
-    _(USR2   , changebin, ##__VA_ARGS__)    \
-    _(ALRM   , ignoremsg, ##__VA_ARGS__)    \
-    _(QUIT   , ignoremsg, ##__VA_ARGS__)    \
-    _(PIPE   , ignoremsg, ##__VA_ARGS__)    \
-    _(CHLD   , ignoremsg, ##__VA_ARGS__)    \
-    _(CONT   , ignoremsg, ##__VA_ARGS__)    \
-    _(TSTP   , ignoremsg, ##__VA_ARGS__)    \
-    _(TTIN   , ignoremsg, ##__VA_ARGS__)    \
-    _(TTOU   , ignoremsg, ##__VA_ARGS__)    \
-    _(PROF   , ignoremsg, ##__VA_ARGS__)    \
-    _(SYS    , ignoremsg, ##__VA_ARGS__)    \
-    _(TRAP   , ignoremsg, ##__VA_ARGS__)    \
-    _(URG    , ignoremsg, ##__VA_ARGS__)    \
-    _(VTALRM , ignoremsg, ##__VA_ARGS__)    \
-    _(XCPU   , ignoremsg, ##__VA_ARGS__)    \
-    _(XFSZ   , ignoremsg, ##__VA_ARGS__)    \
-/*  _(IO     , ignoremsg, ##__VA_ARGS__) */ \
-/*  _(CLD    , ignoremsg, ##__VA_ARGS__) */ \
-    _(WINCH  , ignoremsg, ##__VA_ARGS__)    \
-/*  _(UNUSED , ignoremsg, ##__VA_ARGS__) */ \
-/*  _(EMT    , ignoremsg, ##__VA_ARGS__) */
-#else
-#error "Unknown model!"
-#endif
-
 
 #define CODA_SIG_CASE(name,hand) case SIG##name: log_notice(QUOTES_NAME(SIG##name)"("QUOTES_DATA(SIG##name)"): "#hand); CODA_SIG_CASE_##hand; break;
 #define CODA_SIG_CASE_DEFAULT(n) default: log_notice("DEFAULT CASE in coda_signal_handle(%d) - sigaction is not defined", n); break;
