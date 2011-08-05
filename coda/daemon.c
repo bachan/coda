@@ -175,6 +175,15 @@ int coda_daemon_stop(coda_getopt_t* opt)
 #define CODA_SIG_CASE(name,hand) case SIG##name: log_notice(QUOTES_NAME(SIG##name)"("QUOTES_DATA(SIG##name)"): "#hand); CODA_SIG_CASE_##hand; break;
 #define CODA_SIG_CASE_DEFAULT(n) default: log_notice("DEFAULT CASE in coda_signal_handle(%d) - sigaction is not defined", n); break;
 #define CODA_SIG_INIT(name,hand,glob_hand) if (SIG_ERR == signal((SIG##name), (glob_hand))) return -1;
+
+#define CODA_SIG_INIT_NORESTART(name,hand,glob_hand) do { \
+    struct sigaction sa;                                  \
+    if (0 > sigaction((SIG##name), NULL, &sa)) return -1; \
+    sa.sa_flags &= ~SA_RESTART;                           \
+    sa.sa_handler = (glob_hand);                          \
+    if (0 > sigaction((SIG##name), &sa, NULL)) return -1; \
+} while (0);
+
 #define CODA_SIG_MASK(name,hand,sset,mask) if (((mask) & (1 << (SIG##name))) && 0 > sigaddset(&(sset),(SIG##name))) return -1;
 #define CODA_SIG_CASE_terminate coda_terminate = 1
 #define CODA_SIG_CASE_changecfg coda_changecfg = 1
@@ -201,6 +210,12 @@ int coda_signal_init()
 {
     CODA_SIG_LIST(CODA_SIG_INIT, coda_signal_handle)
     return 0;
+}
+
+int coda_signal_init_norestart()
+{
+	CODA_SIG_LIST(CODA_SIG_INIT_NORESTART, coda_signal_handle);
+	return 0;
 }
 
 int coda_signal_mask(int how, unsigned mask)

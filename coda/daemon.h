@@ -31,6 +31,7 @@ extern volatile int coda_rotatelog;
 extern volatile int coda_changebin;
 
 int coda_signal_init();
+int coda_signal_init_norestart();
 int coda_signal_mask(int how, unsigned mask);
 
 #ifdef __cplusplus
