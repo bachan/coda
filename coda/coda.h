@@ -45,7 +45,7 @@
 typedef struct
 {
 	size_t size;
-	void* data;
+	char * data;
 } strt, *strp;
 
 /* #define coda_string(str) { sizeof(str) - 1, (uchp) str } */
