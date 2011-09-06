@@ -1,6 +1,7 @@
 #ifndef __CODA_ERROR_H__
 #define __CODA_ERROR_H__
 
+#include <alloca.h>
 #include <string.h>
 
 #ifdef __cplusplus
