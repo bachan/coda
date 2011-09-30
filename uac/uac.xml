@@ -145,7 +145,10 @@
 	</det>
 	
 	<det type="1" id="160" title="iPhone">
-		<catch_string>iPhone OS</catch_string>
+		<catch_string>iPhone</catch_string>
+	</det>
+	<det type="1" id="161" title="iPad">
+		<catch_string>iPad</catch_string>
 	</det>
 	
 	<det type="1" id="192" title="Android">
@@ -191,6 +194,10 @@
 		<catch_string>MSIE 9.0</catch_string>
 	</det>
 
+	<det type="2" id="23" title="IE 10.0">
+		<catch_string>MSIE 10.0</catch_string>
+	</det>
+
 	<!-- 64 ... 127 - Mozilla based -->
 	<det type="2" id="64" title="Mozilla-based" />
 
@@ -198,16 +205,22 @@
 		<catch_string>Firefox/0.</catch_string>
 	</det>
 	<det type="2" id="66" title="Firefox 1">
-		<catch_string>Firefox 1</catch_string>
+		<catch_string>Firefox/1.</catch_string>
 	</det>
 	<det type="2" id="67" title="Firefox 2">
-		<catch_string>Firefox 2</catch_string>
+		<catch_string>Firefox/2.</catch_string>
 	</det>
 	<det type="2" id="68" title="Firefox 3">
-		<catch_string>Firefox 3</catch_string>
+		<catch_string>Firefox/3</catch_string>
 	</det>
 	<det type="2" id="69" title="Firefox 4">
-		<catch_string>Firefox 4</catch_string>
+		<catch_string>Firefox/4</catch_string>
+	</det>
+	<det type="2" id="70" title="Firefox 5">
+		<catch_string>Firefox/5</catch_string>
+	</det>
+	<det type="2" id="71" title="Firefox 6">
+		<catch_string>Firefox/6</catch_string>
 	</det>
 
 	<!-- 128 .. 159 - Opera -->
@@ -221,7 +234,7 @@
 	</det>
 
 	<det type="2" id="130" title="Opera 8.x">
-		<catch_string>Opera/8.</catch_string>
+		<catch_string>Opera/8</catch_string>
 	</det>
 
 	<det type="2" id="131" title="Opera 9.x">
@@ -229,7 +242,7 @@
 	</det>
 
 	<det type="2" id="132" title="Opera 10.x">
-		<catch_string>Opera/10.</catch_string>
+		<catch_string>Opera/10</catch_string>
 	</det>
 
 	<!-- 160 ... 179 - KHTML-based -->
@@ -257,9 +270,24 @@
 		<catch_string>Chrome/5</catch_string>
 		<catch_string>Chrome/4</catch_string>
 		<catch_string>Chrome/3</catch_string>
-		<catch_string>Chrome/2</catch_string>
+		<catch_string>Chrome/2.</catch_string>
 		<catch_string>Chrome/1.</catch_string>
 		<catch_string>Chrome/0</catch_string>
+	</det>
+	<det type="2" id="185" title="Google Chrome 11.x">
+		<catch_string>Chrome/11</catch_string>
+	</det>
+	<det type="2" id="186" title="Google Chrome 12.x">
+		<catch_string>Chrome/12</catch_string>
+	</det>
+	<det type="2" id="187" title="Google Chrome 13.x">
+		<catch_string>Chrome/13</catch_string>
+	</det>
+	<det type="2" id="188" title="Google Chrome 14.x">
+		<catch_string>Chrome/14</catch_string>
+	</det>
+	<det type="2" id="189" title="Google Chrome 15.x">
+		<catch_string>Chrome/15</catch_string>
 	</det>
 
 	<det type="3" id="1" title="Sputnik@mail.ru">
