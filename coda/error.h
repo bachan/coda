@@ -1,7 +1,9 @@
 #ifndef __CODA_ERROR_H__
 #define __CODA_ERROR_H__
 
+#ifndef __FreeBSD__
 #include <alloca.h>
+#endif /* __FreeBSD__ */
 #include <string.h>
 
 #ifdef __cplusplus
