@@ -101,3 +101,45 @@ uint32_t uac_determine(const char *s)
 	return (ret & 0xFFFFFFFF);
 }
 
+uint32_t uac_determine_binary(const char *s, size_t sz)
+{
+	uint64_t ret = 0;
+
+	MAFSA_letter tmp[1024];
+	MAFSA_letter l[1024];
+	ssize_t ssz;
+
+	int has_windows_ce = ((ret & ((uint64_t)1 << 33)) != 0);
+	int has_windows = ((ret & ((uint64_t)1 << 35)) != 0);
+	int has_msie = ((ret & ((uint64_t)1 << 34)) != 0);
+
+	ssz = conv_b2l_sla(s, sz, l, 1024);
+	MAFSA_automaton_search_enumerate(uac_ma, l, ssz, tmp, 1024, &ret, MAX_LETTER_SLA, uac_determine_callback);
+
+	/* Linux bit */
+	if (((ret & 0xFF) == 0) && ((ret & ((uint64_t)1 << 32)) != 0)) ret |= 80;
+
+	/* msie bit */
+	if (((ret & 0xFF00) == 0) && ((ret & ((uint64_t)1 << 34)) != 0)) ret |= 16 << 8;
+
+	/* no browser 0x1F (IE) if Opera exists */
+	if (((ret & 0xF000) == 0x1000) && ((ret & ((uint64_t)1 << 38)) != 0)) ret = (ret & 0xFFFF00FF) + 0x8000;
+
+	/* opera bit */
+	if (((ret & 0xFF00) == 0) && ((ret & ((uint64_t)1 << 38)) != 0)) ret |= (128 << 8);
+
+	/* no Safari if Chrome exists */
+	if ((ret & ((uint64_t)1 << 39)) != 0) ret = (ret & 0xFFFF00FF) + 0xA300;
+
+	/* windows ce bit */
+	if (((ret & 0xFF) == 0) && has_windows_ce) ret |= 128;
+
+	/* windows bit */
+	if (((ret & 0xFF) == 0) && has_windows) ret |= 32;
+
+	/* msie bit */
+	if (((ret & 0xFF) == 0) && has_msie) ret |= 32;
+
+	return (ret & 0xFFFFFFFF);
+}
+

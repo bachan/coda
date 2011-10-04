@@ -25,7 +25,10 @@ extern "C" {
 
 ssize_t conv_s2l_sla(const char *s, MAFSA_letter *l, size_t sz);
 size_t conv_l2s_sla(const MAFSA_letter *l, size_t sz_l, char *s, size_t sz_s);
-	
+
+ssize_t conv_b2l_sla(const char *s, size_t sz_s, MAFSA_letter *l, size_t sz_l);
+size_t conv_l2b_sla(const MAFSA_letter *l, size_t sz_l, char *s, size_t sz_s);
+
 #ifdef __cplusplus
 }
 #endif
