@@ -111,6 +111,84 @@ public:
 
 	void lock_write_rw();
 	void unlock_write_rw();
+
+	struct const_iterator
+	{
+		uint32_t* hash;
+		uint32_t position_in_hash;
+		node* pool;
+		uint32_t position_in_pool;
+
+		const_iterator(uint32_t* _hash, uint32_t _position_in_hash, node* _pool, uint32_t _position_in_pool)
+			: hash(_hash)
+			, position_in_hash(_position_in_hash)
+			, pool(_pool)
+			, position_in_pool(_position_in_pool)
+		{
+		}
+
+		bool operator!= (const const_iterator& rhs)
+		{
+			return (position_in_hash != rhs.position_in_hash || position_in_pool != rhs.position_in_pool);
+		}
+
+		const_iterator& operator++()
+		{
+			if (pool[position_in_pool].next != (uint32_t)(-1))
+			{
+				position_in_pool = pool[position_in_pool].next;
+			}
+			else
+			{
+				uint32_t i;
+				for (i = position_in_hash + 1; i < _HASH_SIZE; ++i)
+				{
+					if (hash[i] != (uint32_t)(-1))
+					{
+						position_in_hash = i;
+						position_in_pool = hash[i];
+						break;
+					}
+				}
+				if (i == _HASH_SIZE)
+				{
+					position_in_hash = -1;
+					position_in_pool = -1;
+				}
+			}
+
+			return *this;
+		}
+
+		uint64_t key()
+		{
+			return pool[position_in_pool].p.key;
+		}
+
+		const _Type& value()
+		{
+			return pool[position_in_pool].p.value;
+		}
+	};
+
+	const_iterator begin()
+	{
+		for (uint32_t i = 0; i < _HASH_SIZE; ++i)
+		{
+			uint32_t el = hash[i];
+			if (el != (uint32_t)(-1))
+			{
+				return const_iterator(hash, i, objects, el);
+			}
+		}
+
+		return const_iterator(hash, -1, objects, -1);
+	}
+
+	const_iterator end()
+	{
+		return const_iterator(hash, -1, objects, -1);
+	}
 };
 
 }
