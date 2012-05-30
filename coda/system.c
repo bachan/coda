@@ -72,7 +72,7 @@ int coda_mkpidf(const char* path)
  * See, mmap(2).
  */
 
-int coda_mmap(strp area, int prot_flags, int mmap_flags, const char* filename)
+int coda_mmap(coda_strp area, int prot_flags, int mmap_flags, const char* filename)
 {
 	int fd;
 	int open_flags;

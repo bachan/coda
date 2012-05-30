@@ -1,99 +1,16 @@
-namespace shm_queue {
-
-	enum T
-	{
-		BOX_SIZE = 8192,
-		MAX_BOXES_IN_QUEUE = 1000, // 8192,
-
-  		SEM_ID_0 = 0,
-		SEM_ID_QUEUE_COUNT = 1
-	};
-
-} /* namespace shm_queue */
+#define SEM_ID_0 0
+#define SEM_ID_QUEUE_COUNT 1
 
 template <typename _T>
-shm_queue::reader<_T>::box::box()
+shm_queue::queue<_T>::box::box()
 {
 	ptr = NULL;
-	r_pos = 0;
+	pos = 0;
 	size  = 0;
 }
 
 template <typename _T>
-shm_queue::reader<_T>::box::~box()
-{
-	if(ptr)
-	{
-		deallocate();
-	}
-}
-
-template <typename _T>
-void shm_queue::reader<_T>::box::allocate(size_t sz)
-{
-	ptr = new u_int8_t[sz];
-	memset(ptr, 0, sz);
-	size = sz;
-	r_pos = 0;
-}
-
-template <typename _T>
-void shm_queue::reader<_T>::box::deallocate()
-{
-	if (0 != ptr)
-	{
-		delete[] ptr;
-
-		ptr = 0;
-		size = 0;
-		r_pos = 0;
-	}
-}
-
-template <typename _T>
-void shm_queue::reader<_T>::box::copy_from(void * p)
-{
-	memcpy (ptr, p, size);
-	r_pos = 0;
-}
-
-template <typename _T>
-void shm_queue::reader<_T>::box::clear()
-{
-	memset (ptr, 0, size);
-	r_pos = 0;
-}
-
-template <typename _T>
-bool shm_queue::reader<_T>::box::get(_T& h)
-{
-	if(h.deserialize(ptr + r_pos))
-	{
-		r_pos += h.size();
-
-		return true;
-	}
-	else
-	{
-		return false;
-	}
-}
-template <typename _T>
-bool shm_queue::reader<_T>::box::is_space_for(const _T &h)
-{
-	return (r_pos + h.size() <= size);
-}
-//------------------------------------------------------------------------
-template <typename _T>
-shm_queue::writer<_T>::box::box()
-{
-	ptr = NULL;
-	w_pos = 0;
-	size  = 0;
-}
-
-template <typename _T>
-shm_queue::writer<_T>::box::~box ()
+shm_queue::queue<_T>::box::~box()
 {
 	if (ptr)
 	{
@@ -102,121 +19,140 @@ shm_queue::writer<_T>::box::~box ()
 }
 
 template <typename _T>
-void shm_queue::writer<_T>::box::allocate(size_t sz)
+void shm_queue::queue<_T>::box::allocate(size_t sz)
 {
-	ptr = new u_int8_t[sz];
+	ptr = new uint8_t [sz];
 	memset(ptr, 0, sz);
 	size = sz;
-	w_pos = 0;
+	pos = 0;
 }
 
 template <typename _T>
-void shm_queue::writer<_T>::box::deallocate()
+void shm_queue::queue<_T>::box::deallocate()
 {
-	if (0 != ptr)
+	if (ptr)
 	{
-		delete[] ptr;
+		delete [] ptr;
 
 		ptr = 0;
 		size = 0;
-		w_pos = 0;
+		pos = 0;
 	}
 }
 
 template <typename _T>
-void shm_queue::writer<_T>::box::clear()
+void shm_queue::queue<_T>::box::copy_from(void * p)
 {
-	memset (ptr, 0, size);
-	w_pos = 0;
+	memcpy(ptr, p, size);
+	pos = 0;
 }
 
 template <typename _T>
-void shm_queue::writer<_T>::box::copy_to(void * p) const
+void shm_queue::queue<_T>::box::copy_to(void * p) const
 {
-	memcpy (p, ptr, size);
+	memcpy(p, ptr, size);
 }
 
 template <typename _T>
-bool shm_queue::writer<_T>::box::put(const _T & h)
+void shm_queue::queue<_T>::box::clear()
 {
-	size_t sz = h.size();
+	memset(ptr, 0, size);
+	pos = 0;
+}
 
- 	//printf("box::put\n   w_pos:%d h.size():%d box.size: %d\n", w_pos, sz, size);
-
-	if(is_space_for(h) && h.serialize(ptr + w_pos))
+template <typename _T>
+bool shm_queue::queue<_T>::box::get(_T& h)
+{
+	if (h.deserialize(ptr + pos))
 	{
-		w_pos += sz;
-		//printf("/box::put  TRUE\n");
+		pos += h.size();
 		return true;
 	}
 	else
 	{
-		//printf("/box::put  false\n");
 		return false;
 	}
 }
+
 template <typename _T>
-bool shm_queue::writer<_T>::box::is_space_for(const _T & h)
+bool shm_queue::queue<_T>::box::put(const _T & h)
 {
-	return (w_pos + h.size() <= size);
-}
-//------------------------------------------------------------------------
-template <typename _T>
-shm_queue::reader<_T>::reader() : info(0), boxes(0), sem_id(-1), shm_id(-1)
-{
-}
-template <typename _T>
-shm_queue::reader<_T>::~reader()
-{
-	if(boxes)
+	size_t sz = h.size();
+
+	if (is_space_for(h) && h.serialize(ptr + pos))
 	{
-		disconnect_shm();
+		pos += sz;
+		return true;
+	}
+	else
+	{
+		return false;
 	}
 }
+
 template <typename _T>
-void shm_queue::reader<_T>::connect_shm(const char *key_fname)
+bool shm_queue::queue<_T>::box::is_space_for(const _T &h)
 {
-	if(boxes)
+	return (pos + h.size() <= size);
+}
+
+template <typename _T>
+shm_queue::queue<_T>::queue()
+	: info(0)
+	, boxes(0)
+	, sem_id(-1)
+	, shm_id(-1)
+	, BOX_SIZE(0)
+	, MAX_BOXES_IN_QUEUE(0)
+{
+}
+
+template <typename _T>
+shm_queue::queue<_T>::~queue()
+{
+	if (boxes)
 	{
-		throw std::logic_error("shm_queue::reader<>: queue already connected");
+		disconnect();
+	}
+}
+
+template <typename _T>
+void shm_queue::queue<_T>::connect_shm(const char *key_fname)
+{
+	if (boxes)
+	{
+		throw coda_error("shm_queue::queue<>: queue already connected");
 	}
 
 	key_t key;
-	key = ftok(key_fname, 1);
-	if((key_t)(-1) == key)
-	{
-		char errbuf[1024];
-		snprintf(errbuf, 1024, "shm_queue::reader<>: error creating key from file '%s': %s", key_fname, strerror(errno));
 
-		throw std::logic_error(errbuf);
+	if ((key_t) -1 == (key = ftok(key_fname, 1)))
+	{
+		throw coda_error("shm_queue::queue<>: error creating key from file '%s': %s", key_fname, coda_strerror(errno));
 	}
 
 	int created = 0;
-	shm_id = shmget(key, MAX_BOXES_IN_QUEUE * BOX_SIZE + sizeof(queue_info), 0666);
-	if(-1 == shm_id)
+
+	if (-1 == (shm_id = shmget(key, MAX_BOXES_IN_QUEUE * BOX_SIZE + sizeof(queue_info), 0666)))
 	{
-		// not created? creating...
-		shm_id = shmget(key, MAX_BOXES_IN_QUEUE * BOX_SIZE + sizeof(queue_info), IPC_CREAT | 0666);
-		if (-1 == shm_id)
+		if (-1 == (shm_id = shmget(key, MAX_BOXES_IN_QUEUE * BOX_SIZE + sizeof(queue_info), IPC_CREAT | 0666))) // not created? creating...
 		{
-			char errbuf[1024];
-			snprintf(errbuf, 1024, "shm_queue::reader<>: error creating queue shm: %s", strerror(errno));
-			throw std::logic_error(errbuf);
+			throw coda_error("shm_queue::queue<>: error creating queue shm: %s", coda_strerror(errno));
 		}
+
 		created = 1;
 	}
 
-	u_int8_t * ptr = (u_int8_t *)shmat(shm_id, 0, 0);
-	if((void*)(-1) == ptr)
-	{
-		char errbuf[1024];
-		snprintf(errbuf, 1024, "shm_queue::reader<>: error attaching queue shmem: %s", strerror(errno));
+	uint8_t *ptr = (uint8_t *) shmat(shm_id, 0, 0);
 
-		throw std::logic_error(errbuf);
+	if ((void*) -1 == ptr)
+	{
+		throw coda_error("shm_queue::queue<>: error attaching queue shmem: %s", coda_strerror(errno));
 	}
 
-	info = (shm_queue::queue_info*)ptr;
-	if(created)
+	info = (shm_queue::queue_info *) ptr;
+
+	if (created)
 	{
 		memset(ptr, 0, MAX_BOXES_IN_QUEUE * BOX_SIZE + sizeof(queue_info));
 		info->box_size = BOX_SIZE;
@@ -224,24 +160,23 @@ void shm_queue::reader<_T>::connect_shm(const char *key_fname)
 	}
 
 	ptr += sizeof(shm_queue::queue_info);
-	if((BOX_SIZE != info->box_size) || (MAX_BOXES_IN_QUEUE != info->size))
+
+	if ((BOX_SIZE != info->box_size) || (MAX_BOXES_IN_QUEUE != info->size))
 	{
-		char errbuf[1024];
-		snprintf(errbuf, 1024, "box_size(%d) in queue is not equal to %d", info->box_size, BOX_SIZE);
 		shmdt(info);
 		info = 0;
 
-		throw std::logic_error(errbuf);
+		throw coda_error("box_size(%d) in queue is not equal to %d", info->box_size, BOX_SIZE);
 	}
-	boxes = ptr;
 
-	current_read_box.allocate(BOX_SIZE);
+	boxes = ptr;
+	current_box.allocate(BOX_SIZE);
 }
 
 template <typename _T>
-void shm_queue::reader<_T>::reset_queue()
+void shm_queue::queue<_T>::reset_queue()
 {
-	if(info)
+	if (info)
 	{
 		memset(info, 0, MAX_BOXES_IN_QUEUE * BOX_SIZE + sizeof(queue_info));
 		info->box_size = BOX_SIZE;
@@ -250,70 +185,63 @@ void shm_queue::reader<_T>::reset_queue()
 }
 
 template <typename _T>
-void shm_queue::reader<_T>::connect_sem(const char *key_fname)
+void shm_queue::queue<_T>::connect_sem(const char *key_fname)
 {
-	if(-1 != sem_id)
+	if (-1 != sem_id)
 	{
-		throw std::logic_error("<shm_queue::reader> sem already connected");
+		throw coda_error("<shm_queue::queue> sem already connected");
 	}
 
 	key_t key;
-	key = ftok(key_fname, 1);
-	if((key_t)(-1) == key)
-	{
-		char errbuf[1024];
-		snprintf(errbuf, 1024, "shm_queue::reader<>: error creating key from file '%s': %s", key_fname, strerror(errno));
 
-		throw std::logic_error(errbuf);
+	if ((key_t) -1 == (key = ftok(key_fname, 1)))
+	{
+		throw coda_error("shm_queue::queue<>: error creating key from file '%s': %s", key_fname, coda_strerror(errno));
 	}
 
-	sem_id = semget(key, 2, 0);
-	if(-1 == sem_id)
+	if (-1 == (sem_id = semget(key, 2, 0)))
 	{
-		sem_id = semget(key, 2, IPC_CREAT | 0666);
-		if(-1 == sem_id)
+		if (-1 == (sem_id = semget(key, 2, IPC_CREAT | 0666)))
 		{
-			char errbuf[1024];
-			snprintf(errbuf, 1024, "shm_queue::reader<>:error getting sem: %s", strerror(errno));
-
-			throw std::logic_error(errbuf);
+			throw coda_error("shm_queue::queue<>:error getting sem: %s", coda_strerror(errno));
 		}
-		if(-1 == semctl(sem_id, SEM_ID_0, SETVAL, (1)))
-		{
-			char errbuf[1024];
-			snprintf(errbuf, 1024, "shm_queue::reader<>:error setting sem: %s", strerror(errno));
 
-			throw std::logic_error(errbuf);
-		}
-		if(semctl(sem_id, SEM_ID_QUEUE_COUNT, SETVAL, (0)) == -1)
+		if (-1 == semctl(sem_id, SEM_ID_0, SETVAL, (1)))
 		{
-			char errbuf[1024];
-			snprintf(errbuf, 1024, "shm_queue::reader<>:error setting sem: %s", strerror(errno));
-			throw std::logic_error(errbuf);
+			throw coda_error("shm_queue::queue<>:error setting sem: %s", coda_strerror(errno));
+		}
+
+		if (-1 == semctl(sem_id, SEM_ID_QUEUE_COUNT, SETVAL, (0)))
+		{
+			throw coda_error("shm_queue::queue<>:error setting sem: %s", coda_strerror(errno));
 		}
 	}
 }
 
 template <typename _T>
-void shm_queue::reader<_T>::disconnect_shm()
+void shm_queue::queue<_T>::disconnect()
 {
-	if(!info)
+	if (NULL == info)
+	{
 		return;
+	}
 
 	shmdt(info);
+	info = NULL;
+	boxes = NULL;
+	current_box.deallocate();
 	sem_id = -1;
 	shm_id = -1;
-	info = 0;
-	boxes = 0;
-	current_read_box.deallocate();
+	BOX_SIZE = 0;
+	MAX_BOXES_IN_QUEUE = 0;
 }
 
 template <typename _T>
-bool shm_queue::reader<_T>::get(_T &h)
+bool shm_queue::queue<_T>::get(_T &h)
 {
-	if(current_read_box.is_space_for(h))
+	if (current_box.is_space_for(h))
 	{
-		return current_read_box.get(h);
+		return current_box.get(h);
 	}
 	else
 	{
@@ -322,25 +250,24 @@ bool shm_queue::reader<_T>::get(_T &h)
 }
 
 template <typename _T>
-bool shm_queue::reader<_T>::unflush()
+bool shm_queue::queue<_T>::unflush()
 {
-	if(boxes)
+	if (boxes)
 	{
 		struct sembuf sem;
 		sem.sem_num = SEM_ID_QUEUE_COUNT;
 		sem.sem_op = -1;
 		sem.sem_flg = 0;
 
-		if(-1 == semop(sem_id, &sem, 1))
+		if (-1 == semop(sem_id, &sem, 1))
 		{
 			return false;
 		}
 
-
 		lock_queue();
 
-		u_int8_t *ptr = boxes + info->start * info->box_size;
-		current_read_box.copy_from(ptr);
+		uint8_t *ptr = boxes + info->start * info->box_size;
+		current_box.copy_from(ptr);
 		memset(ptr, 0, info->box_size);
 
 		info->start++;
@@ -355,248 +282,27 @@ bool shm_queue::reader<_T>::unflush()
 }
 
 template <typename _T>
-int shm_queue::reader<_T>::boxes_in_queue()const
+bool shm_queue::queue<_T>::put(const _T &h)
 {
-	return semctl(sem_id, SEM_ID_QUEUE_COUNT, GETVAL);
-}
-
-template <typename _T>
-void shm_queue::reader<_T>::set_register(u_int8_t offset, u_int32_t var)
-{
-	if(offset <  queue_info::registers_number)
-	{
-		lock_queue();
-
-		info->reserved[offset] = var;
-
-		unlock_queue();
-	}
-}
-
-template <typename _T>
-u_int32_t shm_queue::reader<_T>::get_register(u_int8_t offset)
-{
-	u_int32_t var = 0;
-
-	if(offset <  queue_info::registers_number)
-	{
-		lock_queue();
-
-		var = info->reserved[offset];
-
-		unlock_queue();
-	}
-
-	return var;
-}
-
-template <typename _T>
-u_int8_t shm_queue::reader<_T>::registers_number()const
-{
-	return queue_info::registers_number;
-}
-
-template <typename _T>
-u_int32_t shm_queue::reader<_T>::pages_used()const
-{
-	return semctl(sem_id, SEM_ID_QUEUE_COUNT, GETVAL, (0));
-}
-
-template <typename _T>
-void shm_queue::reader<_T>::lock_queue()
-{
-	struct sembuf sem;
-	sem.sem_num = SEM_ID_0;
-	sem.sem_op = -1;
-	sem.sem_flg = SEM_UNDO;
-
-	semop(sem_id, &sem, 1);
-}
-
-template <typename _T>
-void shm_queue::reader<_T>::unlock_queue()
-{
-	struct sembuf sem;
-	sem.sem_num = SEM_ID_0;
-	sem.sem_op = 1;
-	sem.sem_flg = SEM_UNDO;
-
-	semop(sem_id, &sem, 1);
-}
-
-//------------------------------------------------------------------------------------------------
-template <typename _T>
-shm_queue::writer<_T>::writer() : info(0), boxes(0), sem_id(-1), shm_id(-1)
-{
-}
-
-template <typename _T>
-shm_queue::writer<_T>::~writer()
-{
-	if(boxes)
-	{
-		disconnect_shm();
-	}
-}
-
-template <typename _T>
-void shm_queue::writer<_T>::connect_shm(const char *key_fname)
-{
-	if(boxes)
-	{
-		throw std::logic_error("shm_queue::writer<>: queue already connected");
-	}
-
-	key_t key;
-	key = ftok(key_fname, 1);
-	if((key_t)(-1) == key)
-	{
-		char errbuf[1024];
-		snprintf(errbuf, 1024, "shm_queue::writer<>: error creating key from file '%s': %s", key_fname, strerror(errno));
-
-		throw std::logic_error(errbuf);
-	}
-
-	int created = 0;
-	shm_id = shmget(key, MAX_BOXES_IN_QUEUE * BOX_SIZE + sizeof(queue_info), 0666);
-	if(-1 == shm_id)
-	{
-		// not created? creating...
-		shm_id = shmget(key, MAX_BOXES_IN_QUEUE * BOX_SIZE + sizeof(queue_info), IPC_CREAT | 0666);
-		if (-1 == shm_id)
-		{
-			char errbuf[1024];
-			snprintf(errbuf, 1024, "shm_queue::writer<>: error creating queue shm: %s", strerror(errno));
-
-			throw std::logic_error(errbuf);
-		}
-		created = 1;
-	}
-
-	u_int8_t *ptr = (u_int8_t *)shmat(shm_id, 0, 0);
-	if((void*)(-1) == ptr)
-	{
-		char errbuf[1024];
-		snprintf(errbuf, 1024, "shm_queue::writer<>: error attaching queue shmem: %s", strerror(errno));
-
-		throw std::logic_error(errbuf);
-	}
-
-	info = (shm_queue::queue_info*)ptr;
-	if(created)
-	{
-		memset(ptr, 0, MAX_BOXES_IN_QUEUE * BOX_SIZE + sizeof(queue_info));
-		info->box_size = BOX_SIZE;
-		info->size = MAX_BOXES_IN_QUEUE;
-	}
-
-	ptr += sizeof(shm_queue::queue_info);
-	if((BOX_SIZE != info->box_size) || (MAX_BOXES_IN_QUEUE != info->size))
-	{
-		char errbuf[1024];
-		snprintf(errbuf, 1024, "shm_queue::writer<>: box_size(%d) in queue is not equal to %d", info->box_size, BOX_SIZE);
-		shmdt(info);
-		info = 0;
-
-		throw std::logic_error(errbuf);
-	}
-	boxes = ptr;
-
-	current_write_box.allocate(BOX_SIZE);
-}
-
-template <typename _T>
-void shm_queue::writer<_T>::reset_queue()
-{
-	if(info)
-	{
-		memset(info, 0, MAX_BOXES_IN_QUEUE * BOX_SIZE + sizeof(queue_info));
-		info->box_size = BOX_SIZE;
-		info->size = MAX_BOXES_IN_QUEUE;
-	}
-}
-
-template <typename _T>
-void shm_queue::writer<_T>::connect_sem(const char *key_fname)
-{
-	if(-1 != sem_id)
-	{
-		throw std::logic_error("shm_queue::writer<>: sem already connected");
-	}
-
-	key_t key;
-	key = ftok(key_fname, 1);
-	if((key_t)(-1) == key)
-	{
-		char errbuf[1024];
-		snprintf(errbuf, 1024, "shm_queue::writer<>: error creating key from file '%s': %s", key_fname, strerror(errno));
-
-		throw std::logic_error(errbuf);
-	}
-
-	sem_id = semget(key, 2, 0);
-	if(sem_id == -1)
-	{
-		sem_id = semget(key, 2, IPC_CREAT | 0666);
-		if(sem_id == -1)
-		{
-			char errbuf[1024];
-			snprintf(errbuf, 1024, "shm_queue::writer<>: error getting sem: %s", strerror(errno));
-			throw std::logic_error(errbuf);
-		}
-
-		if(semctl(sem_id, SEM_ID_0, SETVAL, (1)) == -1)
-		{
-			char errbuf[1024];
-			snprintf(errbuf, 1024, "shm_queue::writer<>: error setting sem: %s", strerror(errno));
-			throw std::logic_error(errbuf);
-		}
-		if(semctl(sem_id, SEM_ID_QUEUE_COUNT, SETVAL, (0)) == -1)
-		{
-			char errbuf[1024];
-			snprintf(errbuf, 1024, "shm_queue::writer<>: error setting sem: %s", strerror(errno));
-			throw std::logic_error(errbuf);
-		}
-	}
-}
-
-template <typename _T>
-void shm_queue::writer<_T>::disconnect_shm()
-{
-	if(!info)
-		return;
-
-	shmdt(info);
-
-	info = 0;
-	boxes = 0;
-	current_write_box.deallocate();
-	sem_id = -1;
-	shm_id = -1;
-}
-
-template <typename _T>
-bool shm_queue::writer<_T>::put(const _T &h)
-{
-	if(current_write_box.put(h))
+	if (current_box.put(h))
 	{
 		return true;
 	}
 
 	flush();
-	return current_write_box.put(h);
+	return current_box.put(h);
 }
 
 template <typename _T>
-void shm_queue::writer<_T>::flush()
+void shm_queue::queue<_T>::flush()
 {
-	if(boxes)
+	if (boxes)
 	{
 		lock_queue();
-		if((info->end + 1) % info->size != info->start)
+		if ((info->end + 1) % info->size != info->start)
 		{
-			u_int8_t *ptr = boxes + info->end * info->box_size;
-			current_write_box.copy_to(ptr);
+			uint8_t *ptr = boxes + info->end * info->box_size;
+			current_box.copy_to(ptr);
 			info->end++;
 			info->end %= info->size;
 
@@ -604,7 +310,6 @@ void shm_queue::writer<_T>::flush()
 			sem.sem_num = SEM_ID_QUEUE_COUNT;
 			sem.sem_op = 1;
 			sem.sem_flg = 0;
-
 			semop(sem_id, &sem, 1);
 		}
 		else
@@ -613,39 +318,35 @@ void shm_queue::writer<_T>::flush()
 		}
 		unlock_queue();
 	}
-	current_write_box.clear();
+	current_box.clear();
 }
 
 template <typename _T>
-int shm_queue::writer<_T>::boxes_in_queue()const
+int shm_queue::queue<_T>::boxes_in_queue()const
 {
 	return semctl(sem_id, SEM_ID_QUEUE_COUNT, GETVAL);
 }
 
 template <typename _T>
-void shm_queue::writer<_T>::set_register(u_int8_t offset, u_int32_t var)
+void shm_queue::queue<_T>::set_register(uint8_t offset, uint32_t var)
 {
-	if(offset <  queue_info::registers_number)
+	if (offset < queue_info::registers_number)
 	{
 		lock_queue();
-
 		info->reserved[offset] = var;
-
 		unlock_queue();
 	}
 }
 
 template <typename _T>
-u_int32_t shm_queue::writer<_T>::get_register(u_int8_t offset)
+uint32_t shm_queue::queue<_T>::get_register(uint8_t offset)
 {
-	u_int32_t var = 0;
+	uint32_t var = 0;
 
-	if(offset <  queue_info::registers_number)
+	if (offset < queue_info::registers_number)
 	{
 		lock_queue();
-
 		var = info->reserved[offset];
-
 		unlock_queue();
 	}
 
@@ -653,37 +354,34 @@ u_int32_t shm_queue::writer<_T>::get_register(u_int8_t offset)
 }
 
 template <typename _T>
-u_int8_t shm_queue::writer<_T>::registers_number()const
+uint8_t shm_queue::queue<_T>::registers_number()const
 {
 	return queue_info::registers_number;
 }
 
 template <typename _T>
-u_int32_t shm_queue::writer<_T>::pages_used()const
+uint32_t shm_queue::queue<_T>::pages_used()const
 {
 	return semctl(sem_id, SEM_ID_QUEUE_COUNT, GETVAL, (0));
 }
 
 template <typename _T>
-void shm_queue::writer<_T>::lock_queue()
+void shm_queue::queue<_T>::lock_queue()
 {
 	struct sembuf sem;
 	sem.sem_num = SEM_ID_0;
 	sem.sem_op = -1;
 	sem.sem_flg = SEM_UNDO;
-
 	semop(sem_id, &sem, 1);
 }
 
 template <typename _T>
-void shm_queue::writer<_T>::unlock_queue()
+void shm_queue::queue<_T>::unlock_queue()
 {
 	struct sembuf sem;
 	sem.sem_num = SEM_ID_0;
 	sem.sem_op = 1;
 	sem.sem_flg = SEM_UNDO;
-
 	semop(sem_id, &sem, 1);
 }
-
 

@@ -1,6 +1,10 @@
 #ifndef __CODA_H__
 #define __CODA_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if __GNUC__ >= 3
 #define CODA_INLINE      inline __attribute__ ((always_inline))
 #define CODA_NOINLINE           __attribute__ ((noinline))
@@ -42,14 +46,6 @@
 #endif
 
 #if 1 /* TODO discuss this one particular typedef, and more simple iovec analog with you know who */
-typedef struct
-{
-	size_t size;
-	char * data;
-} strt, *strp;
-
-/* #define coda_string(str) { sizeof(str) - 1, (uchp) str } */
-/* #define coda_null_string { 0, NULL } */
 #include <string.h>
 #define coda_clrptr(p)   memset((p),0,sizeof(*(p)))
 #define coda_clrvec(p,n) memset((p),0,sizeof(*(p))*(n))
@@ -60,5 +56,9 @@ typedef struct
 #define QUOTES_DATA(val) QUOTES_NAME(val)
 #define CONCAT_NAME(a,b) a##b
 #define CONCAT_DATA(a,b) CONCAT_NAME(a,b)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __CODA_H__ */
