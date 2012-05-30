@@ -219,6 +219,18 @@ void shm_queue::queue<_T>::connect_sem(const char *key_fname)
 }
 
 template <typename _T>
+void shm_queue::queue<_T>::connect(const char *key_fname, uint32_t bs, uint32_t mbiq)
+{
+	BOX_SIZE = bs;
+	MAX_BOXES_IN_QUEUE = mbiq;
+
+	connect_sem(key_fname);
+	lock_queue();
+	connect_shm(key_fname);
+	unlock_queue();
+}
+
+template <typename _T>
 void shm_queue::queue<_T>::disconnect()
 {
 	if (NULL == info)

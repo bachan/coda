@@ -1,7 +1,7 @@
 #ifndef __SHM_QUEUE_H__
 #define __SHM_QUEUE_H__
 
-#include <sys/types.h>
+#include <inttypes.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <sys/sem.h>
@@ -80,7 +80,7 @@ public:
 	queue();
 	~queue();
 
-	void connect(const char *shm_key, const char *sem_key, uint32_t bs = DEFAULT_BOX_SIZE, uint32_t mbiq = DEFAULT_MAX_BOXES_IN_QUEUE);
+	void connect(const char *key_fname, uint32_t bs = DEFAULT_BOX_SIZE, uint32_t mbiq = DEFAULT_MAX_BOXES_IN_QUEUE);
 	void disconnect();
 
 	bool get(_T &h);
