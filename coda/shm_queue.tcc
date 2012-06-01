@@ -262,16 +262,21 @@ bool shm_queue::queue<_T>::get(_T &h)
 }
 
 template <typename _T>
-bool shm_queue::queue<_T>::unflush()
+bool shm_queue::queue<_T>::unflush(short sem_flg, long sem_usec)
 {
 	if (boxes)
 	{
 		struct sembuf sem;
 		sem.sem_num = SEM_ID_QUEUE_COUNT;
 		sem.sem_op = -1;
-		sem.sem_flg = 0;
+		sem.sem_flg = sem_flg;
 
-		if (-1 == semop(sem_id, &sem, 1))
+		struct timespec ts;
+
+		ts.tv_sec  = (sem_usec / 1000000);
+		ts.tv_nsec = (sem_usec % 1000000) * 1000;
+
+		if (-1 == semtimedop(sem_id, &sem, 1, &ts))
 		{
 			return false;
 		}

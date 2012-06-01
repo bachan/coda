@@ -1,5 +1,5 @@
-#ifndef __SHM_QUEUE_H__
-#define __SHM_QUEUE_H__
+#ifndef __SHM_QUEUE_HPP__
+#define __SHM_QUEUE_HPP__
 
 #include <inttypes.h>
 #include <sys/ipc.h>
@@ -84,7 +84,7 @@ public:
 	void disconnect();
 
 	bool get(_T &h);
-	bool unflush();
+	bool unflush(short sem_flg = 0, long sem_usec = 100000);
 
 	bool put(const _T &h);
 	void flush();
