@@ -122,12 +122,13 @@ void coda_get_stringset(const char* str, std::set<std::string>& result)
 	}
 }
 
-void coda_get_uint32set(const char* str, std::set<unsigned int>& result)
+void coda_get_uint64set(const char* str, std::set<uint64_t>& result)
 {
 	const char* i = str;
 	while (i)
 	{
-		unsigned int temp = strtoul(i, 0, 10);
+		uint64_t temp;
+		sscanf(i, "%"PRIu64, &temp);
 		result.insert(temp);
 		i = strchr(i, ',');
 		if (i)
