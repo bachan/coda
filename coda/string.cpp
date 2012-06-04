@@ -5,17 +5,42 @@
 
 #define BUFSZ 32768
 
+#if 0
+int coda_strappend_HARDCORE(std::string& out, const char* fmt, ...)
+{
+	va_list ap;
+	va_start(ap, fmt);
+
+	out.resize(BUFSZ);
+
+	int bytes = vsnprintf((char *) out.data(), out.size(), fmt, ap);
+
+	if (out.size() <= bytes)
+	{
+		out.resize(bytes);
+		vsnprintf((char *) out.data(), out.size() + 1, fmt, ap);
+	}
+	else
+	{
+		out.resize(bytes);
+	}
+
+	return bytes;
+}
+#endif
+
 int coda_strappend(std::string& out, const char* fmt, ...)
 {
 	va_list ap;
 	va_start(ap, fmt);
 
 	int bytes;
-	char BUF[BUFSZ];
+	char *BUF = (char *) alloca(BUFSZ);
 
 	if (BUFSZ <= (bytes = vsnprintf(BUF, BUFSZ, fmt, ap)))
 	{
-		bytes = BUFSZ - 1;
+		BUF = (char *) alloca(bytes + 1);
+		vsnprintf(BUF, bytes + 1, fmt, ap);
 	}
 
 	out.append(BUF, bytes);
