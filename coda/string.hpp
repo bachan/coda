@@ -8,6 +8,8 @@
 #include <stdint.h>
 #include <set>
 
+std::string coda_strprintf(const char *fmt, ...) CODA_FORMAT(printf, 1, 2);
+
 int coda_strappend (std::string& out, const char* fmt, ...) CODA_FORMAT(printf, 2, 3);
 int coda_strnappend(std::string& out, size_t num, const char* fmt, ...) CODA_FORMAT(printf, 3, 4);
 int coda_strnprintf(std::string& out, size_t pos, size_t num, const char* fmt, ...) CODA_FORMAT(printf, 4, 5);

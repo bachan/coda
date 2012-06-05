@@ -29,6 +29,23 @@ int coda_strappend_HARDCORE(std::string& out, const char* fmt, ...)
 }
 #endif
 
+std::string coda_strprintf(const char *fmt, ...)
+{
+	va_list ap;
+	va_start(ap, fmt);
+
+	int bytes;
+	char *BUF = (char *) alloca(BUFSZ);
+
+	if (BUFSZ <= (bytes = vsnprintf(BUF, BUFSZ, fmt, ap)))
+	{
+		BUF = (char *) alloca(bytes + 1);
+		vsnprintf(BUF, bytes + 1, fmt, ap);
+	}
+
+	return BUF;
+}
+
 int coda_strappend(std::string& out, const char* fmt, ...)
 {
 	va_list ap;
