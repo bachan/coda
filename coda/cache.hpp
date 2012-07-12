@@ -16,9 +16,12 @@ class coda_cache
 		typename data_t::iterator prev;
 		typename data_t::iterator next;
 
+		size_t link; /* number of links to element */
+
 		elem_t(typename data_t::iterator i_prev, typename data_t::iterator i_next)
 			: prev(i_prev)
 			, next(i_next)
+			, link(0)
 		{
 		}
 	};
@@ -29,6 +32,8 @@ class coda_cache
 	typename data_t::iterator beg_it;
 	typename data_t::iterator end_it;
 
+	void drop_last_unused();
+
 public:
 	coda_cache(size_t i_size)
 		: size(i_size)
@@ -37,7 +42,9 @@ public:
 		end_it = data.end();
 	}
 
-	Val& get(const Key &key);
+	Val& acquire(const Key &key);
+	void release(const Key &key);
+
 	void dbg();
 };
 

@@ -2,11 +2,12 @@
 #include "cache.hpp"
 
 template <typename Key, typename Val>
-Val& coda_cache<Key, Val>::get(const Key &key)
+Val& coda_cache<Key, Val>::acquire(const Key &key)
 {
 	std::pair<typename data_t::iterator, bool> res;
 
 	res = data.insert(typename data_t::value_type(key, elem_t(data.end(), data.end())));
+	res.first->second.link++;
 
 //	log_info("cache::get size=%d, max_sz=%d", (int) data.size(), (int) max_sz);
 
@@ -40,6 +41,8 @@ Val& coda_cache<Key, Val>::get(const Key &key)
 		end_it->second.next = res.first;
 		end_it = res.first;
 
+		drop_last_unused();
+
 		return res.first->second.elem;
 	}
 
@@ -56,7 +59,31 @@ Val& coda_cache<Key, Val>::get(const Key &key)
 	{
 		beg_it = end_it;
 	}
-	else if (data.size() > size)
+	else
+	{
+		drop_last_unused();
+	}
+
+	return res.first->second.elem;
+}
+
+template <typename Key, typename Val>
+void coda_cache<Key, Val>::release(const Key &key)
+{
+	typename data_t::iterator it = data.find(key);
+
+	if (it != data.end() && it->second.link > 0)
+	{
+		it->second.link--;
+	}
+}
+
+template <typename Key, typename Val>
+void coda_cache<Key, Val>::drop_last_unused()
+{
+	if (beg_it == data.end()) return;
+
+	if (data.size() > size && 0 == beg_it->second.link)
 	{
 		typename data_t::iterator beg_it_old = beg_it;
 		beg_it = beg_it->second.next;
@@ -68,8 +95,6 @@ Val& coda_cache<Key, Val>::get(const Key &key)
 
 		data.erase(beg_it_old);
 	}
-
-	return res.first->second.elem;
 }
 
 template <typename Key, typename Val>
