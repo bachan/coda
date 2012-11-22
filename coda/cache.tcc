@@ -9,7 +9,7 @@ Val& coda_cache<Key, Val>::acquire(const Key &key)
 	res = data.insert(typename data_t::value_type(key, elem_t(data.end(), data.end())));
 	res.first->second.link++;
 
-//	log_info("cache::get size=%d, max_sz=%d", (int) data.size(), (int) max_sz);
+	// log_info("cache::get size=%d, max_sz=%d", (int) data.size(), (int) max_sz);
 
 	if (res.second == false)
 	{
@@ -21,6 +21,8 @@ Val& coda_cache<Key, Val>::acquire(const Key &key)
 		}
 		else
 		{
+			// drop_last_unused();
+
 			return res.first->second.elem;
 		}
 
@@ -41,7 +43,7 @@ Val& coda_cache<Key, Val>::acquire(const Key &key)
 		end_it->second.next = res.first;
 		end_it = res.first;
 
-		drop_last_unused();
+		// drop_last_unused();
 
 		return res.first->second.elem;
 	}
@@ -59,10 +61,8 @@ Val& coda_cache<Key, Val>::acquire(const Key &key)
 	{
 		beg_it = end_it;
 	}
-	else
-	{
-		drop_last_unused();
-	}
+
+	// drop_last_unused();
 
 	return res.first->second.elem;
 }
@@ -76,6 +76,8 @@ void coda_cache<Key, Val>::release(const Key &key)
 	{
 		it->second.link--;
 	}
+
+	drop_last_unused();
 }
 
 template <typename Key, typename Val>
@@ -83,7 +85,9 @@ void coda_cache<Key, Val>::drop_last_unused()
 {
 	if (beg_it == data.end()) return;
 
-	if (data.size() > size && 0 == beg_it->second.link)
+	// fprintf(stderr, "cache drop_last_unused data.size()=%u size=%u beg_it->second.link=%u\n", (unsigned) data.size(), (unsigned) size, (unsigned) beg_it->second.link);
+
+	while (data.size() > size && 0 == beg_it->second.link)
 	{
 		typename data_t::iterator beg_it_old = beg_it;
 		beg_it = beg_it->second.next;
@@ -100,9 +104,13 @@ void coda_cache<Key, Val>::drop_last_unused()
 template <typename Key, typename Val>
 void coda_cache<Key, Val>::dbg()
 {
+	std::cerr << "cache data.size()=" << data.size() << " size=" << size;
+
 	for (typename data_t::iterator it = beg_it; it != data.end(); it = it->second.next)
 	{
-		std::cerr << it->first << std::endl;
+		std::cerr << " " << it->first << "," << it->second.link;
 	}
+
+	std::cerr << std::endl;
 }
 
