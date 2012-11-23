@@ -100,6 +100,10 @@ void coda_cache_memlim<Key, Val>::drop_last_unused()
 		{
 			beg_it->second.prev = data.end();
 		}
+		else
+		{
+			end_it = beg_it;
+		}
 
 		size_cur -= beg_it_old->second.size;
 		data.erase(beg_it_old);

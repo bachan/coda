@@ -96,6 +96,10 @@ void coda_cache<Key, Val>::drop_last_unused()
 		{
 			beg_it->second.prev = data.end();
 		}
+		else
+		{
+			end_it = beg_it;
+		}
 
 		data.erase(beg_it_old);
 	}
