@@ -1,4 +1,3 @@
-#include <iostream>
 #include "cache.hpp"
 
 template <typename Key, typename Val>
@@ -7,9 +6,17 @@ Val& coda_cache_memlim<Key, Val>::acquire(const Key &key)
 	std::pair<typename data_t::iterator, bool> res;
 
 	res = data.insert(typename data_t::value_type(key, elem_t(data.end(), data.end())));
-	res.first->second.link++;
 
-	// log_info("cache::get size=%d, max_sz=%d", (int) data.size(), (int) max_sz);
+	/* clear outdated element */
+	size_t time_cur = time(NULL);
+	if (res.first->second.time + time_max < time_cur &&
+		res.first->second.link == 0)
+	{
+		res.first->second.elem = Val();
+		res.first->second.time = time_cur;
+	}
+
+	res.first->second.link++;
 
 	if (res.second == false)
 	{
@@ -21,8 +28,6 @@ Val& coda_cache_memlim<Key, Val>::acquire(const Key &key)
 		}
 		else
 		{
-			// drop_last_unused();
-
 			return res.first->second.elem;
 		}
 
@@ -43,8 +48,6 @@ Val& coda_cache_memlim<Key, Val>::acquire(const Key &key)
 		end_it->second.next = res.first;
 		end_it = res.first;
 
-		// drop_last_unused();
-
 		return res.first->second.elem;
 	}
 
@@ -61,8 +64,6 @@ Val& coda_cache_memlim<Key, Val>::acquire(const Key &key)
 	{
 		beg_it = end_it;
 	}
-
-	// drop_last_unused();
 
 	return res.first->second.elem;
 }
@@ -85,13 +86,45 @@ void coda_cache_memlim<Key, Val>::release(const Key &key)
 }
 
 template <typename Key, typename Val>
+bool coda_cache_memlim<Key, Val>::drop(const Key &key)
+{
+	typename data_t::iterator it = data.find(key);
+
+	if (it == data.end() || it->second.link > 0)
+	{
+		return false;
+	}
+
+	if (it->second.next != data.end())
+	{
+		it->second.next->second.prev = it->second.prev;
+	}
+	else
+	{
+		end_it = it->second.prev;
+	}
+
+	if (it->second.prev != data.end())
+	{
+		it->second.prev->second.next = it->second.next;
+	}
+	else
+	{
+		beg_it = it->second.next;
+	}
+
+	size_cur -= it->second.size;
+	data.erase(it);
+
+	return true;
+}
+
+template <typename Key, typename Val>
 void coda_cache_memlim<Key, Val>::drop_last_unused()
 {
 	if (beg_it == data.end()) return;
 
-	// fprintf(stderr, "cache drop_last_unused size_cur=%u size=%u beg_it->second.link=%u\n", (unsigned) size_cur, (unsigned) size, (unsigned) beg_it->second.link);
-
-	while (size_cur > size && 0 == beg_it->second.link)
+	while (size_cur > size_max && 0 == beg_it->second.link)
 	{
 		typename data_t::iterator beg_it_old = beg_it;
 		beg_it = beg_it->second.next;
@@ -111,15 +144,28 @@ void coda_cache_memlim<Key, Val>::drop_last_unused()
 }
 
 template <typename Key, typename Val>
-void coda_cache_memlim<Key, Val>::dbg()
+void coda_cache_memlim<Key, Val>::dbg(std::string &res, int dbg)
 {
-	std::cerr << "cache size_cur=" << size_cur << " size=" << size;
+	size_t time_cur = time(NULL);
+
+	coda_strappend(res, "nelt_cur=%"PRIuMAX"\n", (uintmax_t) data.size());
+	coda_strappend(res, "size_cur=%"PRIuMAX"\n", (uintmax_t) size_cur);
+	coda_strappend(res, "size_max=%"PRIuMAX"\n", (uintmax_t) size_max);
+	coda_strappend(res, "time_max=%"PRIuMAX"\n", (uintmax_t) (time_cur - time_max));
+	coda_strappend(res, "\n");
+
+	if (!dbg) return;
 
 	for (typename data_t::iterator it = beg_it; it != data.end(); it = it->second.next)
 	{
-		std::cerr << " " << it->first << "," << it->second.size << "," << it->second.link;
+		coda_strappend(res, "%s,%"PRIuMAX",%p-%p,%"PRIuMAX",%"PRIuMAX"\n",
+			it->first.c_str(),
+			(uintmax_t) it->second.size,
+			&*(it->second.prev),
+			&*(it->second.next),
+			(uintmax_t) it->second.link,
+			(uintmax_t) it->second.time
+		);
 	}
-
-	std::cerr << std::endl;
 }
 
