@@ -9,6 +9,12 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
+#ifndef MSG_NOSIGNAL
+#ifdef SO_NOSIGPIPE
+#define MSG_NOSIGNAL SO_NOSIGPIPE
+#endif /* SO_NOSIGPIPE */
+#endif /* MSG_NOSIGNAL */
+
 static inline
 int coda_set_nonblk(int s, int value)
 {
