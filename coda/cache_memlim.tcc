@@ -1,5 +1,3 @@
-#include "cache.hpp"
-
 template <typename Key, typename Val>
 Val& coda_cache_memlim<Key, Val>::acquire(const Key &key)
 {
@@ -86,6 +84,26 @@ void coda_cache_memlim<Key, Val>::release(const Key &key)
 }
 
 template <typename Key, typename Val>
+bool coda_cache_memlim<Key, Val>::find(const Key &key) const
+{
+	return data.find(key) != data.end();
+}
+
+template <typename Key, typename Val>
+const Val *coda_cache_memlim<Key, Val>::get(const Key &key) const
+{
+	typename data_t::const_iterator it = data.find(key);
+	return it != data.end() ? &it->second.elem : NULL;
+}
+
+template <typename Key, typename Val>
+void coda_cache_memlim<Key, Val>::update_time(const Key &key)
+{
+	typename data_t::iterator it = data.find(key);
+	if (it != data.end()) it->second.time = ::time(NULL);
+}
+
+template <typename Key, typename Val>
 bool coda_cache_memlim<Key, Val>::drop(const Key &key)
 {
 	typename data_t::iterator it = data.find(key);
@@ -144,7 +162,7 @@ void coda_cache_memlim<Key, Val>::drop_last_unused()
 }
 
 template <typename Key, typename Val>
-void coda_cache_memlim<Key, Val>::dbg(std::string &res, int dbg)
+void coda_cache_memlim<Key, Val>::dbg(std::string &res, int dbg) const
 {
 	size_t time_cur = time(NULL);
 
@@ -156,9 +174,9 @@ void coda_cache_memlim<Key, Val>::dbg(std::string &res, int dbg)
 
 	if (!dbg) return;
 
-	for (typename data_t::iterator it = beg_it; it != data.end(); it = it->second.next)
+	for (typename data_t::const_iterator it = beg_it; it != data.end(); it = it->second.next)
 	{
-		coda_strappend(res, "%s,%"PRIuMAX",%p-%p,%"PRIuMAX",%"PRIuMAX"\n",
+		coda_strappend(res, "%s\t%"PRIuMAX"\t%p-%p\t%"PRIuMAX"\t%"PRIuMAX"\n",
 			it->first.c_str(),
 			(uintmax_t) it->second.size,
 			&*(it->second.prev),

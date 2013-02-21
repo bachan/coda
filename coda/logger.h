@@ -47,28 +47,29 @@ extern "C" {
 #define log_debug(  fmt,...) /* nothing here */
 #endif /* NDEBUG */
 
-#define LOG_FORMAT(lvstr,tname,fmt) "%04u-%02u-%02u %02u:%02u:%02u\t"lvstr"\t"tname"\t"fmt"\n"
-#define LOG_VALUES(tmgmt,tname,...) tmgmt.tm_year, tmgmt.tm_mon, tmgmt.tm_mday, \
-    tmgmt.tm_hour, tmgmt.tm_min, tmgmt.tm_sec, tname, ##__VA_ARGS__
+#define LOG_FORMAT(lvstr,tname,fmt) "%04u-%02u-%02u %02u:%02u:%02u "lvstr" "tname" "fmt"\n"
+#define LOG_VALUES(tmloc,tname,...) tmloc.tm_year + 1900, tmloc.tm_mon + 1, tmloc.tm_mday, \
+    tmloc.tm_hour, tmloc.tm_min, tmloc.tm_sec, tname, ##__VA_ARGS__
 
-#define log_fmt(f,level,lvstr,fmt,...) do {								\
+#define log_fmt(f,level,lvstr,fmt,...) do {                                 \
                                                                             \
     if (level <= log_level)                                                 \
     {                                                                       \
-        struct tm tmgmt;                                                    \
+        struct tm tmloc;                                                    \
+        time_t ts = time(NULL);                                             \
         const char* tname;                                                  \
                                                                             \
-        coda_gmtime(time(NULL), &tmgmt);                                    \
+        localtime_r(&ts, &tmloc);                                           \
                                                                             \
         if (NULL != (tname = log_thread_name_get()))                        \
         {                                                                   \
             fprintf(f, LOG_FORMAT(lvstr,"%s",fmt),                          \
-                       LOG_VALUES(tmgmt,tname,##__VA_ARGS__));              \
+                       LOG_VALUES(tmloc,tname,##__VA_ARGS__));              \
         }                                                                   \
         else                                                                \
         {                                                                   \
             fprintf(f, LOG_FORMAT(lvstr,"%lu",fmt),                         \
-                       LOG_VALUES(tmgmt,(unsigned long)pthread_self(),##__VA_ARGS__));     \
+                       LOG_VALUES(tmloc,(unsigned long)pthread_self(),##__VA_ARGS__));     \
         }                                                                   \
     }                                                                       \
                                                                             \

@@ -57,7 +57,12 @@ public:
 
 	bool drop(const Key &key);
 
-	void dbg(std::string &res, int dbg);
+	bool find(const Key &key) const;
+	const Val *get(const Key &key) const;
+
+	void update_time(const Key &key);
+
+	void dbg(std::string &res, int dbg) const;
 
 	size_t get_size() const
 	{

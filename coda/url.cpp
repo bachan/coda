@@ -108,8 +108,9 @@ size_t coda_urlenc(char* dst, const char* src, size_t sz_src)
 {
 	unsigned char* pdst = (unsigned char *) dst;
 	unsigned char* psrc = (unsigned char *) src;
+	unsigned char* esrc = (unsigned char *) src + sz_src;
 
-	for (size_t i = 0; i < sz_src; ++i)
+	while (psrc < esrc)
 	{
 		if (table_urlenc[*psrc >> 5] & (1 << (*psrc & 0x1f)))
 		{
@@ -156,6 +157,59 @@ size_t coda_urldec(char* dst, const char* src, size_t sz_src)
 	*pdst = 0;
 
 	return pdst - (unsigned char *) dst;
+}
+
+std::string coda_urlenc(const char* src, size_t sz_src)
+{
+	std::string dst;
+
+	unsigned char* psrc = (unsigned char *) src;
+	unsigned char* esrc = (unsigned char *) src + sz_src;
+
+	while (psrc < esrc)
+	{
+		if (table_urlenc[*psrc >> 5] & (1 << (*psrc & 0x1f)))
+		{
+			dst.push_back('%');
+			dst.push_back(table_hexval[*psrc >> 4]);
+			dst.push_back(table_hexval[*psrc & 0xf]);
+			++psrc;
+		}
+		else
+		{
+			dst.push_back(*psrc++);
+		}
+	}
+
+	return dst;
+}
+
+std::string coda_urldec(const char* src, size_t sz_src)
+{
+	std::string dst;
+
+	const unsigned char* psrc = (const unsigned char *) src;
+	const unsigned char* esrc = (const unsigned char *) src + sz_src;
+
+	while (psrc < esrc)
+	{
+		if (*psrc == '%' && psrc < esrc - 2)
+		{
+			dst.push_back(table_urldec[*(psrc+1)] * 0x10 + table_urldec[*(psrc+2)] * 0x01);
+			psrc += 3;
+		}
+		else if (*psrc == '+')
+		{
+			dst.push_back(' ');
+			++psrc;
+		}
+		else
+		{
+			dst.push_back(*psrc++);
+		}
+	}
+
+	return dst;
 }
 
 void coda_url_escape(const char *s, char *dest, size_t sz)

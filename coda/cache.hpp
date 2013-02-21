@@ -44,8 +44,6 @@ public:
 
 	Val& acquire(const Key &key);
 	void release(const Key &key);
-
-	void dbg();
 };
 
 #include "cache.tcc"
