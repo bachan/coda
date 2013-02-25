@@ -5,17 +5,13 @@ SET (FLAGS_CXX_LANG "-Wno-deprecated")
 SET (FLAGS_RELEASE  "-O3 -fomit-frame-pointer -funroll-loops -DNDEBUG")
 SET (FLAGS_DEBUG    "-ggdb")
 
-IF (CMAKE_SYSTEM_NAME STREQUAL Linux)
-  SET (FLAGS_DEBUG "${FLAGS_DEBUG} -pg")
-ENDIF ()
-
 # TODO
 # -pedantic: stupid gcc-4.4 warning about empty macro arguments
 # -fno-strict-aliasing: removes following optimizations
 # -Wno-strict-aliasing: removes warning
 
 SET (CMAKE_C_FLAGS_DEBUG     "${FLAGS_DEFAULT} ${FLAGS_WARNING} ${FLAGS_DEBUG}")
-SET (CMAKE_C_FLAGS_RELEASE   "${FLAGS_DEFAULT} ${FLAGS_WARNING} ${FLAGS_RELEASE}")
+SET (CMAKE_C_FLAGS_RELEASE   "${FLAGS_DEFAULT} ${FLAGS_WARNING} ${FLAGS_DEBUG} ${FLAGS_RELEASE}")
 
 SET (CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_C_FLAGS_DEBUG}   ${FLAGS_CXX_LANG}")
 SET (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} ${FLAGS_CXX_LANG}")
