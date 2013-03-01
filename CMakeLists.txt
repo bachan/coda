@@ -3,26 +3,6 @@ CMAKE_MINIMUM_REQUIRED (VERSION 2.6)
 INCLUDE (CMakeMacro.cmake)
 
 USE_PACKAGE (expat expat.h)
-USE_PACKAGE (MAFSA MAFSA/automaton.h)
-
-ADD_LIBRARY (uac STATIC uac/sla.c uac/uac.cpp uac/uac-base.c)
-ADD_LIBRARY (uacbase STATIC uac/sla.c uac/uac-base.c)
-
-ADD_EXECUTABLE (uac_compiler uac/uac_compiler.cpp)
-TARGET_LINK_LIBRARIES (uac_compiler uac coda ${LIB_EXPAT})
-ADD_CUSTOM_COMMAND (TARGET uac_compiler POST_BUILD COMMAND ./uac_compiler ${coda_SOURCE_DIR}/uac/uac.xml uac.automaton)
-
-ADD_EXECUTABLE (uac_detect uac/uac_detect.cpp)
-TARGET_LINK_LIBRARIES (uac_detect uac coda ${LIB_MAFSA} ${LIB_EXPAT})
-
-ADD_EXECUTABLE (test_stringstorage tests/stringstorage/test.c)
-TARGET_LINK_LIBRARIES (test_stringstorage coda)
-
-INSTALL (FILES uac/uac.h DESTINATION include/uac)
-INSTALL (TARGETS uac DESTINATION ${LIBDIR})
-INSTALL (TARGETS uacbase DESTINATION ${LIBDIR})
-INSTALL (FILES uac/uac.xml ${coda_BINARY_DIR}/uac.automaton DESTINATION share/uac)
-INSTALL (TARGETS uac_detect uac_compiler DESTINATION bin)
 
 AUX_SOURCE_DIRECTORY (coda/ SRC_coda)
 ADD_LIBRARY (coda ${SRC_coda})
@@ -32,4 +12,7 @@ INSTALL (DIRECTORY coda/ DESTINATION include/coda FILES_MATCHING PATTERN "*.h")
 INSTALL (DIRECTORY coda/ DESTINATION include/coda FILES_MATCHING PATTERN "*.hpp")
 INSTALL (DIRECTORY coda/ DESTINATION include/coda FILES_MATCHING PATTERN "*.tcc")
 SET_TARGET_PROPERTIES (coda PROPERTIES VERSION 0.1 SOVERSION 1)
+
+ADD_EXECUTABLE (test_stringstorage tests/stringstorage/test.c)
+TARGET_LINK_LIBRARIES (test_stringstorage coda)
 
