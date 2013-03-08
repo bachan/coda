@@ -1,11 +1,11 @@
-Source: libcoda
+Source: libcoda-dev
 Section: devel
 Priority: extra
 Maintainer: Alexander Pankov <pianist@usrsrc.ru>
 Standards-Version: 3.7.2
 Homepage: https://github.com/bachan/coda
 
-Package: libcoda
+Package: libcoda-dev
 Architecture: any
 Section: libdevel
 Depends: ${shlibs:Depends},
