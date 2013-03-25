@@ -1,3 +1,9 @@
+libcoda-dev (0.1.1) stable; urgency=low
+
+  * version of cache, which returns copies of element
+
+ -- Sergey Bochenkov <ba4an@yandex.ru>  Mon, 25 Mar 2013 15:06:59 +0700
+
 libcoda-dev (0.1.0) stable; urgency=low
 
   * initial version
