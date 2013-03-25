@@ -19,7 +19,7 @@ void coda_cache<Key, Val>::get_copy(const Key &key, Val &val)
 }
 
 template <typename Key, typename Val>
-void coda_cache<Key, Val>::set(const Key &key, const Val &val)
+void coda_cache<Key, Val>::set(const Key &key, const Val &val, bool do_update_time)
 {
 	std::pair<typename data_t::iterator, bool> res;
 
@@ -41,6 +41,11 @@ void coda_cache<Key, Val>::set(const Key &key, const Val &val)
 			res.first->second.elem = val;
 			res.first->second.size = val.size();
 			size_cur += res.first->second.size;
+
+			if (do_update_time)
+			{
+				res.first->second.time = time(NULL);
+			}
 
 			return;
 		}
@@ -68,6 +73,11 @@ void coda_cache<Key, Val>::set(const Key &key, const Val &val)
 		res.first->second.elem = val;
 		res.first->second.size = val.size();
 		size_cur += res.first->second.size;
+
+		if (do_update_time)
+		{
+			res.first->second.time = time(NULL);
+		}
 
 		return;
 	}

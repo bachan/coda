@@ -51,7 +51,7 @@ public:
 	}
 
 	void get_copy(const Key &key, Val &val);
-	void set(const Key &key, const Val &val);
+	void set(const Key &key, const Val &val, bool do_update_time);
 
 	bool drop(typename data_t::iterator it);
 	bool drop(const Key &key);
