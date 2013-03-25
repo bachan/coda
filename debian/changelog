@@ -1,3 +1,9 @@
+libcoda-dev (0.1.2) stable; urgency=low
+
+  * changed required gcc version
+
+ -- Sergey Bochenkov <bachan@sample-sandbox2g.dev.itim.vn>  Mon, 25 Mar 2013 15:21:06 +0700
+
 libcoda-dev (0.1.1) stable; urgency=low
 
   * version of cache, which returns copies of element
