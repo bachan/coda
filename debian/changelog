@@ -1,3 +1,9 @@
+libcoda-dev (0.1.3) stable; urgency=low
+
+  * changed some debian files
+
+ -- Sergey Bochenkov <ba4an@yandex.ru>  Mon, 25 Mar 2013 15:30:00 +0700
+
 libcoda-dev (0.1.2) stable; urgency=low
 
   * changed required gcc version
