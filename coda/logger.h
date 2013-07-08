@@ -5,6 +5,8 @@
 #define _GNU_SOURCE
 #endif
 
+#include <stdio.h>
+#include <sys/time.h>
 #include <pthread.h>
 #include "gmtime.h"
 #include "system.h"
@@ -47,29 +49,29 @@ extern "C" {
 #define log_debug(  fmt,...) /* nothing here */
 #endif /* NDEBUG */
 
-#define LOG_FORMAT(lvstr,tname,fmt) "%04u-%02u-%02u %02u:%02u:%02u " lvstr " " tname " " fmt "\n"
-#define LOG_VALUES(tmloc,tname,...) tmloc.tm_year + 1900, tmloc.tm_mon + 1, tmloc.tm_mday, \
-    tmloc.tm_hour, tmloc.tm_min, tmloc.tm_sec, tname, ##__VA_ARGS__
+#define LOG_FORMAT(lvstr,tname,fmt) "%04u-%02u-%02u %02u:%02u:%02u.%03u " lvstr " " tname " " fmt "\n"
+#define LOG_VALUES(tmloc,tv,tname,...) tmloc.tm_year + 1900, tmloc.tm_mon + 1, tmloc.tm_mday, \
+    tmloc.tm_hour, tmloc.tm_min, tmloc.tm_sec, (unsigned) tv.tv_usec / 1000, tname, ##__VA_ARGS__
 
-#define log_fmt(f,level,lvstr,fmt,...) do {                                 \
+#define log_fmt(fp,level,lvstr,fmt,...) do {                                \
                                                                             \
     if (level <= log_level)                                                 \
     {                                                                       \
-        struct tm tmloc;                                                    \
-        time_t ts = time(NULL);                                             \
         const char* tname;                                                  \
-                                                                            \
-        localtime_r(&ts, &tmloc);                                           \
+        struct tm tmloc;                                                    \
+        struct timeval tv;                                                  \
+        gettimeofday(&tv, NULL);                                            \
+        localtime_r(&tv.tv_sec, &tmloc);                                    \
                                                                             \
         if (NULL != (tname = log_thread_name_get()))                        \
         {                                                                   \
-            fprintf(f, LOG_FORMAT(lvstr,"%s",fmt),                          \
-                       LOG_VALUES(tmloc,tname,##__VA_ARGS__));              \
+            fprintf(fp, LOG_FORMAT(lvstr,"%s",fmt),                         \
+                LOG_VALUES(tmloc,tv,tname,##__VA_ARGS__));                  \
         }                                                                   \
         else                                                                \
         {                                                                   \
-            fprintf(f, LOG_FORMAT(lvstr,"%lu",fmt),                         \
-                       LOG_VALUES(tmloc,(unsigned long)pthread_self(),##__VA_ARGS__));     \
+            fprintf(fp, LOG_FORMAT(lvstr,"%lu",fmt),                        \
+                LOG_VALUES(tmloc,tv,(unsigned long)pthread_self(),##__VA_ARGS__)); \
         }                                                                   \
     }                                                                       \
                                                                             \
