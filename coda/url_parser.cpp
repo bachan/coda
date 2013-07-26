@@ -10,8 +10,6 @@ coda_url::coda_url()
 {
 	val_str = dom_str = NULL;
 	val_len = dom_len = 0;
-
-	// *sha1 = 0;
 }
 
 coda_url::coda_url(const coda_url &u)
@@ -23,8 +21,6 @@ coda_url::coda_url(const coda_url &u)
 
 		val_str = NULL;
 		dom_str = NULL;
-
-		// *sha1 = 0;
 	}
 	else
 	{
@@ -35,7 +31,6 @@ coda_url::coda_url(const coda_url &u)
 		memcpy(val_str, u.val_str, val_len + dom_len + 2);
 
 		dom_str = val_str + val_len + 1;
-		// snprintf(sha1, CODA_SHA1HEX + 1, "%s", u.sha1);
 	}
 }
 
@@ -53,8 +48,6 @@ coda_url &coda_url::operator= (const coda_url &u)
 
 		val_str = NULL;
 		dom_str = NULL;
-
-		// *sha1 = 0;
 	}
 	else
 	{
@@ -65,7 +58,6 @@ coda_url &coda_url::operator= (const coda_url &u)
 		memcpy(val_str, u.val_str, val_len + dom_len + 2);
 
 		dom_str = val_str + val_len + 1;
-		// snprintf(sha1, CODA_SHA1HEX + 1, "%s", u.sha1);
 	}
 
 	return *this;
@@ -89,7 +81,6 @@ int coda_url::reset()
 	val_str = dom_str = NULL;
 	val_len = dom_len = 0;
 
-	// *sha1 = 0;
 	return 0;
 }
 
@@ -104,7 +95,6 @@ int coda_url::create_absolute(const char *u, size_t sz, uint32_t flags)
 	val_str = (char *) malloc(2 + 2 * sz + 9); // val + 0 + dom + 0 + "http[s]://" + "/"
 
 	create_scheme(u, sz, flags);
-	// coda_sha1sum(sha1, val_str, val_len);
 
 	return 0;
 }
@@ -137,8 +127,6 @@ int coda_url::create_relative(const char *u, size_t sz, uint32_t flags, const co
 			return -1;
 		}
 	}
-
-	// coda_sha1sum(sha1, val_str, val_len);
 
 	return 0;
 }
