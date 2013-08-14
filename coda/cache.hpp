@@ -3,6 +3,7 @@
 
 #include <time.h>
 #include <map>
+#include "estimate_capacity.hpp"
 #include "string.hpp"
 
 template <typename Key, typename Val>

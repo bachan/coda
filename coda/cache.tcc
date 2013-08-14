@@ -1,3 +1,5 @@
+#include <sstream> /* this is needed for dbg() output */
+
 template <typename Key, typename Val>
 void coda_cache<Key, Val>::get_copy(const Key &key, Val &val)
 {
@@ -39,7 +41,7 @@ void coda_cache<Key, Val>::set(const Key &key, const Val &val, bool do_update_ti
 
 			size_cur -= res.first->second.size;
 			res.first->second.elem = val;
-			res.first->second.size = val.size();
+			res.first->second.size = estimate_capacity(val);
 			size_cur += res.first->second.size;
 
 			if (do_update_time)
@@ -71,7 +73,7 @@ void coda_cache<Key, Val>::set(const Key &key, const Val &val, bool do_update_ti
 
 		size_cur -= res.first->second.size;
 		res.first->second.elem = val;
-		res.first->second.size = val.size();
+		res.first->second.size = estimate_capacity(val);
 		size_cur += res.first->second.size;
 
 		if (do_update_time)
@@ -99,7 +101,7 @@ void coda_cache<Key, Val>::set(const Key &key, const Val &val, bool do_update_ti
 	// return res.first->second.elem;
 
 	res.first->second.elem = val;
-	res.first->second.size = val.size();
+	res.first->second.size = estimate_capacity(val);
 	size_cur += res.first->second.size;
 
 	// ...
@@ -189,15 +191,19 @@ void coda_cache<Key, Val>::dbg(std::string &res, int dbg) const
 
 	if (!dbg) return;
 
+	std::stringstream os;
+
 	for (typename data_t::const_iterator it = beg_it; it != data.end(); it = it->second.next)
 	{
-		coda_strappend(res, "%s\t%"PRIuMAX"\t%p-%p\t%"PRIuMAX"\n",
-			it->first.c_str(),
-			(uintmax_t) it->second.size,
-			&*(it->second.prev),
-			&*(it->second.next),
-			(uintmax_t) it->second.time
-		);
+		os
+			<< it->first << '\t'
+			<< it->second.size << '\t'
+			<< &*(it->second.prev) << '-'
+			<< &*(it->second.next) << '\t'
+			<< it->second.time << '\n'
+		;
 	}
+
+	res.append(os.str());
 }
 

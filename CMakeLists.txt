@@ -17,6 +17,9 @@ ADD_EXECUTABLE (coda_url_parser tests/url_parser/test.cpp)
 TARGET_LINK_LIBRARIES (coda_url_parser coda)
 INSTALL (TARGETS coda_url_parser DESTINATION bin)
 
+ADD_EXECUTABLE (test_cache tests/cache/test.cpp)
+TARGET_LINK_LIBRARIES (test_cache coda)
+
 ADD_EXECUTABLE (test_stringstorage tests/stringstorage/test.c)
 TARGET_LINK_LIBRARIES (test_stringstorage coda)
 
