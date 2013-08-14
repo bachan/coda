@@ -13,6 +13,10 @@ INSTALL (DIRECTORY coda/ DESTINATION include/coda FILES_MATCHING PATTERN "*.hpp"
 INSTALL (DIRECTORY coda/ DESTINATION include/coda FILES_MATCHING PATTERN "*.tcc")
 SET_TARGET_PROPERTIES (coda PROPERTIES VERSION 0.1 SOVERSION 1)
 
+ADD_EXECUTABLE (coda_url_parser tests/url_parser/test.cpp)
+TARGET_LINK_LIBRARIES (coda_url_parser coda)
+INSTALL (TARGETS coda_url_parser DESTINATION bin)
+
 ADD_EXECUTABLE (test_stringstorage tests/stringstorage/test.c)
 TARGET_LINK_LIBRARIES (test_stringstorage coda)
 

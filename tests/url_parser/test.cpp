@@ -3,9 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
-#include <coda/urlhq.hpp>
-#include <coda/urlpa.hpp>
-#include <coda/c_attr.h>
+#include <coda/url.hpp>
+#include <coda/url_parser.hpp>
+#include <coda/attr.h>
 
 #define URLBUF (8192)
 #define ENCBUF (URLBUF * 3 + 1)
@@ -138,8 +138,8 @@ int urlq_uparse(const char *url, size_t sz, const urlq_getopt_t *opts)
         return -1;
     }
 
-    printf("%s%s%s\n", opts->domain ? out.get_dom() : "",
-        opts->domain ? "|" : "", out.get_val());
+    printf("%s%s%s\n", opts->domain ? out.get_domain() : "",
+        opts->domain ? "|" : "", out.get_url());
 
     return 0;
 }
