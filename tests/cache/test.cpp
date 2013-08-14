@@ -24,17 +24,17 @@ int main(int argc, char **argv)
 
 	printf("%s\n", dbg.c_str());
 
-#if 0
+#if 1
 	// std::vector<long double> v (5);
 	std::string v = "12345";
 
 	printf("%u\n", (unsigned) estimate_capacity(v));
 
-	printf("sizeof(std::string)=%u\n", sizeof(std::string));
-	printf("sizeof(std::vector<int>)=%u\n", sizeof(std::vector<int>));
-	printf("sizeof(std::map<std::string,custom_type>)=%u\n", sizeof(std::map<std::string,custom_type>));
-	printf("sizeof(std::map<std::string,custom_type>::value_type)=%u\n", sizeof(std::map<std::string,custom_type>::value_type));
-	printf("sizeof(std::pair<std::string,custom_type>)=%u\n", sizeof(std::pair<std::string,custom_type>));
+	printf("sizeof(std::string)=%u\n", (unsigned) sizeof(std::string));
+	printf("sizeof(std::vector<int>)=%u\n", (unsigned) sizeof(std::vector<int>));
+	printf("sizeof(std::map<std::string,custom_type>)=%u\n", (unsigned) sizeof(std::map<std::string,custom_type>));
+	printf("sizeof(std::map<std::string,custom_type>::value_type)=%u\n", (unsigned) sizeof(std::map<std::string,custom_type>::value_type));
+	printf("sizeof(std::pair<std::string,custom_type>)=%u\n", (unsigned) sizeof(std::pair<std::string,custom_type>));
 #endif
 
 	return 0;
