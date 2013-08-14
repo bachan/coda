@@ -9,7 +9,7 @@ void coda_cache<Key, Val>::get_copy(const Key &key, Val &val)
 
 		if (it->second.time + time_max < time_cur)
 		{
-			drop(it);
+			erase(it);
 		}
 		else
 		{
@@ -115,14 +115,7 @@ const Val *coda_cache<Key, Val>::get(const Key &key) const
 }
 
 template <typename Key, typename Val>
-void coda_cache<Key, Val>::update_time(const Key &key)
-{
-	typename data_t::iterator it = data.find(key);
-	if (it != data.end()) it->second.time = ::time(NULL);
-}
-
-template <typename Key, typename Val>
-bool coda_cache<Key, Val>::drop(typename data_t::iterator it)
+bool coda_cache<Key, Val>::erase(typename data_t::iterator it)
 {
 	if (it == data.end())
 	{
@@ -154,9 +147,9 @@ bool coda_cache<Key, Val>::drop(typename data_t::iterator it)
 }
 
 template <typename Key, typename Val>
-bool coda_cache<Key, Val>::drop(const Key &key)
+bool coda_cache<Key, Val>::erase(const Key &key)
 {
-	return drop(data.find(key));
+	return erase(data.find(key));
 }
 
 template <typename Key, typename Val>

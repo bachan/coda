@@ -50,22 +50,15 @@ public:
 		end_it = data.end();
 	}
 
+	const Val *get(const Key &key) const;
+
 	void get_copy(const Key &key, Val &val);
 	void set(const Key &key, const Val &val, bool do_update_time);
 
-	bool drop(typename data_t::iterator it);
-	bool drop(const Key &key);
-
-	const Val *get(const Key &key) const;
-
-	void update_time(const Key &key);
+	bool erase(typename data_t::iterator it);
+	bool erase(const Key &key);
 
 	void dbg(std::string &res, int dbg) const;
-
-	size_t get_size() const
-	{
-		return size_cur;
-	}
 };
 
 #include "cache.tcc"
