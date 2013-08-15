@@ -1,15 +1,33 @@
 #include <sstream> /* this is needed for dbg() output */
 
 template <typename Key, typename Val>
+const Val *coda_cache<Key, Val>::get(const Key &key) const
+{
+	typename data_t::const_iterator it = data.find(key);
+
+	if (it != data.end())
+	{
+		if (time_max && it->second.time + time_max < (size_t) time(NULL))
+		{
+			return NULL;
+		}
+		else
+		{
+			return &it->second.elem;
+		}
+	}
+
+	return NULL;
+}
+
+template <typename Key, typename Val>
 void coda_cache<Key, Val>::get_copy(const Key &key, Val &val)
 {
 	typename data_t::iterator it = data.find(key);
 
 	if (it != data.end())
 	{
-		size_t time_cur = time(NULL);
-
-		if (it->second.time + time_max < time_cur)
+		if (time_max && it->second.time + time_max < (size_t) time(NULL))
 		{
 			erase(it);
 		}
@@ -37,8 +55,6 @@ void coda_cache<Key, Val>::set(const Key &key, const Val &val, bool do_update_ti
 		}
 		else
 		{
-			// return res.first->second.elem;
-
 			size_cur -= res.first->second.size;
 			res.first->second.elem = val;
 			res.first->second.size = estimate_capacity(val);
@@ -69,8 +85,6 @@ void coda_cache<Key, Val>::set(const Key &key, const Val &val, bool do_update_ti
 		end_it->second.next = res.first;
 		end_it = res.first;
 
-		// return res.first->second.elem;
-
 		size_cur -= res.first->second.size;
 		res.first->second.elem = val;
 		res.first->second.size = estimate_capacity(val);
@@ -98,22 +112,11 @@ void coda_cache<Key, Val>::set(const Key &key, const Val &val, bool do_update_ti
 		beg_it = end_it;
 	}
 
-	// return res.first->second.elem;
-
 	res.first->second.elem = val;
 	res.first->second.size = estimate_capacity(val);
 	size_cur += res.first->second.size;
 
-	// ...
-
 	drop_last_unused();
-}
-
-template <typename Key, typename Val>
-const Val *coda_cache<Key, Val>::get(const Key &key) const
-{
-	typename data_t::const_iterator it = data.find(key);
-	return it != data.end() ? &it->second.elem : NULL;
 }
 
 template <typename Key, typename Val>

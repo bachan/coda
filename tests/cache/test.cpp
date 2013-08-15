@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <unistd.h>
 #include <coda/cache.hpp>
 #include <map>
 
@@ -14,6 +15,54 @@ struct custom_type
 
 int main(int argc, char **argv)
 {
+	/* TEST 1 */
+	{
+		printf("Test 1: check that elements in cache with time_max == 0 do not expire\n");
+
+		coda_cache<int, int> cache (1024, 0);
+		cache.set(0, 23, false);
+
+		const int *v = cache.get(0);
+		printf("right after insert got %d\n", v ? *v : NULL);
+
+		sleep(1);
+
+		v = cache.get(0);
+		printf("one second later got %d\n", v ? *v : NULL);
+
+		sleep(3);
+
+		v = cache.get(0);
+		printf("three more seconds later got %d\n", v ? *v : NULL);
+	}
+
+	/* TEST 2 */
+	{
+		printf("Test 2: check that elements in cache with time_max = 1 expire after one second\n");
+
+		coda_cache<int, int> cache (1024, 1);
+		cache.set(0, 35, false);
+
+		const int *v = cache.get(0);
+		printf("right after insert got %d\n", v ? *v : NULL);
+
+		sleep(1);
+
+		v = cache.get(0);
+		printf("one second later got %d\n", v ? *v : NULL);
+
+		sleep(3);
+
+		v = cache.get(0);
+		printf("three more seconds later got %d\n", v ? *v : NULL);
+	}
+
+
+
+
+
+#if 0
+
 	coda_cache<int, int> cache (1024 * 1024, 86400);
 
 	cache.set(0, 23, false);
@@ -35,6 +84,8 @@ int main(int argc, char **argv)
 	printf("sizeof(std::map<std::string,custom_type>)=%u\n", (unsigned) sizeof(std::map<std::string,custom_type>));
 	printf("sizeof(std::map<std::string,custom_type>::value_type)=%u\n", (unsigned) sizeof(std::map<std::string,custom_type>::value_type));
 	printf("sizeof(std::pair<std::string,custom_type>)=%u\n", (unsigned) sizeof(std::pair<std::string,custom_type>));
+#endif
+
 #endif
 
 	return 0;

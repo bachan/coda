@@ -6,6 +6,12 @@
 #include "estimate_capacity.hpp"
 #include "string.hpp"
 
+/*
+ * Associated container, with maxiumum size of i_size_max bytes (oldest
+ * elements are removed first when exceeded, TODO set to 0 for no size limit)
+ * and maximum element lifetime of i_time_max (set to 0 for no limit)
+ */
+
 template <typename Key, typename Val>
 class coda_cache
 {
