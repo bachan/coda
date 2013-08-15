@@ -22,15 +22,15 @@ int main(int argc, char **argv)
 		coda_cache<int, int> cache (1024, 0);
 		cache.set(0, 23, false);
 		const int *v = cache.get(0);
-		printf("right after insert got %d\n", (int) (v ? *v : NULL));
+		printf("right after insert got %d\n", (int) (v ? *v : 0));
 
 		sleep(1);
 		v = cache.get(0);
-		printf("one second later got %d\n", (int) (v ? *v : NULL));
+		printf("one second later got %d\n", (int) (v ? *v : 0));
 
 		sleep(3);
 		v = cache.get(0);
-		printf("three more seconds later got %d\n", (int) (v ? *v : NULL));
+		printf("three more seconds later got %d\n", (int) (v ? *v : 0));
 	}
 
 	/* TEST 2 */
@@ -40,15 +40,15 @@ int main(int argc, char **argv)
 		coda_cache<int, int> cache (1024, 1);
 		cache.set(0, 35, false);
 		const int *v = cache.get(0);
-		printf("right after insert got %d\n", (int) (v ? *v : NULL));
+		printf("right after insert got %d\n", (int) (v ? *v : 0));
 
 		sleep(1);
 		v = cache.get(0);
-		printf("one second later got %d\n", (int) (v ? *v : NULL));
+		printf("one second later got %d\n", (int) (v ? *v : 0));
 
 		sleep(3);
 		v = cache.get(0);
-		printf("three more seconds later got %d\n", (int) (v ? *v : NULL));
+		printf("three more seconds later got %d\n", (int) (v ? *v : 0));
 	}
 
 #if 0
