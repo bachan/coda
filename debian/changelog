@@ -1,3 +1,9 @@
+libcoda-dev (0.1.5) stable; urgency=low
+
+  * remove outdated elements from both get() methods of coda_cache
+
+ -- Sergey Bochenkov <ba4an@yandex.ru>  Mon, 19 Aug 2013 12:42:00 +0700
+
 libcoda-dev (0.1.4) stable; urgency=low
 
   * support coda_cache with basic POD types
