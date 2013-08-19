@@ -44,13 +44,13 @@ void coda_cache<Key, Val>::set(const Key &key, const Val &val, bool do_update_ti
 {
 	std::pair<typename data_t::iterator, bool> res;
 
-	res = data.insert(typename data_t::value_type(key, elem_t(data.end(), data.end())));
+	res = data.insert(typename data_t::value_type(key, elem_t()));
 
 	if (res.second == false)
 	{
 		/* pop */
 
-		if (res.first->second.next != data.end())
+		if (res.first->second.next != NULL)
 		{
 			res.first->second.next->second.prev = res.first->second.prev;
 		}
@@ -69,22 +69,22 @@ void coda_cache<Key, Val>::set(const Key &key, const Val &val, bool do_update_ti
 			return;
 		}
 
-		if (res.first->second.prev != data.end())
+		if (res.first->second.prev != NULL)
 		{
 			res.first->second.prev->second.next = res.first->second.next;
 		}
 		else
 		{
-			beg_it = res.first->second.next;
+			begp = res.first->second.next;
 		}
 
-		res.first->second.next = data.end();
-		res.first->second.prev = end_it;
+		res.first->second.next = NULL;
+		res.first->second.prev = endp;
 
 		/* push_back */
 
-		end_it->second.next = res.first;
-		end_it = res.first;
+		endp->second.next = &*res.first;
+		endp = &*res.first;
 
 		size_cur -= res.first->second.size;
 		res.first->second.elem = val;
@@ -99,18 +99,18 @@ void coda_cache<Key, Val>::set(const Key &key, const Val &val, bool do_update_ti
 		return;
 	}
 
-	res.first->second.prev = end_it;
+	res.first->second.prev = endp;
 
-	if (end_it != data.end())
+	if (endp != NULL)
 	{
-		end_it->second.next = res.first;
+		endp->second.next = &*res.first;
 	}
 
-	end_it = res.first;
+	endp = &*res.first;
 
-	if (beg_it == data.end())
+	if (begp == NULL)
 	{
-		beg_it = end_it;
+		begp = endp;
 	}
 
 	res.first->second.elem = val;
@@ -128,22 +128,22 @@ bool coda_cache<Key, Val>::erase(typename data_t::iterator it)
 		return false;
 	}
 
-	if (it->second.next != data.end())
+	if (it->second.next != NULL)
 	{
 		it->second.next->second.prev = it->second.prev;
 	}
 	else
 	{
-		end_it = it->second.prev;
+		endp = it->second.prev;
 	}
 
-	if (it->second.prev != data.end())
+	if (it->second.prev != NULL)
 	{
 		it->second.prev->second.next = it->second.next;
 	}
 	else
 	{
-		beg_it = it->second.next;
+		begp = it->second.next;
 	}
 
 	size_cur -= it->second.size;
@@ -161,24 +161,24 @@ bool coda_cache<Key, Val>::erase(const Key &key)
 template <typename Key, typename Val>
 void coda_cache<Key, Val>::drop_last_unused()
 {
-	if (beg_it == data.end()) return;
+	if (begp == NULL) return;
 
 	while (size_cur > size_max)
 	{
-		typename data_t::iterator beg_it_old = beg_it;
-		beg_it = beg_it->second.next;
+		data_value_t *begp_old = begp;
+		begp = begp->second.next;
 
-		if (beg_it != data.end())
+		if (begp != NULL)
 		{
-			beg_it->second.prev = data.end();
+			begp->second.prev = NULL;
 		}
 		else
 		{
-			end_it = beg_it;
+			endp = begp;
 		}
 
-		size_cur -= beg_it_old->second.size;
-		data.erase(beg_it_old);
+		size_cur -= begp_old->second.size;
+		data.erase(begp_old->first);
 	}
 }
 
@@ -197,13 +197,13 @@ void coda_cache<Key, Val>::dbg(std::string &res, int dbg) const
 
 	std::stringstream os;
 
-	for (typename data_t::const_iterator it = beg_it; it != data.end(); it = it->second.next)
+	for (data_value_t *it = begp; it != NULL; it = it->second.next)
 	{
 		os
 			<< it->first << '\t'
 			<< it->second.size << '\t'
-			<< &*(it->second.prev) << '-'
-			<< &*(it->second.next) << '\t'
+			<< it->second.prev << '-'
+			<< it->second.next << '\t'
 			<< it->second.time << '\n'
 		;
 	}

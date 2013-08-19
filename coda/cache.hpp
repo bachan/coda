@@ -2,7 +2,7 @@
 #define __CODA_CACHE_HPP__
 
 #include <time.h>
-#include <map>
+#include <tr1/unordered_map>
 #include "estimate_capacity.hpp"
 #include "string.hpp"
 
@@ -16,21 +16,21 @@ template <typename Key, typename Val>
 class coda_cache
 {
 	struct elem_t;
-	typedef std::map<Key, elem_t> data_t;
+	typedef std::tr1::unordered_map<Key, elem_t> data_t;
+	typedef std::pair<const Key, elem_t> data_value_t; /* HACK: here we "know" about data_t::value_type */
 
 	struct elem_t
 	{
 		Val elem;
-
-		typename data_t::iterator prev;
-		typename data_t::iterator next;
+		data_value_t *prev;
+		data_value_t *next;
 
 		size_t size;
 		size_t time; /* time when element was created */
 
-		elem_t(typename data_t::iterator i_prev, typename data_t::iterator i_next)
-			: prev(i_prev)
-			, next(i_next)
+		elem_t()
+			: prev(NULL)
+			, next(NULL)
 			, size(0)
 		{
 			time = ::time(NULL);
@@ -38,23 +38,23 @@ class coda_cache
 	};
 
 	data_t data;
+	data_value_t *begp;
+	data_value_t *endp;
+
 	size_t size_cur;
 	size_t size_max;
 	size_t time_max;
-
-	typename data_t::iterator beg_it;
-	typename data_t::iterator end_it;
 
 	void drop_last_unused();
 
 public:
 	coda_cache(size_t i_size_max, size_t i_time_max)
-		: size_cur(0)
+		: begp(NULL)
+		, endp(NULL)
+		, size_cur(0)
 		, size_max(i_size_max)
 		, time_max(i_time_max)
 	{
-		beg_it = data.end();
-		end_it = data.end();
 	}
 
 	/* NOTE, that both get() functions could possibly erase outdated element */

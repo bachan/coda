@@ -31,6 +31,10 @@ int main(int argc, char **argv)
 		sleep(3);
 		v = cache.get(0);
 		printf("three more seconds later got %d\n", (int) (v ? *v : 0));
+
+		std::string s;
+		cache.dbg(s, 1);
+		printf("dbg: %s\n", s.c_str());
 	}
 
 	/* TEST 2 */
@@ -49,6 +53,10 @@ int main(int argc, char **argv)
 		sleep(3);
 		v = cache.get(0);
 		printf("three more seconds later got %d\n", (int) (v ? *v : 0));
+
+		std::string s;
+		cache.dbg(s, 1);
+		printf("dbg: %s\n", s.c_str());
 	}
 
 #if 0
