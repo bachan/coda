@@ -57,9 +57,10 @@ public:
 		end_it = data.end();
 	}
 
-	const Val *get(const Key &key) const;
+	/* NOTE, that both get() functions could possibly erase outdated element */
 
-	void get_copy(const Key &key, Val &val);
+	const Val *get(const Key &key);
+	void get(const Key &key, Val &val);
 	void set(const Key &key, const Val &val, bool do_update_time);
 
 	bool erase(typename data_t::iterator it);

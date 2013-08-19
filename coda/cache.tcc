@@ -1,14 +1,15 @@
 #include <sstream> /* this is needed for dbg() output */
 
 template <typename Key, typename Val>
-const Val *coda_cache<Key, Val>::get(const Key &key) const
+const Val *coda_cache<Key, Val>::get(const Key &key)
 {
-	typename data_t::const_iterator it = data.find(key);
+	typename data_t::iterator it = data.find(key);
 
 	if (it != data.end())
 	{
 		if (time_max && it->second.time + time_max < (size_t) time(NULL))
 		{
+			erase(it);
 			return NULL;
 		}
 		else
@@ -21,7 +22,7 @@ const Val *coda_cache<Key, Val>::get(const Key &key) const
 }
 
 template <typename Key, typename Val>
-void coda_cache<Key, Val>::get_copy(const Key &key, Val &val)
+void coda_cache<Key, Val>::get(const Key &key, Val &val)
 {
 	typename data_t::iterator it = data.find(key);
 
