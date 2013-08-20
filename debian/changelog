@@ -1,3 +1,9 @@
+libcoda-dev (0.1.6) stable; urgency=low
+
+  * cache is now unordered_map
+
+ -- Sergey Bochenkov <ba4an@yandex.ru>  Mon, 20 Aug 2013 14:56:00 +0700
+
 libcoda-dev (0.1.5) stable; urgency=low
 
   * remove outdated elements from both get() methods of coda_cache
