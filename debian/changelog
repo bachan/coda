@@ -1,3 +1,9 @@
+libcoda-dev (0.1.7) stable; urgency=low
+
+  * bugfix in coda_strappend
+
+ -- Sergey Bochenkov <ba4an@yandex.ru>  Fri, 25 Oct 2013 18:00:00 +0700
+
 libcoda-dev (0.1.6) stable; urgency=low
 
   * cache is now unordered_map
