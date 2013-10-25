@@ -5,42 +5,21 @@
 
 #define BUFSZ 32768
 
-#if 0
-int coda_strappend_HARDCORE(std::string& out, const char* fmt, ...)
-{
-	va_list ap;
-	va_start(ap, fmt);
-
-	out.resize(BUFSZ);
-
-	int bytes = vsnprintf((char *) out.data(), out.size(), fmt, ap);
-
-	if (out.size() <= bytes)
-	{
-		out.resize(bytes);
-		vsnprintf((char *) out.data(), out.size() + 1, fmt, ap);
-	}
-	else
-	{
-		out.resize(bytes);
-	}
-
-	return bytes;
-}
-#endif
-
 std::string coda_strprintf(const char *fmt, ...)
 {
 	va_list ap;
-	va_start(ap, fmt);
 
-	int bytes;
 	char *BUF = (char *) alloca(BUFSZ);
+	va_start(ap, fmt);
+	int bytes = vsnprintf(BUF, BUFSZ, fmt, ap);
+	va_end(ap);
 
-	if (BUFSZ <= (bytes = vsnprintf(BUF, BUFSZ, fmt, ap)))
+	if (BUFSZ <= bytes)
 	{
 		BUF = (char *) alloca(bytes + 1);
+		va_start(ap, fmt);
 		vsnprintf(BUF, bytes + 1, fmt, ap);
+		va_end(ap);
 	}
 
 	return BUF;
@@ -49,15 +28,18 @@ std::string coda_strprintf(const char *fmt, ...)
 int coda_strappend(std::string& out, const char* fmt, ...)
 {
 	va_list ap;
-	va_start(ap, fmt);
 
-	int bytes;
 	char *BUF = (char *) alloca(BUFSZ);
+	va_start(ap, fmt);
+	int bytes = vsnprintf(BUF, BUFSZ, fmt, ap);
+	va_end(ap);
 
 	if (BUFSZ <= (bytes = vsnprintf(BUF, BUFSZ, fmt, ap)))
 	{
 		BUF = (char *) alloca(bytes + 1);
+		va_start(ap, fmt);
 		vsnprintf(BUF, bytes + 1, fmt, ap);
+		va_end(ap);
 	}
 
 	out.append(BUF, bytes);
@@ -97,6 +79,8 @@ int coda_strnappend(std::string& out, size_t num, const char* fmt, ...)
 		delete [] BUF;
 	}
 
+	va_end(ap);
+
 	return bytes;
 }
 
@@ -133,6 +117,8 @@ int coda_strnprintf(std::string& out, size_t pos, size_t num, const char* fmt, .
 
 		delete [] BUF;
 	}
+
+	va_end(ap);
 
 	return bytes;
 }
