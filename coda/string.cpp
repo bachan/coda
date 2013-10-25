@@ -34,7 +34,7 @@ int coda_strappend(std::string& out, const char* fmt, ...)
 	int bytes = vsnprintf(BUF, BUFSZ, fmt, ap);
 	va_end(ap);
 
-	if (BUFSZ <= (bytes = vsnprintf(BUF, BUFSZ, fmt, ap)))
+	if (BUFSZ <= bytes)
 	{
 		BUF = (char *) alloca(bytes + 1);
 		va_start(ap, fmt);
