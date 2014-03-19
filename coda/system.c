@@ -1,3 +1,5 @@
+#include <sys/file.h>
+#include "logger.h"
 #include "system.h"
 
 #define coda_realpath(path) realpath((const char*) path, alloca(PATH_MAX))
@@ -54,11 +56,62 @@ int coda_mkpath(char* path)
 
 int coda_mkpidf(const char* path)
 {
-	FILE* f = fopen(path, "w");
-	if (!f) return -1;
+	int fd, nb;
+	char buf [32];
 
-	fprintf(f, "%d\n", (int)getpid());
-	fclose(f);
+	fd = open(path, O_CREAT|O_RDWR, 0644);
+	if (0 > fd) return -1;
+
+	if (0 > flock(fd, LOCK_EX|LOCK_NB))
+	{
+		log_emerg("can't lock pid-file %s", path);
+		close(fd);
+		return -1;
+	}
+
+	struct stat st;
+
+	if (0 > fstat(fd, &st))
+	{
+		log_emerg("can't stat locked pid-file %s", path);
+		flock(fd, LOCK_UN);
+		close(fd);
+		return -1;
+	}
+
+	if (st.st_size > 0)
+	{
+		log_emerg("pid-file %s exists", path);
+		flock(fd, LOCK_UN);
+		close(fd);
+		return -1;
+	}
+
+	if (0 > (nb = snprintf(buf, 32, "%d\n", (int) getpid())))
+	{
+		flock(fd, LOCK_UN);
+		close(fd);
+		return -1;
+	}
+
+	if (0 > write(fd, buf, nb))
+	{
+		flock(fd, LOCK_UN);
+		close(fd);
+		return -1;
+	}
+
+	if (0 > flock(fd, LOCK_UN))
+	{
+		close(fd);
+		return -1;
+	}
+
+	if (0 > close(fd))
+	{
+		return -1;
+	}
+
 	return 0;
 }
 
