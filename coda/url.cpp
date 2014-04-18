@@ -93,7 +93,7 @@ static uint32_t table_urlenc [] =
 {
 	0xffffffff, /* 1111 1111 1111 1111  1111 1111 1111 1111 */
 	            /* ?>=< ;:98 7654 3210  /.-, +*)( '&%$ #"!  */
-	0xfc009fff, /* 1111 1100 0000 0000  1001 1111 1111 1111 */
+	0xfc009ffe, /* 1111 1100 0000 0000  1001 1111 1111 1110 */
 	            /* _^]\ [ZYX WVUT SRQP  ONML KJIH GFED CBA@ */
 	0x78000001, /* 0111 1000 0000 0000  0000 0000 0000 0001 */
 	            /*  ~}| {zyx wvut srqp  onml kjih gfed cba` */
@@ -117,6 +117,11 @@ size_t coda_urlenc(char* dst, const char* src, size_t sz_src)
 			*pdst++ = '%';
 			*pdst++ = table_hexval[*psrc >> 4];
 			*pdst++ = table_hexval[*psrc & 0xf];
+			++psrc;
+		}
+		else if (*psrc == ' ')
+		{
+			*pdst++ = '+';
 			++psrc;
 		}
 		else
@@ -175,6 +180,11 @@ std::string coda_urlenc(const char* src, size_t sz_src)
 			dst.push_back(table_hexval[*psrc & 0xf]);
 			++psrc;
 		}
+		else if (*psrc == ' ')
+		{
+			dst.push_back('+');
+			++psrc;
+		}
 		else
 		{
 			dst.push_back(*psrc++);
@@ -223,6 +233,10 @@ void coda_url_escape(const char *s, char *dest, size_t sz)
 		if (table_urlenc[*s >> 5] & (1 << (*s & 0x1f)))
 		{
 			ptr += snprintf(dest + ptr, sz - ptr, "%%%02X", *s);
+		}
+		else if (*s == ' ')
+		{
+			dest[ptr++] = '+';
 		}
 		else
 		{
