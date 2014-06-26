@@ -45,6 +45,12 @@ int log_create(const char* path, int level)
 	return STDERR_FILENO;
 }
 
+int log_create_from_str(const char* path, const char* level)
+{
+	log_level = log_levels(level);
+	return log_create(path, log_level);
+}
+
 /* thread */
 
 pthread_key_t  log_thread_name;
