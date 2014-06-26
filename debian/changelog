@@ -1,3 +1,9 @@
+libcoda-dev (0.1.11) stable; urgency=low
+
+  * bugfix: log_create_from_str function didn't set log_level
+
+ -- Sergey Bochenkov <ba4an@yandex.ru>  Wed, 26 Jun 2014 13:00:00 +0700
+
 libcoda-dev (0.1.10) stable; urgency=low
 
   * encode spaces to plus signs
