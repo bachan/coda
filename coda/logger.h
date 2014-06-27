@@ -80,11 +80,11 @@ extern "C" {
 extern volatile int log_level;
 int log_levels(const char* level);
 int log_create(const char* path, int level);
-int log_create_from_str(const char* path, const char* level);
 int log_thread_name_set(const char* name);
 const char* log_thread_name_get();
 
-#define log_rotate(path) log_create(path, log_level)
+#define log_create_from_str(path, level) log_create(path, log_levels(level))
+#define log_rotate(path)                 log_create(path, log_level)
 
 #ifdef __cplusplus
 }
