@@ -1,6 +1,6 @@
 Summary: 	coda developement library
 Name: 		libcoda-devel
-Version: 	0.1.0
+Version: 	0.1.12
 Release: 	0%{?dist}
 License: 	LGPL
 Source: 	libcoda-%{version}.tar.gz
@@ -29,6 +29,7 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
+%{_bindir}/coda_url_parser
 %{_includedir}/coda
 %{_libdir}/libcoda.a
 
