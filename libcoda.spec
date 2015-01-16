@@ -1,6 +1,6 @@
 Summary: 	coda developement library
 Name: 		libcoda-devel
-Version: 	0.1.12
+Version: 	0.1.13
 Release: 	0%{?dist}
 License: 	LGPL
 Source: 	libcoda-%{version}.tar.gz
@@ -34,6 +34,9 @@ rm -rf %{buildroot}
 %{_libdir}/libcoda.a
 
 %changelog
+* Fri Jan 16 2015 Dmitri Samirov <dsamirov@gmail.com> - 0.1.13
++ add #include <errno.h> to shm_hash_map.tcc
+
 * Sat Mar 09 2013 Alexander Pankov <pianist@usrsrc.ru> - 0.1.0
 + First RPM package
 
