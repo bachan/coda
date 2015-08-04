@@ -62,7 +62,7 @@ void *allocate_reallocate_array(void *a, size_t cnt, size_t bsz)
 	return a;
 }
 
-inline size_t get_common_prefix_size(const char *s, const char *t)
+static inline size_t get_common_prefix_size(const char *s, const char *t)
 {
 	size_t ret = 0;
 	while (s[ret] && (s[ret] == t[ret])) ret++;
