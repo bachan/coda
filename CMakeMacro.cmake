@@ -2,13 +2,18 @@
 SET (FLAGS_DEFAULT  "-fPIC -pipe")
 SET (FLAGS_WARNING  "-Wall -Werror -Wno-long-long -Wno-variadic-macros -Wno-strict-aliasing")# -Wextra -pedantic")
 SET (FLAGS_CXX_LANG "-Wno-deprecated")
-SET (FLAGS_RELEASE  "-O3 -fomit-frame-pointer -funroll-loops -DNDEBUG")
+SET (FLAGS_RELEASE  "-O3 -DNDEBUG") # -fomit-frame-pointer -funroll-loops
 SET (FLAGS_DEBUG    "-ggdb")
 
 # TODO
 # -pedantic: stupid gcc-4.4 warning about empty macro arguments
 # -fno-strict-aliasing: removes following optimizations
 # -Wno-strict-aliasing: removes warning
+
+# This is needed because debian package builder sets -DCMAKE_BUILD_TYPE=None
+IF (CMAKE_BUILD_TYPE STREQUAL None)
+  SET (CMAKE_BUILD_TYPE Release)
+ENDIF ()
 
 SET (CMAKE_C_FLAGS_DEBUG     "${FLAGS_DEFAULT} ${FLAGS_WARNING} ${FLAGS_DEBUG}")
 SET (CMAKE_C_FLAGS_RELEASE   "${FLAGS_DEFAULT} ${FLAGS_WARNING} ${FLAGS_DEBUG} ${FLAGS_RELEASE}")
@@ -39,9 +44,9 @@ ADD_DEFINITIONS (-D_FILE_OFFSET_BITS=64)
 #ADD_DEFINITIONS (-DJUDYERROR_NOTEST)
 
 SET (LIBDIR lib)
-IF (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
-  SET (LIBDIR lib64)
-ENDIF (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
+#IF (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
+#  SET (LIBDIR lib64)
+#ENDIF (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
 
 # Don't know if this is needed with one monolith CMakeLists.txt file.
 #SET (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
