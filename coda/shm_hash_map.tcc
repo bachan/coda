@@ -1,3 +1,5 @@
+#include <errno.h>
+
 #define mySEM_R 0
 #define mySEM_W 1
 
