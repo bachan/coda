@@ -8,13 +8,13 @@ libcoda-dev (0.1.15) stable; urgency=low
 
   * added web64
 
- -- Dmitri Samirov <ba4an@yandex.ru>  Thu, 25 Feb 2016 15:53:47 +0700
+ -- Sergey Bochenkov <ba4an@yandex.ru>  Thu, 25 Feb 2016 15:53:47 +0700
 
 libcoda-dev (0.1.14) stable; urgency=low
 
   * install into lib
 
- -- Dmitri Samirov <bachan@farm.itim.vn>  Mon, 05 Oct 2015 10:53:11 +0700
+ -- Sergey Bochenkov <bachan@farm.itim.vn>  Mon, 05 Oct 2015 10:53:11 +0700
 
 libcoda-dev (0.1.13) stable; urgency=low
 
