@@ -3,6 +3,7 @@ Section: devel
 Priority: extra
 Maintainer: Alexander Pankov <pianist@usrsrc.ru>
 Standards-Version: 3.7.2
+Build-Depends: cmake, debhelper (>= 9), libexpat-dev
 Homepage: https://github.com/bachan/coda
 
 Package: libcoda-dev

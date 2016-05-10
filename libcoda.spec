@@ -1,6 +1,6 @@
 Summary: 	coda developement library
 Name: 		libcoda-devel
-Version: 	0.1.13
+Version: 	0.1.16
 Release: 	0%{?dist}
 License: 	LGPL
 Source: 	libcoda-%{version}.tar.gz
@@ -34,7 +34,7 @@ rm -rf %{buildroot}
 %{_libdir}/libcoda.a
 
 %changelog
-* Tue, 10 May 2016 Max Volgin <technotopia@gmail.com> - 0.1.14
+* Tue, 10 May 2016 Max Volgin <technotopia@gmail.com> - 0.1.16
 + coda synque get array of queue items
 
 * Fri Jan 16 2015 Dmitri Samirov <dsamirov@gmail.com> - 0.1.13

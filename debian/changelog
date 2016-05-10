@@ -1,9 +1,21 @@
-libcoda-dev (0.1.14) stable; urgency=low
+libcoda-dev (0.1.16) stable; urgency=low
 
   * coda synque get array of queue items
 
  -- Max Volgin <technotopia@gmail.com>  Tue, 10 May 2016 10:29:00 +0300
  -- Alexander Pankov <pianist@usrsrc.ru>  Tue, 10 May 2016 10:29:00 +0300
+
+libcoda-dev (0.1.15) stable; urgency=low
+
+  * added web64
+
+ -- Dmitri Samirov <ba4an@yandex.ru>  Thu, 25 Feb 2016 15:53:47 +0700
+
+libcoda-dev (0.1.14) stable; urgency=low
+
+  * install into lib
+
+ -- Dmitri Samirov <bachan@farm.itim.vn>  Mon, 05 Oct 2015 10:53:11 +0700
 
 libcoda-dev (0.1.13) stable; urgency=low
 
