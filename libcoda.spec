@@ -34,6 +34,9 @@ rm -rf %{buildroot}
 %{_libdir}/libcoda.a
 
 %changelog
+* Tue, 10 May 2016 Max Volgin <technotopia@gmail.com> - 0.1.14
++ coda synque get array of queue items
+
 * Fri Jan 16 2015 Dmitri Samirov <dsamirov@gmail.com> - 0.1.13
 + add #include <errno.h> to shm_hash_map.tcc
 

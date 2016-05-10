@@ -70,6 +70,40 @@ public:
 		return 0;
 	}
 
+	int get(std::deque<_T>& out, ssize_t max_count, int can_wait)
+	{
+		pthread_mutex_lock(&m);
+
+		if (d.empty())
+		{
+			if (0 == canwait)
+			{
+				pthread_mutex_unlock(&m);
+				return -1;
+			}
+			pthread_cond_wait(&c, &m);
+			if (d.empty())
+			{
+				pthread_mutex_unlock(&m);
+				return -1;
+			}
+		}
+
+		size_t quantity = d.size();
+		if ((max_count > 0) && (max_count  < quantity))
+			quantity = max_count;
+
+		for (size_t i = 0; i < quantity; ++i)
+		{
+			out.push_back(d.back());
+			d.pop_back();
+		}
+
+		pthread_mutex_unlock(&m);
+
+		return 0;
+	}
+
 	size_t size()
 	{
 		pthread_mutex_lock(&m);
