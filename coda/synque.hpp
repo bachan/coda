@@ -3,6 +3,7 @@
 
 #include <pthread.h>
 #include <deque>
+#include <cstdio>
 
 namespace coda {
 
@@ -70,7 +71,7 @@ public:
 		return 0;
 	}
 
-	int get(std::deque<_T>& out, ssize_t max_count, int can_wait)
+	int get(std::deque<_T>& out, ssize_t max_count, int canwait)
 	{
 		pthread_mutex_lock(&m);
 

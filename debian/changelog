@@ -3,7 +3,6 @@ libcoda-dev (0.1.16) stable; urgency=low
   * coda synque get array of queue items
 
  -- Max Volgin <technotopia@gmail.com>  Tue, 10 May 2016 10:29:00 +0300
- -- Alexander Pankov <pianist@usrsrc.ru>  Tue, 10 May 2016 10:29:00 +0300
 
 libcoda-dev (0.1.15) stable; urgency=low
 
