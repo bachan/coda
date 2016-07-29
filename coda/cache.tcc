@@ -187,10 +187,10 @@ void coda_cache<Key, Val>::dbg(std::string &res, int dbg) const
 {
 	size_t time_cur = time(NULL);
 
-	coda_strappend(res, "nelt_cur=%"PRIuMAX"\n", (uintmax_t) data.size());
-	coda_strappend(res, "size_cur=%"PRIuMAX"\n", (uintmax_t) size_cur);
-	coda_strappend(res, "size_max=%"PRIuMAX"\n", (uintmax_t) size_max);
-	coda_strappend(res, "time_max=%"PRIuMAX"\n", (uintmax_t) (time_cur - time_max));
+	coda_strappend(res, "nelt_cur=%" PRIuMAX "\n", (uintmax_t) data.size());
+	coda_strappend(res, "size_cur=%" PRIuMAX "\n", (uintmax_t) size_cur);
+	coda_strappend(res, "size_max=%" PRIuMAX "\n", (uintmax_t) size_max);
+	coda_strappend(res, "time_max=%" PRIuMAX "\n", (uintmax_t) (time_cur - time_max));
 	coda_strappend(res, "\n");
 
 	if (!dbg) return;
