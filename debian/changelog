@@ -1,3 +1,9 @@
+libcoda-dev (0.1.17) stable; urgency=low
+
+  * C++11 friendly code
+
+ -- Sergey Bochenkov <ba4an@yandex.ru>  Fri, 29 Jul 2016 10:13:46 +0700
+
 libcoda-dev (0.1.16) stable; urgency=low
 
   * coda synque get array of queue items
