@@ -1,3 +1,9 @@
+libcoda-dev (0.1.18) stable; urgency=low
+
+  * added vietnamese tone remover
+
+ -- Sergey Bochenkov <ba4an@yandex.ru>  Mon, 19 Sep 2016 16:13:17 +0700
+
 libcoda-dev (0.1.17) stable; urgency=low
 
   * C++11 friendly code
