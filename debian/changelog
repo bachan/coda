@@ -1,3 +1,9 @@
+libcoda-dev (0.1.19) stable; urgency=low
+
+  * added coda_split_string function
+
+ -- Sergey Bochenkov <ba4an@yandex.ru>  Wed, 28 Sep 2016 13:54:40 +0700
+
 libcoda-dev (0.1.18) stable; urgency=low
 
   * added vietnamese tone remover
