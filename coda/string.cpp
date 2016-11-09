@@ -170,9 +170,37 @@ std::vector<std::string> coda_split_string(const char *src, const char *delimite
 {
 	std::vector<std::string> result;
 	const char *prev_ptr = src;
-	const char *p;
+	const char *p = src;
 
-	for (p = src; *p; ++p)
+	for (; *p; ++p)
+	{
+		if (NULL != strchr(delimiters, *p))
+		{
+			if (prev_ptr < p || !ignore_empty)
+			{
+				result.push_back(std::string(prev_ptr, p - prev_ptr));
+			}
+
+			prev_ptr = p + 1;
+		}
+	}
+
+	if (prev_ptr < p || !ignore_empty)
+	{
+		result.push_back(std::string(prev_ptr, p - prev_ptr));
+	}
+
+	return result;
+}
+
+std::vector<std::string> coda_split_string(const char *src, size_t size, const char *delimiters, bool ignore_empty)
+{
+	std::vector<std::string> result;
+	const char *prev_ptr = src;
+	const char *p = src;
+	const char *e = src + size;
+
+	for (; p < e; ++p)
 	{
 		if (NULL != strchr(delimiters, *p))
 		{
