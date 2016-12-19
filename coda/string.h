@@ -3,6 +3,7 @@
 
 #include <ctype.h>
 #include <string.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -49,6 +50,47 @@ size_t coda_strnspc(const char *s, const char *n, size_t len);
 size_t coda_strxspc(const char *s, const char *n, size_t len);
 size_t coda_revnspc(const char *s, const char *n, size_t len);
 size_t coda_revxspc(const char *s, const char *n, size_t len);
+
+/*
+ * String to integer conversions for non-null-terminated strings.
+ *
+ * These functions will return 0 if the string is mallformed (i.e. if it's not
+ * a number). This behaviour doesn't match standard atoi(3) behaviour, but we
+ * do this way here, because we are sure, where the string ends.
+ */
+
+static inline
+uint64_t coda_atou(const char *data, size_t size)
+{
+	uint64_t result = 0;
+
+	const char *p = data;
+	const char *e = data + size;
+
+	for (; p < e; ++p)
+	{
+		if ('0' > *p || *p > '9')
+		{
+			return 0;
+		}
+
+		result *= 10;
+		result += *p - '0';
+	}
+
+	return result;
+}
+
+static inline
+int64_t coda_atoi(const char *data, size_t size)
+{
+	if (size > 0 && data[0] == '-')
+	{
+		return -coda_atou(data + 1, size - 1);
+	}
+
+	return coda_atou(data, size);
+}
 
 #ifdef __cplusplus
 }  /* extern "C" */
