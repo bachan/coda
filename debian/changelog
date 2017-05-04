@@ -1,3 +1,9 @@
+libcoda-dev (0.1.22) stable; urgency=low
+
+  * coda_random_string
+
+ -- Sergey Bochenkov <ba4an@yandex.ru>  Thu, 04 May 2017 17:54:40 +0700
+
 libcoda-dev (0.1.21) stable; urgency=low
 
   * added string to int conversion functions for non-null-terminated strings
