@@ -5,8 +5,15 @@
 #include <unistd.h>
 #include "random.h"
 
+static volatile int coda_random_inited = 0;
+
 int coda_random_init()
 {
+	if (coda_random_inited)
+	{
+		return 0;
+	}
+
 	int fd = open("/dev/urandom", O_RDONLY);
 	if (0 > fd) return -1;
 
@@ -18,6 +25,7 @@ int coda_random_init()
 	close(fd);
 
 	srandom(rnd_from_device);
+	coda_random_inited = 1;
 
 	return 0;
 }

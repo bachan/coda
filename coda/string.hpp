@@ -20,4 +20,6 @@ void coda_get_uint64set(const char* str, std::set<uint64_t>& result);
 std::vector<std::string> coda_split_string(const char *src, const char *delimiters, bool ignore_empty = true);
 std::vector<std::string> coda_split_string(const char *src, size_t size, const char *delimiters, bool ignore_empty = true);
 
+std::string coda_random_string(size_t size, const char *alphabet, size_t alphabet_size);
+
 #endif /* __CODA_STRING_HPP__ */

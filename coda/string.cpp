@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#include "random.h"
 #include "string.hpp"
 
 #define BUFSZ 32768
@@ -216,6 +217,21 @@ std::vector<std::string> coda_split_string(const char *src, size_t size, const c
 	if (prev_ptr < p || !ignore_empty)
 	{
 		result.push_back(std::string(prev_ptr, p - prev_ptr));
+	}
+
+	return result;
+}
+
+std::string coda_random_string(size_t size, const char *alphabet, size_t alphabet_size)
+{
+	coda_random_init();
+
+	std::string result;
+
+	for (; size--;)
+	{
+		unsigned idx = coda_random() % alphabet_size;
+		result.push_back(alphabet[idx]);
 	}
 
 	return result;
