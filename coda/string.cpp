@@ -157,7 +157,7 @@ void coda_get_uint64set(const char* str, std::set<uint64_t>& result)
 	while (i)
 	{
 		uint64_t temp;
-		sscanf(i, "%"PRIu64, &temp);
+		sscanf(i, "%" PRIu64, &temp);
 		result.insert(temp);
 		i = strchr(i, ',');
 		if (i)
