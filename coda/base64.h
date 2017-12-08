@@ -34,17 +34,17 @@ extern "C" {
 #define BASE64_LENGTH(inlen) ((((inlen) + 2) / 3) * 4)
 #define BASE64_DECODE_LENGTH(outlen) ((((outlen) + 3) / 4) * 3)
 
-extern bool isbase64 (char ch);
+extern bool coda_isbase64 (char ch);
 
-extern void base64_encode (const char * in, size_t inlen,
+extern void coda_base64_encode (const char * in, size_t inlen,
 			   char * out, size_t outlen);
 
-extern size_t base64_encode_alloc (const char *in, size_t inlen, char **out);
+extern size_t coda_base64_encode_alloc (const char *in, size_t inlen, char **out);
 
-extern bool base64_decode (const char * in, size_t inlen,
+extern bool coda_base64_decode (const char * in, size_t inlen,
 			   char * out, size_t *outlen);
 
-extern bool base64_decode_alloc (const char *in, size_t inlen,
+extern bool coda_base64_decode_alloc (const char *in, size_t inlen,
 				 char **out, size_t *outlen);
 
 #ifdef __cplusplus

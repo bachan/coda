@@ -25,14 +25,14 @@
  * Be careful with error checking.  Here is how you would typically
  * use these functions:
  *
- * bool ok = base64_decode_alloc (in, inlen, &out, &outlen);
+ * bool ok = coda_base64_decode_alloc (in, inlen, &out, &outlen);
  * if (!ok)
  *   FAIL: input was not valid base64
  * if (out == NULL)
  *   FAIL: memory allocation error
  * OK: data in OUT/OUTLEN
  *
- * size_t outlen = base64_encode_alloc (in, inlen, &out);
+ * size_t outlen = coda_base64_encode_alloc (in, inlen, &out);
  * if (out == NULL && outlen == 0 && inlen != 0)
  *   FAIL: input too long
  * if (out == NULL)
@@ -62,7 +62,7 @@ to_uchar (char ch)
    possible.  If OUTLEN is larger than BASE64_LENGTH(INLEN), also zero
    terminate the output buffer. */
 void
-base64_encode (const char * in, size_t inlen,
+coda_base64_encode (const char * in, size_t inlen,
 	       char * out, size_t outlen)
 {
   static const char b64str[64] =
@@ -109,7 +109,7 @@ base64_encode (const char * in, size_t inlen,
    indicates length of the requested memory block, i.e.,
    BASE64_LENGTH(inlen) + 1. */
 size_t
-base64_encode_alloc (const char *in, size_t inlen, char **out)
+coda_base64_encode_alloc (const char *in, size_t inlen, char **out)
 {
   size_t outlen = 1 + BASE64_LENGTH (inlen);
 
@@ -135,7 +135,7 @@ base64_encode_alloc (const char *in, size_t inlen, char **out)
   if (!*out)
     return outlen;
 
-  base64_encode (in, inlen, *out, outlen);
+  coda_base64_encode (in, inlen, *out, outlen);
 
   return outlen - 1;
 }
@@ -293,7 +293,7 @@ static const signed char b64[0x100] = {
    false otherwise.  Note that '=' is padding and not considered to be
    part of the alphabet.  */
 bool
-isbase64 (char ch)
+coda_isbase64 (char ch)
 {
   return uchar_in_range (to_uchar (ch)) && 0 <= b64[to_uchar (ch)];
 }
@@ -308,14 +308,14 @@ isbase64 (char ch)
    that, when applicable, you must remove any line terminators that is
    part of the data stream before calling this function.  */
 bool
-base64_decode (const char * in, size_t inlen,
+coda_base64_decode (const char * in, size_t inlen,
 	       char * out, size_t *outlen)
 {
   size_t outleft = *outlen;
 
   while (inlen >= 2)
     {
-      if (!isbase64 (in[0]) || !isbase64 (in[1]))
+      if (!coda_isbase64 (in[0]) || !coda_isbase64 (in[1]))
 	break;
 
       if (outleft)
@@ -339,7 +339,7 @@ base64_decode (const char * in, size_t inlen,
 	}
       else
 	{
-	  if (!isbase64 (in[2]))
+	  if (!coda_isbase64 (in[2]))
 	    break;
 
 	  if (outleft)
@@ -359,7 +359,7 @@ base64_decode (const char * in, size_t inlen,
 	    }
 	  else
 	    {
-	      if (!isbase64 (in[3]))
+	      if (!coda_isbase64 (in[3]))
 		break;
 
 	      if (outleft)
@@ -395,7 +395,7 @@ base64_decode (const char * in, size_t inlen,
    input was invalid, in which case *OUT is NULL and *OUTLEN is
    undefined. */
 bool
-base64_decode_alloc (const char *in, size_t inlen, char **out,
+coda_base64_decode_alloc (const char *in, size_t inlen, char **out,
 		     size_t *outlen)
 {
   /* This may allocate a few bytes too much, depending on input,
@@ -409,7 +409,7 @@ base64_decode_alloc (const char *in, size_t inlen, char **out,
   if (!*out)
     return true;
 
-  if (!base64_decode (in, inlen, *out, &needlen))
+  if (!coda_base64_decode (in, inlen, *out, &needlen))
     {
       free (*out);
       *out = NULL;
