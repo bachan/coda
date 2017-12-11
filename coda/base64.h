@@ -16,8 +16,8 @@
    along with this program; if not, write to the Free Software Foundation,
    Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  */
 
-#ifndef BASE64_H
-#define BASE64_H
+#ifndef __CODA_BASE64_H__
+#define __CODA_BASE64_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,8 +31,8 @@ extern "C" {
 
 /* This uses that the expression (n+(k-1))/k means the smallest
    integer >= n/k, i.e., the ceiling of n/k.  */
-#define BASE64_LENGTH(inlen) ((((inlen) + 2) / 3) * 4)
-#define BASE64_DECODE_LENGTH(outlen) ((((outlen) + 3) / 4) * 3)
+#define CODA_BASE64_LENGTH(inlen) ((((inlen) + 2) / 3) * 4)
+#define CODA_BASE64_DECODE_LENGTH(outlen) ((((outlen) + 3) / 4) * 3)
 
 extern bool coda_isbase64 (char ch);
 
@@ -51,5 +51,5 @@ extern bool coda_base64_decode_alloc (const char *in, size_t inlen,
 }
 #endif
 
-#endif /* BASE64_H */
+#endif /* __CODA_BASE64_H__ */
 

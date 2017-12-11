@@ -58,8 +58,8 @@ to_uchar (char ch)
 }
 
 /* Base64 encode IN array of size INLEN into OUT array of size OUTLEN.
-   If OUTLEN is less than BASE64_LENGTH(INLEN), write as many bytes as
-   possible.  If OUTLEN is larger than BASE64_LENGTH(INLEN), also zero
+   If OUTLEN is less than CODA_BASE64_LENGTH(INLEN), write as many bytes as
+   possible.  If OUTLEN is larger than CODA_BASE64_LENGTH(INLEN), also zero
    terminate the output buffer. */
 void
 coda_base64_encode (const char * in, size_t inlen,
@@ -100,18 +100,18 @@ coda_base64_encode (const char * in, size_t inlen,
 }
 
 /* Allocate a buffer and store zero terminated base64 encoded data
-   from array IN of size INLEN, returning BASE64_LENGTH(INLEN), i.e.,
+   from array IN of size INLEN, returning CODA_BASE64_LENGTH(INLEN), i.e.,
    the length of the encoded data, excluding the terminating zero.  On
    return, the OUT variable will hold a pointer to newly allocated
    memory that must be deallocated by the caller.  If output string
    length would overflow, 0 is returned and OUT is set to NULL.  If
    memory allocation failed, OUT is set to NULL, and the return value
    indicates length of the requested memory block, i.e.,
-   BASE64_LENGTH(inlen) + 1. */
+   CODA_BASE64_LENGTH(inlen) + 1. */
 size_t
 coda_base64_encode_alloc (const char *in, size_t inlen, char **out)
 {
-  size_t outlen = 1 + BASE64_LENGTH (inlen);
+  size_t outlen = 1 + CODA_BASE64_LENGTH (inlen);
 
   /* Check for overflow in outlen computation.
    *
