@@ -222,6 +222,16 @@ std::string coda_urldec(const char* src, size_t sz_src)
 	return dst;
 }
 
+std::string coda_urlenc(const std::string &u)
+{
+	return coda_urlenc(u.data(), u.size());
+}
+
+std::string coda_urldec(const std::string &u)
+{
+	return coda_urldec(u.data(), u.size());
+}
+
 void coda_url_escape(const char *s, char *dest, size_t sz)
 {
 	memset(dest, 0, sz);

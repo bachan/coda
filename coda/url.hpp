@@ -17,18 +17,11 @@ int coda_get_header(coda_header_t& header, const char* s);
 size_t coda_urlenc(char* dst, const char* src, size_t sz_src);
 size_t coda_urldec(char* dst, const char* src, size_t sz_src);
 
-static inline std::string coda_urlenc(const std::string &u)
-{
-	return coda_urlenc(u.data(), u.size());
-}
-
-static inline std::string coda_urldec(const std::string &u)
-{
-	return coda_urldec(u.data(), u.size());
-}
-
 std::string coda_urlenc(const char *src, size_t sz_src);
 std::string coda_urldec(const char *src, size_t sz_src);
+
+std::string coda_urlenc(const std::string &u);
+std::string coda_urldec(const std::string &u);
 
 void coda_url_unescape(const char* s, char* dest, size_t sz);
 void coda_url_escape(const char* s, char* dest, size_t sz);
