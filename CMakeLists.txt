@@ -23,3 +23,5 @@ TARGET_LINK_LIBRARIES (test_cache coda)
 ADD_EXECUTABLE (test_stringstorage tests/stringstorage/test.c)
 TARGET_LINK_LIBRARIES (test_stringstorage coda)
 
+ADD_EXECUTABLE (test_base58 tests/base58/test.c)
+TARGET_LINK_LIBRARIES (test_base58 coda)
