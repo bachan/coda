@@ -11,7 +11,7 @@ static unsigned char to_nibble (char c)
     return 0xFF;
 }
 
-static int bytes_to_hex(const char* in, size_t inlen, char** out, size_t* outlen)
+static int bytes_to_hex(const char* in, size_t inlen, char** out, ssize_t* outlen)
 {
     static const char* hex = "0123456789abcdef";
 
@@ -23,7 +23,7 @@ static int bytes_to_hex(const char* in, size_t inlen, char** out, size_t* outlen
         return -1;
     }
 
-    size_t i = 0;
+    ssize_t i = 0;
     while(i < *outlen-1)
     {
         (*out)[i++] = hex[(*in >> 4) & 0xF];
@@ -74,7 +74,7 @@ int main(int argc, char **argv)
 {
     if (argc < 3)
     {
-        fprintf(stderr, "Usage:\n  %s <test_in.txt> <test_control.txt>", argv[0]);
+        fprintf(stderr, "Usage:\n  %s <test_in.txt> <test_control.txt>\n", argv[0]);
         return -1;
     }
 
@@ -109,7 +109,7 @@ int main(int argc, char **argv)
     size_t decoded_len = 0;
 
     char* decoded_hex = NULL;
-    size_t decoded_hex_len = 0;
+    ssize_t decoded_hex_len = 0;
 
     int exit_code = 0;
 
@@ -144,7 +144,14 @@ int main(int argc, char **argv)
             break;
         }
 
-        coda_base58_decode_alloc (encoded, strlen(encoded), &decoded, &decoded_len);
+        decoded_len = coda_base58_decode_alloc (encoded, strlen(encoded), &decoded);
+        if (decoded_len < 0)
+        {
+            fprintf(stderr, "Test failed (decode).\n%s\n%*c^\n", encoded, (int)(-decoded_len-1), ' ');
+            exit_code = -1;
+            break;
+        }
+
         bytes_to_hex (decoded, decoded_len, &decoded_hex, &decoded_hex_len);
 
         if (strcmp (decoded_hex, line_in))

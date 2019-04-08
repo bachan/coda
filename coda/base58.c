@@ -1,6 +1,7 @@
 #include "base58.h"
 #include <stdlib.h>
 #include <limits.h>
+#include <stdio.h>
 
 static inline unsigned char to_uchar (char ch)
 {
@@ -218,14 +219,15 @@ bool coda_isbase58 (char ch)
     return uchar_in_range (to_uchar (ch)) && 0 <= b58[to_uchar (ch)];
 }
 
-bool coda_base58_decode (const char* in, size_t inlen, char* out, size_t *outlen)
+ssize_t coda_base58_decode (const char* in, size_t inlen, char* out)
 {
-    *outlen = 0;
+    ssize_t _inlen = inlen;
+    ssize_t outlen = 0;
+
     while (inlen && *in == '1')
     {
         *out++ = 0;
-        (*outlen)++;
-
+        outlen++;
         in++;
         inlen--;
     }
@@ -235,7 +237,7 @@ bool coda_base58_decode (const char* in, size_t inlen, char* out, size_t *outlen
     char *b256_curr = NULL;
     b256_begin = b256_curr = (char*)calloc (b256len, sizeof(char));
     if (!b256_begin)
-        return false;
+        return -_inlen + inlen;
 
     while (inlen)
     {
@@ -250,13 +252,15 @@ bool coda_base58_decode (const char* in, size_t inlen, char* out, size_t *outlen
             b256_curr[i] = carry % 256;
             carry /= 256;
         }
+        if (carry)
+            return -_inlen + inlen;
         inlen--;
     }
 
     if (inlen != 0)
     {
         free(b256_begin);
-        return false;
+        return -_inlen + inlen;
     }
 
     while (b256len && !*b256_curr)
@@ -265,7 +269,7 @@ bool coda_base58_decode (const char* in, size_t inlen, char* out, size_t *outlen
         b256len--;
     }
 
-    *outlen += b256len;
+    outlen += b256len;
     while (b256len)
     {
         *out++ = *b256_curr++;
@@ -273,13 +277,15 @@ bool coda_base58_decode (const char* in, size_t inlen, char* out, size_t *outlen
     }
 
     free(b256_begin);
-    return true;
+
+    return outlen;
 }
 
-bool coda_base58_decode_alloc (const char *in, size_t inlen, char **out, size_t *outlen)
+ssize_t coda_base58_decode_alloc (const char *in, size_t inlen, char **out)
 {
     size_t zeroes = 0;
     size_t b256len = inlen;
+
     while (b256len && in[zeroes] == '1')
     {
         zeroes++;
@@ -291,15 +297,13 @@ bool coda_base58_decode_alloc (const char *in, size_t inlen, char **out, size_t 
     if (!*out)
         return true;
 
-    if (!coda_base58_decode (in, inlen, *out, &needlen))
+    ssize_t ret = coda_base58_decode (in, inlen, *out);
+    if (ret < 0)
     {
         free (*out);
         *out = NULL;
-        return false;
+        return ret;
     }
 
-    if (outlen)
-        *outlen = needlen;
-
-    return true;
+    return ret;
 }

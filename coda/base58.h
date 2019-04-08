@@ -7,6 +7,7 @@ extern "C" {
 
 #include <stddef.h>
 #include <stdbool.h>
+#include <sys/types.h>
 
 extern bool coda_isbase58 (char ch);
 
@@ -15,11 +16,8 @@ extern void coda_base58_encode (const char * in, size_t inlen,
 
 extern size_t coda_base58_encode_alloc (const char *in, size_t inlen, char **out);
 
-extern bool coda_base58_decode (const char * in, size_t inlen,
-               char * out, size_t *outlen);
-
-extern bool coda_base58_decode_alloc (const char *in, size_t inlen,
-                 char **out, size_t *outlen);
+extern ssize_t coda_base58_decode (const char * in, size_t inlen, char* out);
+extern ssize_t coda_base58_decode_alloc (const char *in, size_t inlen, char **out);
 
 #ifdef __cplusplus
 }
