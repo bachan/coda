@@ -2,7 +2,7 @@
 #define __CODA_CACHE_HPP__
 
 #include <time.h>
-#include <tr1/unordered_map>
+#include <unordered_map>
 #include "estimate_capacity.hpp"
 #include "string.hpp"
 
@@ -16,7 +16,7 @@ template <typename Key, typename Val>
 class coda_cache
 {
 	struct elem_t;
-	typedef std::tr1::unordered_map<Key, elem_t> data_t;
+	typedef std::unordered_map<Key, elem_t> data_t;
 	typedef std::pair<const Key, elem_t> data_value_t; /* HACK: here we "know" about data_t::value_type */
 
 	struct elem_t
