@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <stdint.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -27,10 +28,10 @@ char *coda_strxstr(const char *s, const char *n, size_t len);  /* search for [n]
 size_t coda_strnchp(const char *s, char c, size_t len);
 size_t coda_strxchp(const char *s, char c, size_t len);
 
-/* 
+/*
  * Функции возвращают длину максимальной подстроки в [s], состоящей:
  * (для *spn) из букв алфавита [n], а (для *spc) из оставшихся букв.
- * 
+ *
  * Алфавит [n] задается упорядоченным массивом своих букв.
  * Указатель [s] - это начало буфера со строкой длины [len] байт.
  * Возвращаемое значение считается от начала этой строки.

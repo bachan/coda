@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <getopt.h>
 #include <stdlib.h>
-#include <string.h>
+#include <cstring>
 #include <inttypes.h>
 #include <coda/url.hpp>
 #include <coda/url_parser.hpp>
@@ -169,7 +169,7 @@ int main(int argc, char **argv)
     int i;
 
     urlq_getopt_t opts;
-    memset(&opts, 0, sizeof(opts));
+    std::memset(static_cast<void*>(&opts), 0, sizeof(opts));
 
     if (0 != urlq_getopt_parse(argc, argv, &opts))
     {
