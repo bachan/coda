@@ -1,7 +1,7 @@
 #ifndef __CODA_STRING_HPP__
 #define __CODA_STRING_HPP__
 
-#include <coda/coda.h>
+#include "coda.h"
 #include <inttypes.h>
 #include <stdint.h>
 #include <string>
