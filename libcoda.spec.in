@@ -1,0 +1,72 @@
+BuildRoot: @CMAKE_CURRENT_BINARY_DIR@/_CPack_Packages/Linux/RPM/@CPACK_PACKAGE_FILE_NAME@@CPACK_RPM_PACKAGE_COMPONENT_PART_PATH@
+Summary: coda developement library
+Name: @CPACK_PACKAGE_NAME@
+Version: @CPACK_PACKAGE_VERSION@
+Release: @CPACK_PACKAGE_RELEASE@%{?dist}
+License: LGPL
+Group: Developement/Libraries
+Vendor: @CPACK_PACKAGE_VENDOR@
+Prefix: @CPACK_PACKAGING_INSTALL_PREFIX@
+#BuildRequires: expat-devel cmake gcc-c++
+
+%define _rpmfilename @CPACK_PACKAGE_FILE_NAME@.rpm
+%define _unpackaged_files_terminate_build 0
+%define _topdir @CMAKE_CURRENT_BINARY_DIR@/_CPack_Packages/Linux/RPM
+%define _rpmdir %_topdir
+%define _rpmdir %_topdir/RPMS
+%define _srcrpmdir %_topdir/SRPMS
+
+%description
+Coda developement library: different tools from Bachan.
+
+%prep
+mv $RPM_BUILD_ROOT %_topdir/tmpBBroot
+rm -rf "$RPM_BUILD_DIR/CMakeFiles"
+rm -f "$RPM_BUILD_DIR/CMakeCache.txt"
+
+%build
+
+%install
+if [ -e $RPM_BUILD_ROOT ];
+then
+  rm -Rf $RPM_BUILD_ROOT
+fi
+mv %_topdir/tmpBBroot $RPM_BUILD_ROOT
+mkdir -p $RPM_BUILD_ROOT/usr/share
+
+%post
+@RPM_SYMLINK_POSTINSTALL@
+@CPACK_RPM_SPEC_POSTINSTALL@
+
+%postun
+@CPACK_RPM_SPEC_POSTUNINSTALL@
+
+%pre
+@CPACK_RPM_SPEC_PREINSTALL@
+
+%preun
+@CPACK_RPM_SPEC_PREUNINSTALL@
+
+%clean
+rm -rf %{buildroot}
+
+
+%files
+%defattr(-,root,root,-)
+@CPACK_PACKAGING_INSTALL_PREFIX@/@LIB_INSTALL_DIR@/lib/libcoda.a
+@CPACK_PACKAGING_INSTALL_PREFIX@/bin/coda_url_parser
+@CPACK_PACKAGING_INSTALL_PREFIX@/include/coda
+
+%changelog
+* Mon Apr 29 2019 Ruslan Osmanov <rrosmanov@gmail.com> - 0.1.16.1
++ Improved spec file
+
+* Tue May 10 2016 Max Volgin <technotopia@gmail.com> - 0.1.16
++ coda synque get array of queue items
+
+* Fri Jan 16 2015 Dmitri Samirov <dsamirov@gmail.com> - 0.1.13
++ add #include <errno.h> to shm_hash_map.tcc
+
+* Sat Mar 09 2013 Alexander Pankov <pianist@usrsrc.ru> - 0.1.0
++ First RPM package
+
