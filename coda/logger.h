@@ -30,11 +30,6 @@ extern "C" {
 #define log_ret(err,fmt,...) log_msg(error,fmt " (%d: %s)\n", ##__VA_ARGS__, err, coda_strerror(err)), err
 #define log_die(err,fmt,...) log_msg(emerg,fmt " (%d: %s)\n", ##__VA_ARGS__, err, coda_strerror(err)); exit(EXIT_FAILURE)
 
-#define msg(fmt,...)     fprintf(stderr, fmt          "\n", ##__VA_ARGS__)
-#define err(err,fmt,...) fprintf(stderr, fmt " (%d: %s)\n", ##__VA_ARGS__, err, coda_strerror(err))
-#define ret(err,fmt,...) fprintf(stderr, fmt " (%d: %s)\n", ##__VA_ARGS__, err, coda_strerror(err)), err
-#define die(err,fmt,...) fprintf(stderr, fmt " (%d: %s)\n", ##__VA_ARGS__, err, coda_strerror(err)); exit(EXIT_FAILURE)
-
 #define log_access( fmt,...) log_msg(access,fmt,##__VA_ARGS__)
 #define log_emerg(  fmt,...) log_msg(emerg, fmt,##__VA_ARGS__)
 #define log_alert(  fmt,...) log_msg(alert, fmt,##__VA_ARGS__)

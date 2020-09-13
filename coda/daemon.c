@@ -22,7 +22,8 @@ static struct option coda_getopt_opts [] =
 
 int coda_getopt_usage(int argc CODA_UNUSED, char** argv)
 {
-	msg("Usage:                                \n"
+	fprintf(stderr,
+		"Usage:                                \n"
 		"  %s <opts>                           \n"
 		"                                      \n"
 		"Options:                              \n"
