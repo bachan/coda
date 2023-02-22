@@ -194,6 +194,31 @@ std::string coda_urlenc(const char* src, size_t sz_src)
 	return dst;
 }
 
+std::string coda_urlenc_noplus(const char* src, size_t sz_src)
+{
+	std::string dst;
+
+	unsigned char* psrc = (unsigned char *) src;
+	unsigned char* esrc = (unsigned char *) src + sz_src;
+
+	while (psrc < esrc)
+	{
+		if ((*psrc == ' ') || (table_urlenc[*psrc >> 5] & (1 << (*psrc & 0x1f))))
+		{
+			dst.push_back('%');
+			dst.push_back(table_hexval[*psrc >> 4]);
+			dst.push_back(table_hexval[*psrc & 0xf]);
+			++psrc;
+		}
+		else
+		{
+			dst.push_back(*psrc++);
+		}
+	}
+
+	return dst;
+}
+
 std::string coda_urldec(const char* src, size_t sz_src)
 {
 	std::string dst;
@@ -225,6 +250,11 @@ std::string coda_urldec(const char* src, size_t sz_src)
 std::string coda_urlenc(const std::string &u)
 {
 	return coda_urlenc(u.data(), u.size());
+}
+
+std::string coda_urlenc_noplus(const std::string &u)
+{
+	return coda_urlenc_noplus(u.data(), u.size());
 }
 
 std::string coda_urldec(const std::string &u)

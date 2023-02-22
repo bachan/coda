@@ -18,9 +18,11 @@ size_t coda_urlenc(char* dst, const char* src, size_t sz_src);
 size_t coda_urldec(char* dst, const char* src, size_t sz_src);
 
 std::string coda_urlenc(const char *src, size_t sz_src);
+std::string coda_urlenc_noplus(const char *src, size_t sz_src);
 std::string coda_urldec(const char *src, size_t sz_src);
 
 std::string coda_urlenc(const std::string &u);
+std::string coda_urlenc_noplus(const std::string &u);
 std::string coda_urldec(const std::string &u);
 
 void coda_url_unescape(const char* s, char* dest, size_t sz);
